@@ -1,0 +1,15 @@
+[package]
+name = "ceph-rust"
+version = "0.1.0"
+authors = ["Chris Jones <cj@hanscj.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["ceph", "storage"]
+repository = "https://github.com/lambdastackio/ceph-rust"
+homepage = "https://github.com/lambdastackio/ceph-rust"
+documentation = "https://github.com/lambdastackio/ceph-rust"
+description = """
+ceph-rust is a rust-lang specific interface to Ceph. Under heavy dev *do not use* at this time.
+"""
+
+[dependencies]
