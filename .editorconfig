@@ -1,0 +1,22 @@
+# NOTE: If using Atom then install the EditorConfig plugin. Go to editorconfig.org.
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# 4 space indentation
+[*.py]
+indent_size = 4
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false
