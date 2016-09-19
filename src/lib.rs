@@ -42,6 +42,8 @@
 
 //! Ceph-rust is a thin layer over the librados C interface.
 //!
+//! Only works on Linux
+//!
 //! By default Ceph names librados as the following for the given platforms:
 //! Hammer release:
 //! RHEL/CentOS:
@@ -63,6 +65,8 @@
 //! See the /examples/ceph.rs for how to use the library.
 
 #![allow(non_camel_case_types)]
+#![allow(unused_imports)]
+
 extern crate libc;
 
 use self::libc::{int64_t, size_t, ssize_t, time_t, timeval, uint8_t, uint32_t, uint64_t};
@@ -177,6 +181,7 @@ pub type rados_log_callback_t =
                                         level: *const ::libc::c_char,
                                         msg: *const ::libc::c_char) -> ()>;
 
+#[cfg(target_os = "linux")]
 #[link(name = "rados", kind="dylib")]
 extern "C" {
     pub fn rados_version(major: *mut ::libc::c_int, minor: *mut ::libc::c_int,

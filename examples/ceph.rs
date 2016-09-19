@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(unused_imports)]
+
 extern crate ceph_rust;
 extern crate lsio;
 
 use ceph_rust as ceph;
 
+#[cfg(not(target_os = "linux"))]
+fn main(){}
+
+#[cfg(target_os = "linux")]
 fn main() {
   let mut major: i32 = 0;
   let mut minor: i32 = 0;
