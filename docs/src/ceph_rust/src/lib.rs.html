@@ -13,7 +13,7 @@
     <link rel="stylesheet" type="text/css" href="../../../main.css">
     
 
-    
+    <link rel="shortcut icon" href="https://lambdastackio.github.io/static/images/favicon.ico">
     
 </head>
 <body class="rustdoc">
@@ -27,7 +27,7 @@
     
 
     <nav class="sidebar">
-        
+        <a href='../../../ceph_rust/index.html'><img src='https://lambdastackio.github.io/static/images/lambdastack-200x200.png' alt='logo' width='100'></a>
         
     </nav>
 
@@ -714,6 +714,37 @@
 <span id="670">670</span>
 <span id="671">671</span>
 <span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
 </pre><pre class='rust '>
 <span class='comment'>// Copyright 2016 LambdaStack All rights reserved.</span>
 <span class='comment'>//</span>
@@ -752,8 +783,38 @@
 <span class='comment'>// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
 <span class='comment'>// SOFTWARE.</span>
 
+<span class='comment'>// NOTE: This attribute only needs to be set once.</span>
+<span class='attribute'>#<span class='op'>!</span>[<span class='ident'>doc</span>(<span class='ident'>html_logo_url</span> <span class='op'>=</span> <span class='string'>&quot;https://lambdastackio.github.io/static/images/lambdastack-200x200.png&quot;</span>,
+       <span class='ident'>html_favicon_url</span> <span class='op'>=</span> <span class='string'>&quot;https://lambdastackio.github.io/static/images/favicon.ico&quot;</span>,
+       <span class='ident'>html_root_url</span> <span class='op'>=</span> <span class='string'>&quot;https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph-rust/index.html&quot;</span>)]</span>
+
+<span class='doccomment'>//! Ceph-rust is a thin layer over the librados C interface.</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! Only works on Linux</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! By default Ceph names librados as the following for the given platforms:</span>
+<span class='doccomment'>//! Hammer release:</span>
+<span class='doccomment'>//! RHEL/CentOS:</span>
+<span class='doccomment'>//! /usr/lib64/librados.so.2.0.0</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! Ubuntu:</span>
+<span class='doccomment'>//! /usr/lib/librados.so.2.0.0</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! You will need to do a symlink of the above link to the following:</span>
+<span class='doccomment'>//! RHEL/CentOS:</span>
+<span class='doccomment'>//! sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! Ubuntu:</span>
+<span class='doccomment'>//! sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! NOTE: If someone know of another way for Rust to find the librados file then please issue</span>
+<span class='doccomment'>//! a PR for it. Thanks!</span>
+<span class='doccomment'>//!</span>
+<span class='doccomment'>//! See the /examples/ceph.rs for how to use the library.</span>
 
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>allow</span>(<span class='ident'>non_camel_case_types</span>)]</span>
+<span class='attribute'>#<span class='op'>!</span>[<span class='ident'>allow</span>(<span class='ident'>unused_imports</span>)]</span>
+
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>libc</span>;
 
 <span class='kw'>use</span> <span class='self'>self</span>::<span class='ident'>libc</span>::{<span class='ident'>int64_t</span>, <span class='ident'>size_t</span>, <span class='ident'>ssize_t</span>, <span class='ident'>time_t</span>, <span class='ident'>timeval</span>, <span class='ident'>uint8_t</span>, <span class='ident'>uint32_t</span>, <span class='ident'>uint64_t</span>};
@@ -868,7 +929,8 @@
                                         <span class='ident'>level</span>: <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>,
                                         <span class='ident'>msg</span>: <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>) <span class='op'>-&gt;</span> ()<span class='op'>&gt;</span>;
 
-<span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span> <span class='op'>=</span> <span class='string'>&quot;rados&quot;</span>)]</span>
+<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span> <span class='op'>=</span> <span class='string'>&quot;linux&quot;</span>)]</span>
+<span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span> <span class='op'>=</span> <span class='string'>&quot;rados&quot;</span>, <span class='ident'>kind</span><span class='op'>=</span><span class='string'>&quot;dylib&quot;</span>)]</span>
 <span class='kw'>extern</span> <span class='string'>&quot;C&quot;</span> {
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_version</span>(<span class='ident'>major</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>, <span class='ident'>minor</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>,
                          <span class='ident'>extra</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>) <span class='op'>-&gt;</span> ();
@@ -1125,7 +1187,7 @@
                       <span class='ident'>method</span>: <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>,
                       <span class='ident'>in_buf</span>: <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>, <span class='ident'>in_len</span>: <span class='ident'>size_t</span>,
                       <span class='ident'>buf</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>, <span class='ident'>out_len</span>: <span class='ident'>size_t</span>) <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
-                      
+
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_aio_create_completion</span>(<span class='ident'>cb_arg</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_void</span>,
                                        <span class='ident'>cb_complete</span>: <span class='ident'>rados_callback_t</span>,
                                        <span class='ident'>cb_safe</span>: <span class='ident'>rados_callback_t</span>,
