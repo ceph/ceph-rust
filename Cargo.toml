@@ -7,7 +7,7 @@ readme = "README.md"
 keywords = ["ceph", "storage"]
 repository = "https://github.com/lambdastackio/ceph-rust"
 homepage = "https://github.com/lambdastackio/ceph-rust"
-documentation = "https://lambdastackio.github.io/ceph-rust/ceph-rust"
+documentation = "https://lambdastackio.github.io/ceph-rust/ceph_rust"
 description = """
 Ceph-rust is a rust-lang specific interface to Ceph librados. You can create a Ceph development environment with the
 Chef automation tools I created from the following: https://github.com/bloomberg/chef-bcs. It uses the ceph-chef cookbook

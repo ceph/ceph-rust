@@ -38,7 +38,7 @@
 // NOTE: This attribute only needs to be set once.
 #![doc(html_logo_url = "https://lambdastackio.github.io/static/images/lambdastack-200x200.png",
        html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
-       html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph-rust/index.html")]
+       html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph_rust/index.html")]
 
 //! Ceph-rust is a thin layer over the librados C interface.
 //!
