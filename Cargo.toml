@@ -1,6 +1,6 @@
 [package]
 name = "ceph-rust"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Chris Jones <chris.jones@lambdastack.io>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -18,3 +18,8 @@ for development etc. See README.md for details.
 [dependencies]
 libc = "0.2"
 lsio = "0.1"
+
+[[bin]]
+doc = true
+name = "ceph"
+path = "examples/ceph.rs"

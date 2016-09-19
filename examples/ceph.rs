@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-extern ceph-rust;
+extern crate ceph_rust;
+extern crate lsio;
 
-use ceph_rust;
+use ceph_rust as ceph;
+
+fn main() {
+  let mut major: i32 = 0;
+  let mut minor: i32 = 0;
+  let mut extra: i32 = 0;
+
+  unsafe {
+    ceph::rados_version(&mut major, &mut minor, &mut extra);
+  }
+
+  println!("v{}.{}.{}", major, minor, extra);
+
+}

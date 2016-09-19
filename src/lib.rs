@@ -35,6 +35,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// NOTE: This attribute only needs to be set once.
+#![doc(html_logo_url = "https://lambdastackio.github.io/static/images/lambdastack-200x200.png",
+       html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
+       html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph-rust/index.html")]
+
+//! Ceph-rust is a thin layer over the librados C interface.
+//!
+//! By default Ceph names librados as the following for the given platforms:
+//! Hammer release:
+//! RHEL/CentOS:
+//! /usr/lib64/librados.so.2.0.0
+//!
+//! Ubuntu:
+//! /usr/lib/librados.so.2.0.0
+//!
+//! You will need to do a symlink of the above link to the following:
+//! RHEL/CentOS:
+//! sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
+//!
+//! Ubuntu:
+//! sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
+//!
+//! NOTE: If someone know of another way for Rust to find the librados file then please issue
+//! a PR for it. Thanks!
+//!
+//! See the /examples/ceph.rs for how to use the library.
 
 #![allow(non_camel_case_types)]
 extern crate libc;
@@ -151,7 +177,7 @@ pub type rados_log_callback_t =
                                         level: *const ::libc::c_char,
                                         msg: *const ::libc::c_char) -> ()>;
 
-#[link(name = "rados")]
+#[link(name = "rados", kind="dylib")]
 extern "C" {
     pub fn rados_version(major: *mut ::libc::c_int, minor: *mut ::libc::c_int,
                          extra: *mut ::libc::c_int) -> ();
@@ -408,7 +434,7 @@ extern "C" {
                       method: *const ::libc::c_char,
                       in_buf: *const ::libc::c_char, in_len: size_t,
                       buf: *mut ::libc::c_char, out_len: size_t) -> ::libc::c_int;
-                      
+
     pub fn rados_aio_create_completion(cb_arg: *mut ::libc::c_void,
                                        cb_complete: rados_callback_t,
                                        cb_safe: rados_callback_t,
