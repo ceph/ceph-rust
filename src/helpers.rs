@@ -16,7 +16,7 @@
 use std::slice;
 use std::io::Error;
 
-use ceph::*;
+use rados::*;
 
 /// Returns back a collection of Rados Pools
 ///

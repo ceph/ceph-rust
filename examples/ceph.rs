@@ -26,6 +26,7 @@ use std::ffi::{CStr, CString};
 
 use libc::*;
 use ceph_rust::rados as ceph;
+use ceph_rust::helpers as ceph_helpers;
 
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {
@@ -57,7 +58,7 @@ fn main() {
     ret_code = ceph::rados_connect(cluster);
     println!("Return code: {} - {:?}", ret_code, cluster);
 
-    let pools_list = ceph::helpers::rados_pools(cluster).unwrap();
+    let pools_list = ceph_helpers::rados_pools(cluster).unwrap();
     println!("{:?}", pools_list);
 
     ceph::rados_shutdown(cluster);
