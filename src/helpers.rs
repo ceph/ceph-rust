@@ -13,9 +13,6 @@
 // limitations under the License.
 
 #![cfg(target_os = "linux")]
-use std::iter::FromIterator;
-use std::ptr;
-use std::str;
 use std::slice;
 use std::io::Error;
 

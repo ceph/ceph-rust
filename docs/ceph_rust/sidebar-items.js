@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["ceph",""]]});
+initSidebarItems({"mod":[["rados",""]]});

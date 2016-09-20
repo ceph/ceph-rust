@@ -25,7 +25,7 @@ use std::slice;
 use std::ffi::{CStr, CString};
 
 use libc::*;
-use ceph_rust as ceph;
+use ceph_rust::rados as ceph;
 
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {

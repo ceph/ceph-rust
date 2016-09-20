@@ -46,5 +46,5 @@
 
 extern crate libc;
 
-pub mod ceph;
+pub mod rados;
 pub mod helpers;
