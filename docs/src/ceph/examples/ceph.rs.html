@@ -79,6 +79,37 @@
 <span id="35">35</span>
 <span id="36">36</span>
 <span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
 </pre><pre class='rust '>
 <span class='comment'>// Copyright 2016 LambdaStack All rights reserved.</span>
 <span class='comment'>//</span>
@@ -98,8 +129,22 @@
 
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>ceph_rust</span>;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>lsio</span>;
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>libc</span>;
 
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>iter</span>::<span class='ident'>FromIterator</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>ptr</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>str</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>slice</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>ffi</span>::{<span class='ident'>CStr</span>, <span class='ident'>CString</span>};
+
+<span class='kw'>use</span> <span class='ident'>libc</span>::<span class='op'>*</span>;
 <span class='kw'>use</span> <span class='ident'>ceph_rust</span> <span class='kw'>as</span> <span class='ident'>ceph</span>;
+
+<span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>zeroed_c_char_buf</span> {
+	(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>n</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> {
+		<span class='ident'>repeat</span>(<span class='number'>0</span>).<span class='ident'>take</span>(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>n</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>c_char</span><span class='op'>&gt;&gt;</span>();
+	}
+}
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>not</span>(<span class='ident'>target_os</span> <span class='op'>=</span> <span class='string'>&quot;linux&quot;</span>))]</span>
 <span class='kw'>fn</span> <span class='ident'>main</span>(){}
@@ -110,8 +155,25 @@
   <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>minor</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>0</span>;
   <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>extra</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>0</span>;
 
+  <span class='kw'>let</span> <span class='ident'>config_file</span> <span class='op'>=</span> <span class='ident'>CString</span>::<span class='ident'>new</span>(<span class='string'>&quot;/etc/ceph/ceph.conf&quot;</span>).<span class='ident'>unwrap</span>();
+  <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>cluster</span>: <span class='ident'>ceph</span>::<span class='ident'>rados_t</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>ptr</span>::<span class='ident'>null_mut</span>();
+  <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>ret_code</span>: <span class='ident'>i32</span>;
+
   <span class='kw'>unsafe</span> {
     <span class='ident'>ceph</span>::<span class='ident'>rados_version</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>major</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>minor</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>extra</span>);
+    <span class='ident'>ret_code</span> <span class='op'>=</span> <span class='ident'>ceph</span>::<span class='ident'>rados_create</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>cluster</span>, <span class='ident'>std</span>::<span class='ident'>ptr</span>::<span class='ident'>null</span>());
+    <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Return code: {} - {:?}&quot;</span>, <span class='ident'>ret_code</span>, <span class='ident'>cluster</span>);
+
+    <span class='ident'>ret_code</span> <span class='op'>=</span> <span class='ident'>ceph</span>::<span class='ident'>rados_conf_read_file</span>(<span class='ident'>cluster</span>, <span class='ident'>config_file</span>.<span class='ident'>as_ptr</span>());
+    <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Return code: {} - {:?}&quot;</span>, <span class='ident'>ret_code</span>, <span class='ident'>cluster</span>);
+
+    <span class='ident'>ret_code</span> <span class='op'>=</span> <span class='ident'>ceph</span>::<span class='ident'>rados_connect</span>(<span class='ident'>cluster</span>);
+    <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Return code: {} - {:?}&quot;</span>, <span class='ident'>ret_code</span>, <span class='ident'>cluster</span>);
+
+    <span class='kw'>let</span> <span class='ident'>pools_list</span> <span class='op'>=</span> <span class='ident'>ceph</span>::<span class='ident'>helpers</span>::<span class='ident'>rados_pools</span>(<span class='ident'>cluster</span>).<span class='ident'>unwrap</span>();
+    <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{:?}&quot;</span>, <span class='ident'>pools_list</span>);
+
+    <span class='ident'>ceph</span>::<span class='ident'>rados_shutdown</span>(<span class='ident'>cluster</span>);
   }
 
   <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;v{}.{}.{}&quot;</span>, <span class='ident'>major</span>, <span class='ident'>minor</span>, <span class='ident'>extra</span>);

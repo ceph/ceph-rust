@@ -57,9 +57,7 @@ fn main() {
     ret_code = ceph::rados_connect(cluster);
     println!("Return code: {} - {:?}", ret_code, cluster);
 
-    //let pool_size: usize = 160;
-    //let mut pools_buf: Vec<u8> = Vec::with_capacity(pool_size);
-    let pools_list = ceph::rados_pools(cluster).unwrap();
+    let pools_list = ceph::helpers::rados_pools(cluster).unwrap();
     println!("{:?}", pools_list);
 
     ceph::rados_shutdown(cluster);
