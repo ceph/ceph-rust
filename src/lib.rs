@@ -40,9 +40,12 @@
        html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
        html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph_rust/index.html")]
 
-//! Ceph-rust is a thin layer over the librados C interface.
+//! Ceph-rust is a thin layer over the librados C interface. A little higher abstraction layer will
+//! be coming next that will encapsulate all of the "C" specific features so that only pure Rust will be needed.
 //!
 //! Only works on Linux
+//! The documentation for librados can be found:
+//! http://docs.ceph.com/docs/master/rados/api/librados/
 //!
 //! By default Ceph names librados as the following for the given platforms:
 //! Hammer release:
@@ -68,6 +71,12 @@
 #![allow(unused_imports)]
 
 extern crate libc;
+
+use std::iter::FromIterator;
+use std::ptr;
+use std::str;
+use std::slice;
+use std::io::Error;
 
 use self::libc::{int64_t, size_t, ssize_t, time_t, timeval, uint8_t, uint32_t, uint64_t};
 
@@ -180,6 +189,56 @@ pub type rados_log_callback_t =
                                         seq: uint64_t,
                                         level: *const ::libc::c_char,
                                         msg: *const ::libc::c_char) -> ()>;
+
+/// Returns back a collection of Rados Pools
+///
+/// pool_buffer should be allocated with:
+/// ```
+/// let pool_buffer: Vec<u8> = Vec::with_capacity(<whatever size>);
+/// ```
+/// buf_size should be the value used with_capacity
+///
+/// Returns Ok(Vec<String>) - A list of Strings of the pool names.
+///
+#[allow(unused_variables)]
+pub fn rados_pools(cluster: rados_t)
+                   -> Result<Vec<String>, Error> {
+  let mut pools: Vec<String> = Vec::new();
+  let pool_slice: &[u8];
+  let buf_size: usize = 500;
+  let mut pool_buffer: Vec<u8> = Vec::with_capacity(buf_size);
+
+  unsafe {
+    // Don't need len but did it anyway
+    let len = rados_pool_list(cluster,
+                              pool_buffer.as_mut_ptr() as *mut i8,
+                              buf_size);
+
+    pool_slice = slice::from_raw_parts(pool_buffer.as_mut_ptr(), buf_size);
+
+    let mut new: bool =  true;
+    let mut new_word_slice: Vec<u8> = Vec::with_capacity(50);
+    let mut s: String;
+
+    for p in pool_slice.chunks(1) {
+      if p[0] == b'\0' {
+        if new {
+          break;
+        }
+        new = true;
+        s = String::from_utf8(new_word_slice.clone()).unwrap();
+        pools.push(s.clone());
+        new_word_slice.clear();
+        continue;
+      }
+
+      new_word_slice.push(p[0]);
+      new = false;
+    }
+  }
+
+  Ok(pools)
+}
 
 #[cfg(target_os = "linux")]
 #[link(name = "rados", kind="dylib")]

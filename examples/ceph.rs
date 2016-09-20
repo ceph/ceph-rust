@@ -16,8 +16,22 @@
 
 extern crate ceph_rust;
 extern crate lsio;
+extern crate libc;
 
+use std::iter::FromIterator;
+use std::ptr;
+use std::str;
+use std::slice;
+use std::ffi::{CStr, CString};
+
+use libc::*;
 use ceph_rust as ceph;
+
+macro_rules! zeroed_c_char_buf {
+	($n:expr) => {
+		repeat(0).take($n).collect::<Vec<c_char>>();
+	}
+}
 
 #[cfg(not(target_os = "linux"))]
 fn main(){}
@@ -28,8 +42,27 @@ fn main() {
   let mut minor: i32 = 0;
   let mut extra: i32 = 0;
 
+  let config_file = CString::new("/etc/ceph/ceph.conf").unwrap();
+  let mut cluster: ceph::rados_t = std::ptr::null_mut();
+  let mut ret_code: i32;
+
   unsafe {
     ceph::rados_version(&mut major, &mut minor, &mut extra);
+    ret_code = ceph::rados_create(&mut cluster, std::ptr::null());
+    println!("Return code: {} - {:?}", ret_code, cluster);
+
+    ret_code = ceph::rados_conf_read_file(cluster, config_file.as_ptr());
+    println!("Return code: {} - {:?}", ret_code, cluster);
+
+    ret_code = ceph::rados_connect(cluster);
+    println!("Return code: {} - {:?}", ret_code, cluster);
+
+    //let pool_size: usize = 160;
+    //let mut pools_buf: Vec<u8> = Vec::with_capacity(pool_size);
+    let pools_list = ceph::rados_pools(cluster).unwrap();
+    println!("{:?}", pools_list);
+
+    ceph::rados_shutdown(cluster);
   }
 
   println!("v{}.{}.{}", major, minor, extra);
