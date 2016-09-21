@@ -1,5 +1,5 @@
 ## Ceph Rust
-Rust-lang interface to Ceph. This library is under heavy development. Contributions welcomed.
+Official Ceph Rust-lang interface. This library is under heavy development. Contributions welcomed.
 
 This library is the core librados Rust interface that is used for larger Ceph related projects by LambdaStack.
 
