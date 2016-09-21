@@ -716,6 +716,10 @@
 <span id="672">672</span>
 <span id="673">673</span>
 <span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
 </pre><pre class='rust '>
 <span class='comment'>// Copyright 2016 LambdaStack All rights reserved.</span>
 <span class='comment'>//</span>
@@ -915,6 +919,9 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_cluster_stat</span>(<span class='ident'>cluster</span>: <span class='ident'>rados_t</span>,
                               <span class='ident'>result</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='ident'>Struct_rados_cluster_stat_t</span>) <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
 
+    <span class='doccomment'>/// The Ceph documentation states that the return value of 0 means success but actually</span>
+    <span class='doccomment'>/// a value &lt; 0 is an error and a value &gt; 0 is the length which should be 36.</span>
+    <span class='doccomment'>///</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_cluster_fsid</span>(<span class='ident'>cluster</span>: <span class='ident'>rados_t</span>, <span class='ident'>buf</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>,
                               <span class='ident'>len</span>: <span class='ident'>size_t</span>) <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
 
@@ -949,6 +956,7 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_pool_reverse_lookup</span>(<span class='ident'>cluster</span>: <span class='ident'>rados_t</span>, <span class='ident'>id</span>: <span class='ident'>int64_t</span>,
                                      <span class='ident'>buf</span>: <span class='op'>*</span><span class='kw-2'>mut</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>, <span class='ident'>maxlen</span>: <span class='ident'>size_t</span>) <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
 
+    <span class='doccomment'>/// Returns -17 if pool already exists.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_pool_create</span>(<span class='ident'>cluster</span>: <span class='ident'>rados_t</span>,
                              <span class='ident'>pool_name</span>: <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>) <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
 

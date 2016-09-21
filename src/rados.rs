@@ -196,6 +196,9 @@ extern "C" {
     pub fn rados_cluster_stat(cluster: rados_t,
                               result: *mut Struct_rados_cluster_stat_t) -> ::libc::c_int;
 
+    /// The Ceph documentation states that the return value of 0 means success but actually
+    /// a value < 0 is an error and a value > 0 is the length which should be 36.
+    ///
     pub fn rados_cluster_fsid(cluster: rados_t, buf: *mut ::libc::c_char,
                               len: size_t) -> ::libc::c_int;
 
@@ -230,6 +233,7 @@ extern "C" {
     pub fn rados_pool_reverse_lookup(cluster: rados_t, id: int64_t,
                                      buf: *mut ::libc::c_char, maxlen: size_t) -> ::libc::c_int;
 
+    /// Returns -17 if pool already exists.
     pub fn rados_pool_create(cluster: rados_t,
                              pool_name: *const ::libc::c_char) -> ::libc::c_int;
 

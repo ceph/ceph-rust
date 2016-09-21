@@ -46,7 +46,7 @@ pub fn rados_pools(cluster: rados_t)
 
     // NOTE: Pushed for time so did this. If anyone knows of a better way then please issue a PR.
     let mut new: bool =  true;
-    let mut new_word_slice: Vec<u8> = Vec::with_capacity(50);
+    let mut new_word_slice: Vec<u8> = Vec::with_capacity(80);  // More than 
     let mut s: String;
 
     for p in pool_slice.chunks(1) {
