@@ -162,7 +162,7 @@
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span> <span class='op'>=</span> <span class='string'>&quot;linux&quot;</span>)]</span>
 <span class='kw'>use</span> <span class='ident'>ceph_rust</span>::<span class='ident'>rados</span> <span class='kw'>as</span> <span class='ident'>ceph</span>;
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span> <span class='op'>=</span> <span class='string'>&quot;linux&quot;</span>)]</span>
-<span class='kw'>use</span> <span class='ident'>ceph_rust</span>::<span class='ident'>helpers</span> <span class='kw'>as</span> <span class='ident'>ceph_helpers</span>;
+<span class='kw'>use</span> <span class='ident'>ceph_rust</span>::<span class='ident'>ceph</span> <span class='kw'>as</span> <span class='ident'>ceph_helpers</span>;
 
 <span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>zeroed_c_char_buf</span> {
 	(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>n</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> {
