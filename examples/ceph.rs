@@ -28,7 +28,7 @@ use libc::*;
 #[cfg(target_os = "linux")]
 use ceph_rust::rados as ceph;
 #[cfg(target_os = "linux")]
-use ceph_rust::helpers as ceph_helpers;
+use ceph_rust::ceph as ceph_helpers;
 
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {
