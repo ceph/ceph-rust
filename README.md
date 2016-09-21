@@ -1,7 +1,8 @@
 ## Ceph Rust
-Official Ceph Rust-lang interface. This library is under heavy development. Contributions welcomed.
+### Official Ceph Rust interface
+Official Ceph Rust-lang interface. Contributions welcomed!
 
-This library is the core librados Rust interface that is used for larger Ceph related projects by LambdaStack.
+This library is the core librados Rust interface that is used for larger Ceph related projects.
 
 ### Ceph
 Create a Ceph development environment or use an existing Ceph environment.
@@ -9,7 +10,7 @@ Create a Ceph development environment or use an existing Ceph environment.
 If creating a Ceph environment then use the following. It will generate a 4 node Virtual Box Ceph system with one
 node being a bootstrap node that controls the other. The remaining 3 nodes are Ceph nodes (Mons, OSDs, RGWs, APIs).
 
-Shameless plug - full disclosure: I created and manage github.com/ceph/ceph-chef (Chef cookbooks for Ceph) and the Bloomberg github.com link below for chef-bcs. Chef-bcs uses ceph-chef. These are the same tools we use at Bloomberg.
+Created and manage github.com/ceph/ceph-chef (Chef cookbooks for Ceph) and the Bloomberg github.com link below for chef-bcs. Chef-bcs uses ceph-chef. These are the same tools used at Bloomberg.
 
 Requirements for Mac OSX:
 1. VirtualBox
@@ -56,8 +57,11 @@ git clone https://github.com/lambdastackio/ceph-rust.git
 
 NOTE: Make sure you have setup your favorite editor. Vim is automatically installed.
 
-### AWS S3 Object Store for
-Crate: aws-sdk-rust at https://github.com/lambdastackio/aws-sdk-rust and
+### AWS S3 Object Store
+Crate (library): aws-sdk-rust at https://github.com/lambdastackio/aws-sdk-rust
+
+### AWS S3 CLI Utility
+Crate (binary): s3lsio at https://github.com/lambdastackio/s3lsio
 
 ------------
 Portions originated from Chris Holcombe at https://github.com/cholcombe973
