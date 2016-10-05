@@ -50,6 +50,11 @@ fn main() {
   let mut cluster: ceph::rados_t = std::ptr::null_mut();
   let mut ret_code: i32;
 
+  // NB: These examples (except for a few) are low level examples that require the unsafe block.
+  // However, work for the higher level pur Rust is being worked on in the ceph.rs module of
+  // the library. A few of those are present below. We will create a common Result or Option
+  // return and allow for pattern matching.
+
   unsafe {
     ceph::rados_version(&mut major, &mut minor, &mut extra);
     ret_code = ceph::rados_create(&mut cluster, std::ptr::null());
