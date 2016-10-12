@@ -311,7 +311,7 @@ extern "C" {
     pub fn rados_ioctx_snap_rollback(io: rados_ioctx_t,
                                      oid: *const ::libc::c_char,
                                      snapname: *const ::libc::c_char) -> ::libc::c_int;
-
+    // Deprecated: Use rados_ioctx_snap_rollback() instead 
     pub fn rados_rollback(io: rados_ioctx_t, oid: *const ::libc::c_char,
                           snapname: *const ::libc::c_char) -> ::libc::c_int;
 

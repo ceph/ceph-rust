@@ -45,6 +45,7 @@
 //! See the /examples/ceph.rs for how to use the library.
 
 extern crate libc;
+extern crate uuid;
 
 pub mod rados;
 pub mod ceph;
