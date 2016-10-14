@@ -44,7 +44,12 @@
 //!
 //! See the /examples/ceph.rs for how to use the library.
 
+#[macro_use]
+extern crate bitflags;
+extern crate byteorder;
 extern crate libc;
+#[macro_use]
+extern crate nom;
 extern crate uuid;
 
 pub mod rados;

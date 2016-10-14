@@ -16,8 +16,10 @@ for development etc. See README.md for details.
 """
 
 [dependencies]
+bitflags = "~0.7"
+byteorder = "~0.5"
 libc = "0.2"
-lsio = "0.1"
+nom = "~1.2"
 uuid = "~0.3"
 
 [[bin]]

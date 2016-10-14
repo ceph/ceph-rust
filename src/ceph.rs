@@ -13,7 +13,9 @@
 // limitations under the License.
 #![cfg(target_os = "linux")]
 
-use libc::{ENOENT, ERANGE, c_int, strerror};
+use byteorder::{LittleEndian, WriteBytesExt};
+use libc::{ENOENT, ERANGE, c_int, strerror, timeval};
+use nom::{IResult, le_u32};
 use rados::*;
 
 use std::error::Error as err;
@@ -21,9 +23,16 @@ use std::ffi::{CString, IntoStringError, NulError};
 use std::io::BufRead;
 use std::io::Cursor;
 use std::io::Error;
+use std::net::IpAddr;
 use std::ptr;
 use std::string::FromUtf8Error;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::{ParseError, Uuid};
+
+const CEPH_OSD_TMAP_HDR: char = 'h';
+const CEPH_OSD_TMAP_SET: char = 's';
+const CEPH_OSD_TMAP_CREATE: char = 'c';
+const CEPH_OSD_TMAP_RM: char = 'r';
 
 /// Custom error handling for the library
 #[derive(Debug)]
@@ -92,12 +101,172 @@ fn get_error(n: c_int) -> Result<String, RadosError> {
     }
 }
 
+named!(parse_header<TmapOperation>,
+    chain!(
+        char!(CEPH_OSD_TMAP_HDR)~
+        data_len: le_u32~
+        data: take!(data_len),
+        ||{
+            let mut data_vec: Vec<u8> = Vec::new();
+            data_vec.extend_from_slice(data);
+            TmapOperation::Header{
+                data: data_vec
+            }
+        }
+    )
+);
+
+named!(parse_create<TmapOperation>,
+    chain!(
+        char!(CEPH_OSD_TMAP_CREATE)~
+        key_name_len: le_u32~
+        key_name: take_str!(key_name_len)~
+        data_len: le_u32~
+        data: take!(data_len),
+        ||{
+            let mut data_vec: Vec<u8> = Vec::new();
+            data_vec.extend_from_slice(data);
+            TmapOperation::Create{
+                name: key_name.to_string(),
+                data: data_vec
+            }
+        }
+    )
+);
+
+named!(parse_set<TmapOperation>,
+    chain!(
+        char!(CEPH_OSD_TMAP_SET)~
+        key_name_len: le_u32~
+        key_name: take_str!(key_name_len)~
+        data_len: le_u32~
+        data: take!(data_len),
+        ||{
+            let mut data_vec: Vec<u8> = Vec::new();
+            data_vec.extend_from_slice(data);
+            TmapOperation::Set{
+                key: key_name.to_string(),
+                data: data_vec
+            }
+        }
+    )
+);
+
+named!(parse_remove<TmapOperation>,
+    chain!(
+        char!(CEPH_OSD_TMAP_RM)~
+        key_name_len: le_u32~
+        key_name: take_str!(key_name_len),
+        ||{
+            TmapOperation::Remove{
+                name: key_name.to_string()
+            }
+        }
+    )
+);
+
+#[derive(Debug)]
+pub enum TmapOperation {
+    Header { data: Vec<u8>, },
+    Set { key: String, data: Vec<u8>, },
+    Create { name: String, data: Vec<u8>, },
+    Remove { name: String, },
+}
+
+impl TmapOperation {
+    fn serialize(&self) -> Result<Vec<u8>, RadosError> {
+        let mut buffer: Vec<u8> = Vec::new();
+        match self {
+            &TmapOperation::Header { ref data } => {
+                buffer.push(CEPH_OSD_TMAP_HDR as u8);
+                try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
+                buffer.extend_from_slice(data);
+            },
+            &TmapOperation::Set { ref key, ref data } => {
+                buffer.push(CEPH_OSD_TMAP_SET as u8);
+                try!(buffer.write_u32::<LittleEndian>(key.len() as u32));
+                buffer.extend(key.as_bytes());
+                try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
+                buffer.extend_from_slice(data);
+            },
+            &TmapOperation::Create { ref name, ref data } => {
+                buffer.push(CEPH_OSD_TMAP_CREATE as u8);
+                try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
+                buffer.extend(name.as_bytes());
+                try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
+                buffer.extend_from_slice(data);
+            },
+            &TmapOperation::Remove { ref name } => {
+                buffer.push(CEPH_OSD_TMAP_RM as u8);
+                try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
+                buffer.extend(name.as_bytes());
+            },
+        }
+        Ok(buffer)
+    }
+
+    fn deserialize(input: &[u8]) -> IResult<&[u8], Vec<TmapOperation>> {
+        many0!(input,
+            alt!(
+                complete!(parse_header)|
+                complete!(parse_create) |
+                complete!(parse_set) |
+                complete!(parse_remove)
+            )
+        )
+    }
+}
+
+/// A helper to create rados read operation
+/// An object read operation stores a number of operations which can be executed atomically.
+#[derive(Debug)]
+pub struct ReadOperation {
+    pub object_name: String,
+    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG | LIBRADOS_OPERATION_BALANCE_READS
+    /// all the other flags are documented in rados.rs
+    pub flags: u32,
+    read_op_handle: rados_read_op_t,
+}
+
+impl Drop for ReadOperation {
+    fn drop(&mut self) {
+        unsafe {
+            rados_release_read_op(self.read_op_handle);
+        }
+    }
+}
+
+/// A helper to create rados write operation
+/// An object write operation stores a number of operations which can be executed atomically.
+#[derive(Debug)]
+pub struct WriteOperation {
+    pub object_name: String,
+    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG | LIBRADOS_OPERATION_ORDER_READS_WRITES
+    /// all the other flags are documented in rados.rs
+    pub flags: u32,
+    pub mtime: i64,
+    write_op_handle: rados_write_op_t,
+}
+
+impl Drop for WriteOperation {
+    fn drop(&mut self) {
+        unsafe {
+            rados_release_write_op(self.write_op_handle);
+        }
+    }
+}
+
+/// A rados object extended attribute with name and value.
+/// Can be iterated over
+#[derive(Debug)]
 pub struct XAttr {
     pub name: String,
     pub value: String,
     iter: rados_xattrs_iter_t,
 }
 
+/// The version of the librados library.
+#[derive(Debug)]
 pub struct RadosVersion {
     pub major: i32,
     pub minor: i32,
@@ -252,9 +421,6 @@ pub fn rados_pool_required_alignment(ctx: rados_ioctx_t) -> Result<u64, RadosErr
     }
     unsafe {
         let ret_code = rados_ioctx_pool_required_alignment(ctx);
-        if ret_code < 0 {
-            return Err(RadosError::new(try!(get_error(ret_code))));
-        }
         return Ok(ret_code);
     }
 }
@@ -293,6 +459,7 @@ pub fn rados_get_pool_name(ctx: rados_ioctx_t) -> Result<String, RadosError> {
         } else if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         } else {
+            buffer.set_len(ret_code as usize);
             return Ok(String::from_utf8_lossy(&buffer).into_owned());
         }
     }
@@ -330,7 +497,7 @@ pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
-    let rados_list_ctx: rados_list_ctx_t = ptr::null_mut();
+    let mut rados_list_ctx: rados_list_ctx_t = ptr::null_mut();
     unsafe {
         let ret_code = rados_nobjects_list_open(ctx, &mut rados_list_ctx);
         if ret_code < 0 {
@@ -549,8 +716,7 @@ pub fn rados_get_object_last_version(ctx: rados_ioctx_t) -> Result<u64, RadosErr
 
 /// Write len bytes from buf into the oid object, starting at offset off.
 /// The value of len must be <= UINT_MAX/2.
-pub fn rados_object_write(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8], offset: u64)
-                          -> Result<i32, RadosError> {
+pub fn rados_object_write(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8], offset: u64) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -561,14 +727,13 @@ pub fn rados_object_write(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8], 
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
-        // return bytes written
-        Ok(ret_code)
     }
+    Ok(())
 }
 
 /// The object is filled with the provided data. If the object exists, it is atomically
 /// truncated and then written.
-pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8]) -> Result<i32, RadosError> {
+pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8]) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -579,9 +744,8 @@ pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
-        // return bytes written
-        Ok(ret_code)
     }
+    Ok(())
 }
 
 /// Efficiently copy a portion of one object to another
@@ -615,7 +779,7 @@ pub fn rados_object_append(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8])
     let obj_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_append(ctx, object_name.as_ptr() as *const i8, buffer.as_ptr() as *const i8, buffer.len());
+        let ret_code = rados_append(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -704,7 +868,7 @@ pub fn rados_object_getxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
 }
 
 /// Set an extended attribute on an object.
-pub fn rados_object_setxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &str, attr_value: &[u8])
+pub fn rados_object_setxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &str, attr_value: &mut [u8])
                              -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -744,7 +908,7 @@ pub fn rados_object_rmxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &s
 
 impl XAttr {
     /// Creates a new XAttr.  Call rados_getxattrs to create the iterator for this struct
-    fn new(iter: rados_xattrs_iter_t) -> XAttr {
+    pub fn new(iter: rados_xattrs_iter_t) -> XAttr {
         XAttr {
             name: String::new(),
             value: String::new(),
@@ -774,6 +938,7 @@ impl Iterator for XAttr {
             }
             // end of iterator reached
             else if val_length == 0 {
+                rados_getxattrs_end(self.iter);
                 None
             } else {
                 Some(XAttr {
@@ -788,166 +953,420 @@ impl Iterator for XAttr {
 
 /// Get the rados_xattrs_iter_t reference to iterate over xattrs on an object
 /// Used in conjuction with XAttr::new() to iterate.
-pub fn rados_get_xattr_iterator(ctx: rados_ioctx_t, oid: &str) -> Result<rados_xattrs_iter_t, RadosError> {
+pub fn rados_get_xattr_iterator(ctx: rados_ioctx_t, object_name: &str) -> Result<rados_xattrs_iter_t, RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let mut xattr_iterator_handle: rados_xattrs_iter_t = ptr::null_mut();
 
     unsafe {
+        let ret_code = rados_getxattrs(ctx, object_name_str.as_ptr(), &mut xattr_iterator_handle);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
+    }
+    Ok(xattr_iterator_handle)
+}
+
+/// Get object stats (size,SystemTime)
+pub fn rados_object_stat(ctx: rados_ioctx_t, object_name: &str) -> Result<(u64, SystemTime), RadosError> {
+    if ctx.is_null() {
+        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+    }
+    let object_name_str = try!(CString::new(object_name));
+    let mut psize: u64 = 0;
+    let mut time: i64 = 0;
+
+    unsafe {
+        let ret_code = rados_stat(ctx, object_name_str.as_ptr(), &mut psize, &mut time);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
+    }
+    Ok((psize, (UNIX_EPOCH + Duration::from_secs(time as u64))))
+}
+
+/// Update tmap (trivial map)
+pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str, update: TmapOperation)
+                                -> Result<(), RadosError> {
+    if ctx.is_null() {
+        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+    }
+    let object_name_str = try!(CString::new(object_name));
+    let buffer = try!(update.serialize());
+    unsafe {
+        let ret_code = rados_tmap_update(ctx, object_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len());
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
+    }
+    Ok(())
+}
+
+// pub fn rados_object_tmap_put(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+
+/// Fetch complete tmap (trivial map) object
+pub fn rados_object_tmap_get(ctx: rados_ioctx_t, object_name: &str) -> Result<Vec<TmapOperation>, RadosError> {
+    if ctx.is_null() {
+        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+    }
+    let object_name_str = try!(CString::new(object_name));
+    let mut buffer: Vec<u8> = Vec::with_capacity(500);
+
+    unsafe {
+        let ret_code = rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+        if ret_code == -ERANGE {
+            buffer.reserve(1000);
+            buffer.set_len(1000);
+            let ret_code =
+                rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+            if ret_code < 0 {
+                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+            }
+        } else if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
+    }
+    match TmapOperation::deserialize(&buffer) {
+        IResult::Done(_, tmap) => Ok(tmap),
+        IResult::Incomplete(needed) => {
+            Err(RadosError::new(format!("deserialize of ceph tmap failed.
+            Input from Ceph was too small.  Needed: {:?} more bytes", needed)))
+        },
+        IResult::Error(e) => Err(RadosError::new(e.to_string())),
     }
 }
-pub fn rados_object_stat(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+
+/// Execute an OSD class method on an object
+/// The OSD has a plugin mechanism for performing complicated operations on an object atomically.
+/// These plugins are called classes. This function allows librados users to call the custom
+/// methods. The input and output formats are defined by the class. Classes in ceph.git can
+/// be found in src/cls subdirectories
+pub fn rados_object_exec(ctx: rados_ioctx_t, object_name: &str, class_name: &str, method_name: &str,
+                         input_buffer: &[u8], output_buffer: &mut [u8])
+                         -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let class_name_str = try!(CString::new(class_name));
+    let method_name_str = try!(CString::new(method_name));
 
     unsafe {
+        let ret_code = rados_exec(ctx,
+                                  object_name_str.as_ptr(),
+                                  class_name_str.as_ptr(),
+                                  method_name_str.as_ptr(),
+                                  input_buffer.as_ptr() as *const i8,
+                                  input_buffer.len(),
+                                  output_buffer.as_mut_ptr() as *mut i8,
+                                  output_buffer.len());
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// pub fn rados_object_watch(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+// pub fn rados_object_watch2(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+// pub fn rados_object_watch_check(ctx: rados_ioctx_t, cookie: u64) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+// pub fn rados_object_unwatch(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+// pub fn rados_object_unwatch2(ctx: rados_ioctx_t, cookie: u64) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+//
+/// Sychronously notify watchers of an object
+/// This blocks until all watchers of the object have received and reacted to the notify, or a timeout is reached.
+pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str, data: &[u8]) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
 
     unsafe {
+        let ret_code = rados_notify(ctx, object_name_str.as_ptr(), 0, data.as_ptr() as *const i8, data.len() as i32);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_tmap_put(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// pub fn rados_object_notify2(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+//
+// unsafe {
+// }
+// }
+//
+/// Acknolwedge receipt of a notify
+pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id: u64, cookie: u64,
+                               buffer: Option<&[u8]>)
+                               -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
 
-    unsafe {
+    match buffer {
+        Some(buf) => unsafe {
+            let ret_code = rados_notify_ack(ctx,
+                                            object_name_str.as_ptr(),
+                                            notify_id,
+                                            cookie,
+                                            buf.as_ptr() as *const i8,
+                                            buf.len() as i32);
+            if ret_code < 0 {
+                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+            }
+        },
+        None => unsafe {
+            let ret_code = rados_notify_ack(ctx, object_name_str.as_ptr(), notify_id, cookie, ptr::null(), 0);
+            if ret_code < 0 {
+                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+            }
+
+        },
     }
+    Ok(())
 }
-pub fn rados_object_tmap_get(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+/// Set allocation hint for an object
+/// This is an advisory operation, it will always succeed (as if it was submitted with a
+/// LIBRADOS_OP_FLAG_FAILOK flag set) and is not guaranteed to do anything on the backend.
+pub fn rados_object_set_alloc_hint(ctx: rados_ioctx_t, object_name: &str, expected_object_size: u64,
+                                   expected_write_size: u64)
+                                   -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
 
     unsafe {
+        let ret_code = rados_set_alloc_hint(ctx, object_name_str.as_ptr(), expected_object_size, expected_write_size);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_exec(ctx: rados_ioctx_t, oid: &str) -> Result<(), RadosError> {
+
+// Perform a compound read operation synchronously
+pub fn rados_perform_read_operations(read_op: ReadOperation, ctx: rados_ioctx_t) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(read_op.object_name.clone()));
 
     unsafe {
+        let ret_code =
+            rados_read_op_operate(read_op.read_op_handle, ctx, object_name_str.as_ptr(), read_op.flags as i32);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_watch(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+
+// Perform a compound write operation synchronously
+pub fn rados_commit_write_operations(write_op: &mut WriteOperation, ctx: rados_ioctx_t) -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(write_op.object_name.clone()));
 
     unsafe {
+        let ret_code = rados_write_op_operate(write_op.write_op_handle,
+                                              ctx,
+                                              object_name_str.as_ptr(),
+                                              &mut write_op.mtime,
+                                              write_op.flags as i32);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_watch2(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+
+/// Take an exclusive lock on an object.
+pub fn rados_object_lock_exclusive(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str,
+                                   description: &str, duration_time: &mut timeval, lock_flags: u8)
+                                   -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let lock_name_str = try!(CString::new(lock_name));
+    let cookie_name_str = try!(CString::new(cookie_name));
+    let description_str = try!(CString::new(description));
 
     unsafe {
+        let ret_code = rados_lock_exclusive(ctx,
+                                            object_name_str.as_ptr(),
+                                            lock_name_str.as_ptr(),
+                                            cookie_name_str.as_ptr(),
+                                            description_str.as_ptr(),
+                                            duration_time,
+                                            lock_flags);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_watch_check(ctx: rados_ioctx_t, cookie: u64) -> Result<(), RadosError> {
+
+/// Take a shared lock on an object.
+pub fn rados_object_lock_shared(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str,
+                                description: &str, tag_name: &str, duration_time: &mut timeval, lock_flags: u8)
+                                -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let lock_name_str = try!(CString::new(lock_name));
+    let cookie_name_str = try!(CString::new(cookie_name));
+    let description_str = try!(CString::new(description));
+    let tag_name_str = try!(CString::new(tag_name));
 
     unsafe {
+        let ret_code = rados_lock_shared(ctx,
+                                         object_name_str.as_ptr(),
+                                         lock_name_str.as_ptr(),
+                                         cookie_name_str.as_ptr(),
+                                         tag_name_str.as_ptr(),
+                                         description_str.as_ptr(),
+                                         duration_time,
+                                         lock_flags);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_unwatch(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
+
+/// Release a shared or exclusive lock on an object.
+pub fn rados_object_unlock(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str)
+                           -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let lock_name_str = try!(CString::new(lock_name));
+    let cookie_name_str = try!(CString::new(cookie_name));
 
     unsafe {
+        let ret_code = rados_unlock(ctx, object_name_str.as_ptr(), lock_name_str.as_ptr(), cookie_name_str.as_ptr());
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_unwatch2(ctx: rados_ioctx_t, cookie: u64) -> Result<(), RadosError> {
+
+/// List clients that have locked the named object lock and information about the lock.
+/// The number of bytes required in each buffer is put in the corresponding size out parameter.
+/// If any of the provided buffers are too short, -ERANGE is returned after these sizes are filled in.
+// pub fn rados_object_list_lockers(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, exclusive: u8, ) ->
+// Result<isize, RadosError> {
+// if ctx.is_null() {
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// }
+// let object_name_str = try!(CString::new(object_name));
+//
+// unsafe {
+// let ret_code = rados_list_lockers(ctx,
+// o: *const ::libc::c_char,
+// name: *const ::libc::c_char,
+// exclusive: *mut ::libc::c_int,
+// tag: *mut ::libc::c_char,
+// tag_len: *mut size_t,
+// clients: *mut ::libc::c_char,
+// clients_len: *mut size_t,
+// cookies: *mut ::libc::c_char,
+// cookies_len: *mut size_t,
+// addrs: *mut ::libc::c_char,
+// addrs_len: *mut size_t);
+// }
+// }
+/// Releases a shared or exclusive lock on an object, which was taken by the specified client.
+pub fn rados_object_break_lock(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, client_name: &str,
+                               cookie_name: &str)
+                               -> Result<(), RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
+    let object_name_str = try!(CString::new(object_name));
+    let lock_name_str = try!(CString::new(lock_name));
+    let cookie_name_str = try!(CString::new(cookie_name));
+    let client_name_str = try!(CString::new(client_name));
 
     unsafe {
+        let ret_code = rados_break_lock(ctx,
+                                        object_name_str.as_ptr(),
+                                        lock_name_str.as_ptr(),
+                                        client_name_str.as_ptr(),
+                                        cookie_name_str.as_ptr());
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
+    Ok(())
 }
-pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
 
+pub fn rados_blacklist_client(cluster: rados_t, client: IpAddr, expire_seconds: u32) -> Result<(), RadosError> {
+    if cluster.is_null() {
+        return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
+    }
+    let client_address = try!(CString::new(client.to_string()));
     unsafe {
-    }
-}
-pub fn rados_object_notify2(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
+        let ret_code = rados_blacklist_add(cluster, client_address.as_ptr() as *mut i8, expire_seconds);
 
-    unsafe {
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code as i32))));
+        }
     }
-}
-pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_set_alloc_hint(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_read_op_operate(read_op: rados_read_op_t, ctx: rados_ioctx_t) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_lock_exclusive(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_lock_shared(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {}
-pub fn rados_object_unlock(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_list_lockers(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
-}
-pub fn rados_object_break_lock(ctx: rados_ioctx_t, object_name: &str) -> Result<(), RadosError> {
-    if ctx.is_null() {
-        return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
-    }
-
-    unsafe {
-    }
+    Ok(())
 }
 
 

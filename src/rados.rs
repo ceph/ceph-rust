@@ -42,28 +42,61 @@ extern crate libc;
 
 use self::libc::{int64_t, size_t, ssize_t, time_t, timeval, uint32_t, uint64_t, uint8_t};
 
-pub const LIBRADOS_OP_FLAG_EXCL: ::libc::c_uint = 1;
-pub const LIBRADOS_OP_FLAG_FAILOK: ::libc::c_uint = 2;
-pub const LIBRADOS_OP_FLAG_FADVISE_RANDOM: ::libc::c_uint = 4;
-pub const LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL: ::libc::c_uint = 8;
-pub const LIBRADOS_OP_FLAG_FADVISE_WILLNEED: ::libc::c_uint = 16;
-pub const LIBRADOS_OP_FLAG_FADVISE_DONTNEED: ::libc::c_uint = 32;
-pub const LIBRADOS_OP_FLAG_FADVISE_NOCACHE: ::libc::c_uint = 64;
+bitflags! {
+    pub flags AllocFlags: u32 {
+        const LIBRADOS_OP_FLAG_EXCL = 1,
+        const LIBRADOS_OP_FLAG_FAILOK = 2,
+        const LIBRADOS_OP_FLAG_FADVISE_RANDOM = 4,
+        const LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL = 8,
+        const LIBRADOS_OP_FLAG_FADVISE_WILLNEED = 16,
+        const LIBRADOS_OP_FLAG_FADVISE_DONTNEED = 32,
+        const LIBRADOS_OP_FLAG_FADVISE_NOCACHE = 64,
+    }
+}
+impl AllocFlags {
+    pub fn clear(&mut self) {
+        self.bits = 0;  // The `bits` field can be accessed from within the
+                        // same module where the `bitflags!` macro was invoked.
+    }
+}
 
-pub const LIBRADOS_CMPXATTR_OP_EQ: ::libc::c_uint = 1;
-pub const LIBRADOS_CMPXATTR_OP_NE: ::libc::c_uint = 2;
-pub const LIBRADOS_CMPXATTR_OP_GT: ::libc::c_uint = 3;
-pub const LIBRADOS_CMPXATTR_OP_GTE: ::libc::c_uint = 4;
-pub const LIBRADOS_CMPXATTR_OP_LT: ::libc::c_uint = 5;
-pub const LIBRADOS_CMPXATTR_OP_LTE: ::libc::c_uint = 6;
+bitflags! {
+    pub flags XattrFlags: u32 {
+        const LIBRADOS_CMPXATTR_OP_EQ = 1,
+        const LIBRADOS_CMPXATTR_OP_NE = 2,
+        const LIBRADOS_CMPXATTR_OP_GT = 3,
+        const LIBRADOS_CMPXATTR_OP_GTE = 4,
+        const LIBRADOS_CMPXATTR_OP_LT = 5,
+        const LIBRADOS_CMPXATTR_OP_LTE = 6,
+    }
+}
+impl XattrFlags {
+    pub fn clear(&mut self) {
+        self.bits = 0;  // The `bits` field can be accessed from within the
+                        // same module where the `bitflags!` macro was invoked.
+    }
+}
 
-pub const LIBRADOS_OPERATION_NOFLAG: ::libc::c_uint = 0;
-pub const LIBRADOS_OPERATION_BALANCE_READS: ::libc::c_uint = 1;
-pub const LIBRADOS_OPERATION_LOCALIZE_READS: ::libc::c_uint = 2;
-pub const LIBRADOS_OPERATION_ORDER_READS_WRITES: ::libc::c_uint = 4;
-pub const LIBRADOS_OPERATION_IGNORE_CACHE: ::libc::c_uint = 8;
-pub const LIBRADOS_OPERATION_SKIPRWLOCKS: ::libc::c_uint = 16;
-pub const LIBRADOS_OPERATION_IGNORE_OVERLAY: ::libc::c_uint = 32;
+// Flags for rados_read_op_operate(), rados_write_op_operate(), rados_aio_read_op_operate(),
+// and rados_aio_write_op_operate()
+bitflags! {
+    pub flags OperationFlags: u32 {
+        const LIBRADOS_OPERATION_NOFLAG= 0,
+        const LIBRADOS_OPERATION_BALANCE_READS= 1,
+        const LIBRADOS_OPERATION_LOCALIZE_READS= 2,
+        const LIBRADOS_OPERATION_ORDER_READS_WRITES= 4,
+        const LIBRADOS_OPERATION_IGNORE_CACHE= 8,
+        const LIBRADOS_OPERATION_SKIPRWLOCKS= 16,
+        const LIBRADOS_OPERATION_IGNORE_OVERLAY= 32,
+    }
+}
+
+impl OperationFlags {
+    pub fn clear(&mut self) {
+        self.bits = 0;  // The `bits` field can be accessed from within the
+                        // same module where the `bitflags!` macro was invoked.
+    }
+}
 
 pub type rados_t = *mut ::libc::c_void;
 pub type rados_config_t = *mut ::libc::c_void;
@@ -74,7 +107,7 @@ pub type rados_xattrs_iter_t = *mut ::libc::c_void;
 pub type rados_omap_iter_t = *mut ::libc::c_void;
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 pub struct Struct_rados_pool_stat_t {
     pub num_bytes: uint64_t,
     pub num_kb: uint64_t,
@@ -103,7 +136,7 @@ impl ::std::default::Default for Struct_rados_pool_stat_t {
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy,Debug)]
 pub struct Struct_rados_cluster_stat_t {
     pub kb: uint64_t,
     pub kb_used: uint64_t,
