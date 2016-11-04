@@ -1,7 +1,7 @@
 [package]
 name = "ceph-rust"
-version = "0.1.9"
-authors = ["Chris Jones <chris.jones@lambdastack.io>"]
+version = "0.1.10"
+authors = ["Chris Jones <chris.jones@lambdastack.io>", "Chris Holcombe"]
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["ceph", "storage"]
