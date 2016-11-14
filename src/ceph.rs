@@ -278,11 +278,19 @@ impl Iterator for Pool {
                 None
             } else {
                 let object_name = CStr::from_ptr(entry_ptr as *const ::libc::c_char);
+                let mut object_locator = String::new();
+                let mut namespace = String::new();
+                if !key_ptr.is_null() {
+                    object_locator.push_str(&CStr::from_ptr(key_ptr as *const ::libc::c_char).to_string_lossy());
+                }
+                if !nspace_ptr.is_null() {
+                    namespace.push_str(&CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy());
+                }
 
                 return Some(CephObject {
                     name: object_name.to_string_lossy().into_owned(),
-                    entry_locator: String::new(),
-                    namespace: String::new(),
+                    entry_locator: object_locator,
+                    namespace: namespace,
                 });
             }
         }
