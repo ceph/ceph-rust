@@ -14,7 +14,7 @@
 #![cfg(target_os = "linux")]
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use libc::{ENOENT, ERANGE, c_int, strerror, timeval};
+use libc::{ENOENT, ERANGE, c_int, strerror, strlen, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
 
@@ -47,7 +47,7 @@ pub enum RadosError {
 
 impl RadosError {
     /// Create a new RadosError with a String message
-    fn new(err: String) -> RadosError {
+    pub fn new(err: String) -> RadosError {
         RadosError::Error(err)
     }
 
@@ -214,6 +214,39 @@ impl TmapOperation {
                 complete!(parse_remove)
             )
         )
+    }
+}
+
+/// Helper to iterate over pool objects
+#[derive(Debug)]
+pub struct Pool {
+    pub ctx: rados_list_ctx_t,
+}
+
+impl Iterator for Pool {
+    type Item = String;
+    fn next(&mut self) -> Option<String> {
+        let mut entry_buffer: Vec<u8> = Vec::with_capacity(1024);
+        let entry_ptr: *const ::libc::c_char = ptr::null();
+        let nspace_ptr: *const ::libc::c_char = ptr::null();
+
+        unsafe {
+            let ret_code = rados_nobjects_list_next(self.ctx,
+                                                    entry_buffer.as_ptr() as *mut *const ::libc::c_char,
+                                                    entry_ptr as *mut *const i8,
+                                                    nspace_ptr as *mut *const i8);
+            let buffer_len = strlen(entry_buffer.as_ptr() as *const i8);
+            if ret_code == -ENOENT {
+                // We're done
+                None
+            } else if ret_code < 0 {
+                // Unknown error
+                None
+            } else {
+                entry_buffer.set_len(buffer_len);
+                return Some(String::from_utf8_lossy(&entry_buffer).into_owned());
+            }
+        }
     }
 }
 
@@ -493,7 +526,7 @@ pub fn rados_set_namespace(ctx: rados_ioctx_t, namespace: &str) -> Result<(), Ra
 }
 
 /// Start listing objects in a pool
-pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<(), RadosError> {
+pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<rados_list_ctx_t, RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -504,7 +537,7 @@ pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<(), RadosError> {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
     }
-    Ok(())
+    Ok(rados_list_ctx)
 }
 
 /// Create a pool-wide snapshot
