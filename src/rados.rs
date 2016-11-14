@@ -305,7 +305,7 @@ extern "C" {
 
     pub fn rados_nobjects_list_seek(ctx: rados_list_ctx_t, pos: uint32_t) -> uint32_t;
 
-    pub fn rados_nobjects_list_next(ctx: rados_list_ctx_t, entry: *mut *const ::libc::c_char,
+    pub fn rados_nobjects_list_next(ctx: rados_list_ctx_t, entry: *mut *mut *const ::libc::c_char,
                                     key: *mut *const ::libc::c_char, nspace: *mut *const ::libc::c_char)
                                     -> ::libc::c_int;
 

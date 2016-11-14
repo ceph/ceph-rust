@@ -19,7 +19,7 @@ use nom::{IResult, le_u32};
 use rados::*;
 
 use std::error::Error as StdError;
-use std::ffi::{CString, IntoStringError, NulError};
+use std::ffi::{CStr, CString, IntoStringError, NulError};
 use std::fmt;
 use std::io::BufRead;
 use std::io::Cursor;
@@ -256,16 +256,15 @@ pub struct Pool {
 impl Iterator for Pool {
     type Item = String;
     fn next(&mut self) -> Option<String> {
-        let mut entry_buffer: Vec<u8> = Vec::with_capacity(1024);
+        let mut entry_ptr: *mut *const ::libc::c_char = ptr::null_mut();
         let key_ptr: *const ::libc::c_char = ptr::null();
         let nspace_ptr: *const ::libc::c_char = ptr::null();
 
         unsafe {
             let ret_code = rados_nobjects_list_next(self.ctx,
-                                                    entry_buffer.as_ptr() as *mut *const ::libc::c_char,
+                                                    &mut entry_ptr,
                                                     key_ptr as *mut *const i8,
                                                     nspace_ptr as *mut *const i8);
-            let buffer_len = strlen(entry_buffer.as_ptr() as *const ::libc::c_char);
             if ret_code == -ENOENT {
                 // We're done
                 rados_nobjects_list_close(self.ctx);
@@ -274,9 +273,10 @@ impl Iterator for Pool {
                 // Unknown error
                 None
             } else {
+                let buffer_len = strlen(entry_ptr as *const ::libc::c_char);
                 println!("buffer_len: {}", buffer_len);
-                entry_buffer.set_len(buffer_len);
-                return Some(String::from_utf8_lossy(&entry_buffer).into_owned());
+                let object_name = CStr::from_ptr(entry_ptr as *const ::libc::c_char);
+                return Some(object_name.to_string_lossy().into_owned());
             }
         }
     }
