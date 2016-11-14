@@ -273,8 +273,6 @@ impl Iterator for Pool {
                 // Unknown error
                 None
             } else {
-                let buffer_len = strlen(entry_ptr as *const ::libc::c_char);
-                println!("buffer_len: {}", buffer_len);
                 let object_name = CStr::from_ptr(entry_ptr as *const ::libc::c_char);
                 return Some(object_name.to_string_lossy().into_owned());
             }
