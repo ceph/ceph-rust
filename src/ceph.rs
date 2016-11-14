@@ -14,7 +14,7 @@
 #![cfg(target_os = "linux")]
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use libc::{ENOENT, ERANGE, c_int, strerror, strlen, timeval};
+use libc::{ENOENT, ERANGE, c_int, strerror, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
 
@@ -253,18 +253,22 @@ pub struct Pool {
     pub ctx: rados_list_ctx_t,
 }
 
+#[derive(Debug)]
+pub struct CephObject {
+    pub name: String,
+    pub entry_locator: String,
+    pub namespace: String,
+}
+
 impl Iterator for Pool {
-    type Item = String;
-    fn next(&mut self) -> Option<String> {
+    type Item = CephObject;
+    fn next(&mut self) -> Option<CephObject> {
         let mut entry_ptr: *mut *const ::libc::c_char = ptr::null_mut();
-        let key_ptr: *const ::libc::c_char = ptr::null();
-        let nspace_ptr: *const ::libc::c_char = ptr::null();
+        let mut key_ptr: *mut *const ::libc::c_char = ptr::null_mut();
+        let mut nspace_ptr: *mut *const ::libc::c_char = ptr::null_mut();
 
         unsafe {
-            let ret_code = rados_nobjects_list_next(self.ctx,
-                                                    &mut entry_ptr,
-                                                    key_ptr as *mut *const i8,
-                                                    nspace_ptr as *mut *const i8);
+            let ret_code = rados_nobjects_list_next(self.ctx, &mut entry_ptr, &mut key_ptr, &mut nspace_ptr);
             if ret_code == -ENOENT {
                 // We're done
                 rados_nobjects_list_close(self.ctx);
@@ -274,7 +278,12 @@ impl Iterator for Pool {
                 None
             } else {
                 let object_name = CStr::from_ptr(entry_ptr as *const ::libc::c_char);
-                return Some(object_name.to_string_lossy().into_owned());
+
+                return Some(CephObject {
+                    name: object_name.to_string_lossy().into_owned(),
+                    entry_locator: String::new(),
+                    namespace: String::new(),
+                });
             }
         }
     }
