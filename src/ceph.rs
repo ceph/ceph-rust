@@ -18,8 +18,9 @@ use libc::{ENOENT, ERANGE, c_int, strerror, strlen, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
 
-use std::error::Error as err;
+use std::error::Error as StdError;
 use std::ffi::{CString, IntoStringError, NulError};
+use std::fmt;
 use std::io::BufRead;
 use std::io::Cursor;
 use std::io::Error;
@@ -43,6 +44,35 @@ pub enum RadosError {
     IoError(Error),
     IntoStringError(IntoStringError),
     ParseError(ParseError),
+}
+
+impl fmt::Display for RadosError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
+impl StdError for RadosError {
+    fn description(&self) -> &str {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.description(),
+            RadosError::NulError(ref e) => e.description(),
+            RadosError::Error(ref e) => &e,
+            RadosError::IoError(ref e) => e.description(),
+            RadosError::IntoStringError(ref e) => e.description(),
+            RadosError::ParseError(ref e) => e.description(),
+        }
+    }
+    fn cause(&self) -> Option<&StdError> {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.cause(),
+            RadosError::NulError(ref e) => e.cause(),
+            RadosError::Error(_) => None,
+            RadosError::IoError(ref e) => e.cause(),
+            RadosError::IntoStringError(ref e) => e.cause(),
+            RadosError::ParseError(ref e) => e.cause(),
+        }
+    }
 }
 
 impl RadosError {
@@ -227,22 +257,24 @@ impl Iterator for Pool {
     type Item = String;
     fn next(&mut self) -> Option<String> {
         let mut entry_buffer: Vec<u8> = Vec::with_capacity(1024);
-        let entry_ptr: *const ::libc::c_char = ptr::null();
+        let key_ptr: *const ::libc::c_char = ptr::null();
         let nspace_ptr: *const ::libc::c_char = ptr::null();
 
         unsafe {
             let ret_code = rados_nobjects_list_next(self.ctx,
                                                     entry_buffer.as_ptr() as *mut *const ::libc::c_char,
-                                                    entry_ptr as *mut *const i8,
+                                                    key_ptr as *mut *const i8,
                                                     nspace_ptr as *mut *const i8);
-            let buffer_len = strlen(entry_buffer.as_ptr() as *const i8);
+            let buffer_len = strlen(entry_buffer.as_ptr() as *const ::libc::c_char);
             if ret_code == -ENOENT {
                 // We're done
+                rados_nobjects_list_close(self.ctx);
                 None
             } else if ret_code < 0 {
                 // Unknown error
                 None
             } else {
+                println!("buffer_len: {}", buffer_len);
                 entry_buffer.set_len(buffer_len);
                 return Some(String::from_utf8_lossy(&entry_buffer).into_owned());
             }
