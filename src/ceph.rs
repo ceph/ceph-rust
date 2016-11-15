@@ -18,8 +18,9 @@ use libc::{ENOENT, ERANGE, c_int, strerror, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
 
-use std::error::Error as err;
-use std::ffi::{CString, IntoStringError, NulError};
+use std::error::Error as StdError;
+use std::ffi::{CStr, CString, IntoStringError, NulError};
+use std::fmt;
 use std::io::BufRead;
 use std::io::Cursor;
 use std::io::Error;
@@ -45,9 +46,38 @@ pub enum RadosError {
     ParseError(ParseError),
 }
 
+impl fmt::Display for RadosError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
+impl StdError for RadosError {
+    fn description(&self) -> &str {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.description(),
+            RadosError::NulError(ref e) => e.description(),
+            RadosError::Error(ref e) => &e,
+            RadosError::IoError(ref e) => e.description(),
+            RadosError::IntoStringError(ref e) => e.description(),
+            RadosError::ParseError(ref e) => e.description(),
+        }
+    }
+    fn cause(&self) -> Option<&StdError> {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.cause(),
+            RadosError::NulError(ref e) => e.cause(),
+            RadosError::Error(_) => None,
+            RadosError::IoError(ref e) => e.cause(),
+            RadosError::IntoStringError(ref e) => e.cause(),
+            RadosError::ParseError(ref e) => e.cause(),
+        }
+    }
+}
+
 impl RadosError {
     /// Create a new RadosError with a String message
-    fn new(err: String) -> RadosError {
+    pub fn new(err: String) -> RadosError {
         RadosError::Error(err)
     }
 
@@ -214,6 +244,56 @@ impl TmapOperation {
                 complete!(parse_remove)
             )
         )
+    }
+}
+
+/// Helper to iterate over pool objects
+#[derive(Debug)]
+pub struct Pool {
+    pub ctx: rados_list_ctx_t,
+}
+
+#[derive(Debug)]
+pub struct CephObject {
+    pub name: String,
+    pub entry_locator: String,
+    pub namespace: String,
+}
+
+impl Iterator for Pool {
+    type Item = CephObject;
+    fn next(&mut self) -> Option<CephObject> {
+        let mut entry_ptr: *mut *const ::libc::c_char = ptr::null_mut();
+        let mut key_ptr: *mut *const ::libc::c_char = ptr::null_mut();
+        let mut nspace_ptr: *mut *const ::libc::c_char = ptr::null_mut();
+
+        unsafe {
+            let ret_code = rados_nobjects_list_next(self.ctx, &mut entry_ptr, &mut key_ptr, &mut nspace_ptr);
+            if ret_code == -ENOENT {
+                // We're done
+                rados_nobjects_list_close(self.ctx);
+                None
+            } else if ret_code < 0 {
+                // Unknown error
+                None
+            } else {
+                let object_name = CStr::from_ptr(entry_ptr as *const ::libc::c_char);
+                let mut object_locator = String::new();
+                let mut namespace = String::new();
+                if !key_ptr.is_null() {
+                    object_locator.push_str(&CStr::from_ptr(key_ptr as *const ::libc::c_char).to_string_lossy());
+                }
+                if !nspace_ptr.is_null() {
+                    namespace.push_str(&CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy());
+                }
+
+                return Some(CephObject {
+                    name: object_name.to_string_lossy().into_owned(),
+                    entry_locator: object_locator,
+                    namespace: namespace,
+                });
+            }
+        }
     }
 }
 
@@ -493,7 +573,7 @@ pub fn rados_set_namespace(ctx: rados_ioctx_t, namespace: &str) -> Result<(), Ra
 }
 
 /// Start listing objects in a pool
-pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<(), RadosError> {
+pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<rados_list_ctx_t, RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -504,7 +584,7 @@ pub fn rados_list_pool_objects(ctx: rados_ioctx_t) -> Result<(), RadosError> {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
     }
-    Ok(())
+    Ok(rados_list_ctx)
 }
 
 /// Create a pool-wide snapshot
