@@ -820,7 +820,8 @@ pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[
     let obj_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_write_full(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len());
+        let ret_code =
+            rados_write_full(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const ::libc::c_char, buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -870,19 +871,21 @@ pub fn rados_object_append(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8])
 /// Read data from an object.  This fills the slice given and returns the amount of bytes read
 /// The io context determines the snapshot to read from, if any was set by
 /// rados_ioctx_snap_set_read().
-pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mut [u8], read_offset: u64)
+/// Default read size is 64K unless you call Vec::with_capacity(1024*128) with a larger size.
+pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mut Vec<u8>, read_offset: u64)
                          -> Result<i32, RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
     let object_name_str = try!(CString::new(object_name));
+    let mut len = fill_buffer.capacity();
+    if len == 0 {
+        fill_buffer.reserve_exact(1024 * 64);
+        len = fill_buffer.capacity();
+    }
 
     unsafe {
-        let ret_code = rados_read(ctx,
-                                  object_name_str.as_ptr(),
-                                  fill_buffer.as_mut_ptr() as *mut i8,
-                                  fill_buffer.len(),
-                                  read_offset);
+        let ret_code = rados_read(ctx, object_name_str.as_ptr(), fill_buffer.as_mut_ptr() as *mut i8, len, read_offset);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
