@@ -889,6 +889,7 @@ pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mu
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
+        fill_buffer.set_len(ret_code as usize);
         Ok(ret_code)
     }
 }
