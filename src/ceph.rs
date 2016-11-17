@@ -14,7 +14,7 @@
 #![cfg(target_os = "linux")]
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use libc::{ENOENT, ERANGE, c_int, strerror, timeval};
+use libc::{ENOENT, ERANGE, c_int, strerror_r, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
 
@@ -124,9 +124,10 @@ impl From<Error> for RadosError {
 }
 
 fn get_error(n: c_int) -> Result<String, RadosError> {
+    let mut buf = vec![0u8; 256];
     unsafe {
-        let error_cstring = CString::from_raw(strerror(n));
-        let message = try!(error_cstring.into_string());
+        strerror_r(n, buf.as_mut_ptr() as *mut ::libc::c_char, buf.len());
+        let message = String::from_utf8_lossy(&buf).into_owned();
         Ok(message)
     }
 }
@@ -1060,7 +1061,7 @@ pub fn rados_object_stat(ctx: rados_ioctx_t, object_name: &str) -> Result<(u64, 
     }
     let object_name_str = try!(CString::new(object_name));
     let mut psize: u64 = 0;
-    let mut time: i64 = 0;
+    let mut time: ::libc::time_t = 0;
 
     unsafe {
         let ret_code = rados_stat(ctx, object_name_str.as_ptr(), &mut psize, &mut time);
