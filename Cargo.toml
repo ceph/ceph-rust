@@ -19,7 +19,7 @@ for development etc. See README.md for details.
 bitflags = "~0.7"
 byteorder = "~0.5"
 libc = "0.2"
-nom = "~1.2"
+nom = "^2.0"
 uuid = {version = "~0.3", features = ["use_std"] }
 
 [[bin]]
