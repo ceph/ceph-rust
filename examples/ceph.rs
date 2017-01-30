@@ -92,7 +92,7 @@ fn main() {
         println!("Cluster stat: {:?}", cluster_stat);
 
         let ceph_ver = ceph_helpers::ceph_version();
-        println!("Ceph Version - {:?}", cluster_ve);
+        println!("Ceph Version - {:?}", ceph_ver);
 
         ceph::rados_shutdown(cluster);
     }

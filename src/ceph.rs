@@ -1670,6 +1670,16 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
 /// Ceph version - Ceph during the make release process generates the version number along with
 /// the github hash of the release and embeds the hard coded value into `ceph.py` which is the
 /// the default ceph utility.
-pub fn ceph_version() -> Option<&str> {
-    Some(run_cli("ceph --version").unwrap_or(""))
+pub fn ceph_version() -> Option<String> {
+    match run_cli("ceph --version".to_string()) {
+        Ok(output) => {
+            let n = output.status.code().unwrap();
+            if n == 0 {
+                Some(String::from_utf8_lossy(&output.stdout).to_string())
+            } else {
+                Some(String::from_utf8_lossy(&output.stderr).to_string())
+            }
+        },
+        Err(_) => None
+    }
 }
