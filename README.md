@@ -10,7 +10,7 @@ Create a Ceph development environment or use an existing Ceph environment.
 If creating a Ceph environment then use the following. It will generate a 4 node Virtual Box Ceph system with one
 node being a bootstrap node that controls the other. The remaining 3 nodes are Ceph nodes (Mons, OSDs, RGWs, APIs).
 
-Created and manage github.com/ceph/ceph-chef (Chef cookbooks for Ceph) and the Bloomberg github.com link below for chef-bcs. Chef-bcs uses ceph-chef. These are the same tools used at Bloomberg.
+Created and manage github.com/ceph/ceph-chef (Chef cookbooks for Ceph) and the Bloomberg github.com link below for chef-bcs. Chef-bcs uses ceph-chef. These are the same tools  at Bloomberg.
 
 Requirements for Mac OSX:
 1. VirtualBox
@@ -22,6 +22,8 @@ cd chef-bcs
 cd /bootstrap/vms/vagrant
 ./CEPH_UP
 
+**NOTE: If using the latest version of chef-bcs, you can enable an automatic development environment to be built with all of the development tools. See the project for details.**
+
 This will take about 30 minutes to build out. It installs CentOS 7.2, downloads all of the parts required to get Ceph up and running with good options.
 
 Once complete you can then login to the first node:
@@ -31,10 +33,10 @@ Run ceph -s to make sure you see Ceph running. Now you can install the developme
 
 #### Important
 NOTE: CentOS/RHEL - Ceph Hammer librados is located in /usr/lib64. So, to get rust to see it you need to create a new symlink:
-sudo ls -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
+sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
 
 NOTE: Ubuntu - Ceph Hammer librados is located in /usr/lib. So, to get rust to see it you need to create a new symlink:
-sudo ls -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
+sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
 
 There may be another way to change the link name in rust without having to create a symlink.
 

@@ -54,3 +54,4 @@ extern crate uuid;
 
 pub mod rados;
 pub mod ceph;
+pub mod utils;

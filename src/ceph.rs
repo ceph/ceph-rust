@@ -1,4 +1,4 @@
-// Copyright 2016 LambdaStack All rights reserved.
+// Copyright 2017 LambdaStack All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use libc::{ENOENT, ERANGE, c_int, strerror_r, timeval};
 use nom::{IResult, le_u32};
 use rados::*;
+use utils::*;
 
 use std::error::Error as StdError;
 use std::ffi::{CStr, CString, IntoStringError, NulError};
@@ -1663,4 +1664,12 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
     }
     Ok(out_str.to_string_lossy().into_owned())
 
+}
+
+
+/// Ceph version - Ceph during the make release process generates the version number along with
+/// the github hash of the release and embeds the hard coded value into `ceph.py` which is the
+/// the default ceph utility.
+pub fn ceph_version() -> Option<&str> {
+    Some(run_cli("ceph --version").unwrap_or(""))
 }

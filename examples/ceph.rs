@@ -1,4 +1,4 @@
-// Copyright 2016 LambdaStack All rights reserved.
+// Copyright 2017 LambdaStack All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ macro_rules! zeroed_c_char_buf {
 
 #[cfg(not(target_os = "linux"))]
 fn main() {}
+
+// NB: The examples below show a mix of raw native access and rust specific calls.
 
 #[cfg(target_os = "linux")]
 fn main() {
@@ -85,9 +87,16 @@ fn main() {
         let s: &str = str::from_utf8(slice).unwrap();
         println!("rados_cluster_fsid len: {} - {}", len, s);
 
+        // Rust specific example...
+        let cluster_stat = ceph_helpers::rados_stat_cluster(cluster);
+        println!("Cluster stat: {:?}", cluster_stat);
+
+        let ceph_ver = ceph_helpers::ceph_version();
+        println!("Ceph Version - {:?}", cluster_ve);
+
         ceph::rados_shutdown(cluster);
     }
 
-    println!("v{}.{}.{}", major, minor, extra);
+    println!("RADOS Version - v{}.{}.{}", major, minor, extra);
 
 }
