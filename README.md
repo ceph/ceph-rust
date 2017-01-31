@@ -65,5 +65,17 @@ Crate (library): aws-sdk-rust at https://github.com/lambdastackio/aws-sdk-rust
 ### AWS S3 CLI Utility
 Crate (binary): s3lsio at https://github.com/lambdastackio/s3lsio
 
+### Ceph Admin Commands
+
+An example of finding a mon socket in a generic like environment.
+ceph-conf --name mon.$(hostname -s) --show-config-value admin_socket
+
+The raw admin_socket commands can be found in:
+/src/ceph_admin_socket_mon_commands.json
+/src/ceph_admin_socket_osd_commands.json
+/src/ceph_admin_socket_client_commands.json
+
+A number of them are the same.
+
 ------------
 Portions originated from Chris Holcombe at https://github.com/cholcombe973

@@ -1649,6 +1649,7 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
+
     let mon_id_str = try!(CString::new(mon_id));
     let out_buffer: Vec<u8> = Vec::with_capacity(500);
     let out_buff_size = out_buffer.capacity();
@@ -1671,7 +1672,12 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
 /// the github hash of the release and embeds the hard coded value into `ceph.py` which is the
 /// the default ceph utility.
 pub fn ceph_version() -> Option<String> {
-    match run_cli("ceph --version".to_string()) {
+
+    // NOTE: This can also be obtained from the admin_socket
+    //  version : {"prefix": "version"}
+    //  git_version : {"prefix": "git_version"}
+
+    match run_cli("ceph --version") {
         Ok(output) => {
             let n = output.status.code().unwrap();
             if n == 0 {
@@ -1682,4 +1688,62 @@ pub fn ceph_version() -> Option<String> {
         },
         Err(_) => None
     }
+}
+
+
+/// For testing only at this point.
+/// NOTE: The health can be obtained two ways:
+/// 1. Parse the `ceph -s` output. This doesn't seem efficient and it's not but Ceph hard codes the output
+/// in the mon code.
+/// 2. Call the librados call `rados_mon_command` and and send the `mon` command of `status`. This too returns a hard coded
+/// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which is also not efficient.
+pub fn ceph_health() -> String {
+    "HEALTH_OK".to_string()
+}
+
+
+pub fn ceph_mon_command(cluster: rados_t, cmd: &str) -> Result<(String, String), RadosError> {
+    let data: Vec<*mut c_char> = Vec::with_capacity(1);
+    ceph_mon_command_with_data(cluster, cmd, data)
+}
+
+/// Mon commands
+pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_char>) -> Result<(String, String), RadosError> {
+    if cluster.is_null() {
+        return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
+    }
+
+    let cmd_strings: Vec<String> = Vec::new();
+    cmd_strings.push(cmd.to_string());
+
+    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+
+    let mut outbuf = ptr::null_mut();
+    let mut outs = ptr::null_mut();
+    let mut outbuf_len = 0;
+    let mut out_len = 0;
+
+    // cmd length is 1 because we only allow one command at a time.
+    ret_code = ceph::rados_mon_command(cluster, pointers.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+
+    // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+    let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
+    let c_str_outs: &CStr = CStr::from_ptr(outs);
+    let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
+    let buf_outs: &[u8] = c_str_outs.to_bytes();
+    let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
+    let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
+    let str_outbuf: String = str_slice_outbuf.to_owned();
+    let str_outs: String = str_slice_outs.to_owned();
+
+    if outbuf_len > 0 {
+        rados_buffer_free(outbuf);
+    }
+
+    if out_len > 0 {
+        rados_buffer_free(outs);
+    }
+
+    Ok((str_outbuf, str_outs))
 }

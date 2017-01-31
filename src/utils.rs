@@ -28,10 +28,10 @@ pub fn run_args(cmd: &str, args: &[String], shell: bool) -> Result<(Output)> {
             for s in args {
                 arg_string = arg_string + s + " ";
             }
-            output = try!(run_cli(arg_string));
+            output = try!(run_cli(&arg_string));
         }
     } else {
-        output = try!(run_cli(cmd.to_string()));
+        output = try!(run_cli(cmd));
     }
 
     Ok(output)
@@ -48,7 +48,7 @@ pub fn run_args(cmd: &str, args: &[String], shell: bool) -> Result<(Output)> {
 /// ```
 
 // NOTE: Add Into so a "" can also be passed in...
-pub fn run_cli(cmd_line: String) -> Result<(Output)> {
-    let output = try!(Command::new("sh").arg("-c").arg(&cmd_line).output());
+pub fn run_cli(cmd_line: &str) -> Result<(Output)> {
+    let output = try!(Command::new("sh").arg("-c").arg(cmd_line).output());
     Ok(output)
 }

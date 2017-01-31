@@ -1,0 +1,348 @@
+{
+  "cmd000": {
+    "sig": [
+      "0"
+    ],
+    "help": ""
+  },
+  "cmd001": {
+    "sig": [
+      "1"
+    ],
+    "help": ""
+  },
+  "cmd002": {
+    "sig": [
+      "2"
+    ],
+    "help": ""
+  },
+  "cmd003": {
+    "sig": [
+      "config",
+      "diff"
+    ],
+    "help": "dump diff of current config and default config"
+  },
+  "cmd004": {
+    "sig": [
+      "config",
+      "get",
+      {
+        "name": "var",
+        "type": "CephString"
+      }
+    ],
+    "help": "config get <field>: get the config value"
+  },
+  "cmd005": {
+    "sig": [
+      "config",
+      "set",
+      {
+        "name": "var",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "val",
+        "type": "CephString"
+      }
+    ],
+    "help": "config set <field> <val> [<val> ...]: set a config variable"
+  },
+  "cmd006": {
+    "sig": [
+      "config",
+      "show"
+    ],
+    "help": "dump current config settings"
+  },
+  "cmd007": {
+    "sig": [
+      "dump_blacklist"
+    ],
+    "help": "dump blacklisted clients and times"
+  },
+  "cmd008": {
+    "sig": [
+      "dump_historic_ops"
+    ],
+    "help": "show slowest recent ops"
+  },
+  "cmd009": {
+    "sig": [
+      "dump_op_pq_state"
+    ],
+    "help": "dump op priority queue state"
+  },
+  "cmd010": {
+    "sig": [
+      "dump_ops_in_flight"
+    ],
+    "help": "show the ops currently in flight"
+  },
+  "cmd011": {
+    "sig": [
+      "dump_reservations"
+    ],
+    "help": "show recovery reservations"
+  },
+  "cmd012": {
+    "sig": [
+      "dump_watchers"
+    ],
+    "help": "show clients which have active watches, and on which objects"
+  },
+  "cmd013": {
+    "sig": [
+      "flush_journal"
+    ],
+    "help": "flush the journal to permanent store"
+  },
+  "cmd014": {
+    "sig": [
+      "get_command_descriptions"
+    ],
+    "help": "list available commands"
+  },
+  "cmd015": {
+    "sig": [
+      "get_latest_osdmap"
+    ],
+    "help": "force osd to update the latest map from the mon"
+  },
+  "cmd016": {
+    "sig": [
+      "getomap",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      }
+    ],
+    "help": "output entire object map"
+  },
+  "cmd017": {
+    "sig": [
+      "git_version"
+    ],
+    "help": "get git sha1"
+  },
+  "cmd018": {
+    "sig": [
+      "help"
+    ],
+    "help": "list available commands"
+  },
+  "cmd019": {
+    "sig": [
+      "injectdataerr",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      }
+    ],
+    "help": "inject data error into omap"
+  },
+  "cmd020": {
+    "sig": [
+      "injectmdataerr",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      }
+    ],
+    "help": "inject metadata error"
+  },
+  "cmd021": {
+    "sig": [
+      "log",
+      "dump"
+    ],
+    "help": "dump recent log entries to log file"
+  },
+  "cmd022": {
+    "sig": [
+      "log",
+      "flush"
+    ],
+    "help": "flush log entries to log file"
+  },
+  "cmd023": {
+    "sig": [
+      "log",
+      "reopen"
+    ],
+    "help": "reopen log file"
+  },
+  "cmd024": {
+    "sig": [
+      "objecter_requests"
+    ],
+    "help": "show in-progress osd requests"
+  },
+  "cmd025": {
+    "sig": [
+      "ops"
+    ],
+    "help": "show the ops currently in flight"
+  },
+  "cmd026": {
+    "sig": [
+      "perf",
+      "dump",
+      {
+        "name": "logger",
+        "req": "false",
+        "type": "CephString"
+      },
+      {
+        "name": "counter",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "dump perfcounters value"
+  },
+  "cmd027": {
+    "sig": [
+      "perf",
+      "reset",
+      {
+        "name": "var",
+        "type": "CephString"
+      }
+    ],
+    "help": "perf reset <name>: perf reset all or one perfcounter name"
+  },
+  "cmd028": {
+    "sig": [
+      "perf",
+      "schema"
+    ],
+    "help": "dump perfcounters schema"
+  },
+  "cmd029": {
+    "sig": [
+      "perfcounters_dump"
+    ],
+    "help": ""
+  },
+  "cmd030": {
+    "sig": [
+      "perfcounters_schema"
+    ],
+    "help": ""
+  },
+  "cmd031": {
+    "sig": [
+      "rmomapkey",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      },
+      {
+        "name": "key",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove omap key"
+  },
+  "cmd032": {
+    "sig": [
+      "set_recovery_delay",
+      {
+        "name": "utime",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "Delay osd recovery by specified seconds"
+  },
+  "cmd033": {
+    "sig": [
+      "setomapheader",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      },
+      {
+        "name": "header",
+        "type": "CephString"
+      }
+    ],
+    "help": "set omap header"
+  },
+  "cmd034": {
+    "sig": [
+      "setomapval",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      },
+      {
+        "name": "key",
+        "type": "CephString"
+      },
+      {
+        "name": "val",
+        "type": "CephString"
+      }
+    ],
+    "help": "set omap key"
+  },
+  "cmd035": {
+    "sig": [
+      "status"
+    ],
+    "help": "high-level status of OSD"
+  },
+  "cmd036": {
+    "sig": [
+      "truncobj",
+      {
+        "name": "pool",
+        "type": "CephString"
+      },
+      {
+        "name": "objname",
+        "type": "CephObjectname"
+      },
+      {
+        "name": "len",
+        "type": "CephInt"
+      }
+    ],
+    "help": "truncate object to length"
+  },
+  "cmd037": {
+    "sig": [
+      "version"
+    ],
+    "help": "get ceph version"
+  }
+}

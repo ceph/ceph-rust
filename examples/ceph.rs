@@ -91,6 +91,67 @@ fn main() {
         let cluster_stat = ceph_helpers::rados_stat_cluster(cluster);
         println!("Cluster stat: {:?}", cluster_stat);
 
+        // let inbuf: Vec<*mut ::libc::c_char> = Vec::with_capacity(1);
+        // //let mut cmd = Vec<*mut ::libc::c_char> = Vec::with_capacity(256); //Vec::from(CString::new("{\"prefix\": \"status\"}").unwrap().as_bytes());
+        // let cmd_str = CString::new("{\"prefix\": \"status\"}").unwrap();
+        // let cmd_vec = Vec::new();
+        // cmd_vec.push(cmd_str);
+        //
+        // let mut outbuf: Vec<*mut ::libc::c_char> = Vec::with_capacity(256);
+        // let mut outs: Vec<*mut ::libc::c_char> = Vec::with_capacity(256);
+        // let cmd_len: usize = 1; // 1 command
+        // let mut outs_len: usize = 256;
+        // let mut outbuf_len: usize = 256;
+
+        // fn foo(strings: &[&str]) {
+        //     let cstrings: Vec<CString> = strings.iter().map(|s| CString::new(*s).unwrap()).collect();
+        //     let mut pointers: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+        //     pointers.push(ptr::null());
+        //
+        //     unsafe {
+        //         do_stuff(pointers.as_mut_ptr());
+        //     }
+        // }
+
+        // let strings: Vec<String> = Vec::new();
+        // strings.push("{\"prefix\": \"status\"}".to_string());
+        //
+        // // *s
+        // let cstrings: Vec<CString> = strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+        // let mut pointers: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect(); // NOTE: If C code needs to store the CStrings then use `into_raw` instead of `as_ptr` here.
+        // // pointers.push(ptr::null()); // No need to add a null entry since len is passed in.
+        //
+        // let mut obuf = ptr::null_mut();
+        // let mut sbuf = ptr::null_mut();
+        //
+        // //ret_code = ceph::rados_mon_command(cluster, pointers.as_mut_ptr(), cmd_len, inbuf.as_ptr() as *mut i8, 0 as usize, &mut obuf, /*outbuf.as_mut_ptr()*/, &mut outbuf_len, outs.as_mut_ptr(), &mut out_len);
+        // ret_code = ceph::rados_mon_command(cluster, pointers.as_mut_ptr(), cmd_len, inbuf.as_ptr() as *mut i8, 0 as usize, &mut obuf, &mut outbuf_len, &mut sbuf, &mut out_len);
+
+        // Copy the data from outbuf and then libc::free it or call rados_buffer_free
+        // let c_str: &CStr = CStr::from_ptr(obuf);
+        // let buf: &[u8] = c_str.to_bytes();
+        // let str_slice: &str = str::from_utf8(buf).unwrap();
+        // let str_buf: String = str_slice.to_owned();  // if necessary
+        //
+        // println!("{:?} - {} - {:?} - {:?}", ret_code, str_slice, sbuf, outbuf_len);
+        //
+        // if outbuf_len > 0 {
+        //     ceph::rados_buffer_free(obuf);
+        // }
+        //
+        // if out_len > 0 {
+        //     ceph::rados_buffer_free(sbuf);
+        // }
+
+        // let slice = slice::from_raw_parts(fs_id.as_mut_ptr(), buf_size - 1);
+        // let s: &str = str::from_utf8(slice).unwrap();
+        // println!("rados_mon_command: {}", s);
+
+        let (outbuf, outs) = ceph_helpers::ceph_mon_command(cluster, "{\"prefix\": \"status\"}");
+        println!("{:?}", outbuf);
+
+        // Currently - parses the `ceph --version` call. The admin socket commands `version` and `git_version`
+        // will be called soon to replace the string parse.
         let ceph_ver = ceph_helpers::ceph_version();
         println!("Ceph Version - {:?}", ceph_ver);
 

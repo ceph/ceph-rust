@@ -1,0 +1,200 @@
+{
+  "cmd000": {
+    "sig": [
+      "0"
+    ],
+    "help": ""
+  },
+  "cmd001": {
+    "sig": [
+      "1"
+    ],
+    "help": ""
+  },
+  "cmd002": {
+    "sig": [
+      "2"
+    ],
+    "help": ""
+  },
+  "cmd003": {
+    "sig": [
+      "add_bootstrap_peer_hint",
+      {
+        "name": "addr",
+        "type": "CephIPAddr"
+      }
+    ],
+    "help": "add peer address as potential bootstrap peer for cluster bringup"
+  },
+  "cmd004": {
+    "sig": [
+      "config",
+      "diff"
+    ],
+    "help": "dump diff of current config and default config"
+  },
+  "cmd005": {
+    "sig": [
+      "config",
+      "get",
+      {
+        "name": "var",
+        "type": "CephString"
+      }
+    ],
+    "help": "config get <field>: get the config value"
+  },
+  "cmd006": {
+    "sig": [
+      "config",
+      "set",
+      {
+        "name": "var",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "val",
+        "type": "CephString"
+      }
+    ],
+    "help": "config set <field> <val> [<val> ...]: set a config variable"
+  },
+  "cmd007": {
+    "sig": [
+      "config",
+      "show"
+    ],
+    "help": "dump current config settings"
+  },
+  "cmd008": {
+    "sig": [
+      "get_command_descriptions"
+    ],
+    "help": "list available commands"
+  },
+  "cmd009": {
+    "sig": [
+      "git_version"
+    ],
+    "help": "get git sha1"
+  },
+  "cmd010": {
+    "sig": [
+      "help"
+    ],
+    "help": "list available commands"
+  },
+  "cmd011": {
+    "sig": [
+      "log",
+      "dump"
+    ],
+    "help": "dump recent log entries to log file"
+  },
+  "cmd012": {
+    "sig": [
+      "log",
+      "flush"
+    ],
+    "help": "flush log entries to log file"
+  },
+  "cmd013": {
+    "sig": [
+      "log",
+      "reopen"
+    ],
+    "help": "reopen log file"
+  },
+  "cmd014": {
+    "sig": [
+      "mon_status"
+    ],
+    "help": "show current monitor status"
+  },
+  "cmd015": {
+    "sig": [
+      "perf",
+      "dump",
+      {
+        "name": "logger",
+        "req": "false",
+        "type": "CephString"
+      },
+      {
+        "name": "counter",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "dump perfcounters value"
+  },
+  "cmd016": {
+    "sig": [
+      "perf",
+      "reset",
+      {
+        "name": "var",
+        "type": "CephString"
+      }
+    ],
+    "help": "perf reset <name>: perf reset all or one perfcounter name"
+  },
+  "cmd017": {
+    "sig": [
+      "perf",
+      "schema"
+    ],
+    "help": "dump perfcounters schema"
+  },
+  "cmd018": {
+    "sig": [
+      "perfcounters_dump"
+    ],
+    "help": ""
+  },
+  "cmd019": {
+    "sig": [
+      "perfcounters_schema"
+    ],
+    "help": ""
+  },
+  "cmd020": {
+    "sig": [
+      "quorum",
+      "enter"
+    ],
+    "help": "force monitor back into quorum"
+  },
+  "cmd021": {
+    "sig": [
+      "quorum",
+      "exit"
+    ],
+    "help": "force monitor out of the quorum"
+  },
+  "cmd022": {
+    "sig": [
+      "quorum_status"
+    ],
+    "help": "show current quorum status"
+  },
+  "cmd023": {
+    "sig": [
+      "sync_force",
+      {
+        "name": "validate",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "force sync of and clear monitor store"
+  },
+  "cmd024": {
+    "sig": [
+      "version"
+    ],
+    "help": "get ceph version"
+  }
+}
