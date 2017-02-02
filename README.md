@@ -2,7 +2,7 @@
 ### Official Ceph Rust interface
 Official Ceph Rust-lang interface. Contributions welcomed!
 
-This library is the core librados Rust interface that is used for larger Ceph related projects.
+This library is the core librados Rust interface for Ceph. It also supports Admin Socket commands.
 
 ### Ceph
 Create a Ceph development environment or use an existing Ceph environment.
@@ -22,9 +22,9 @@ cd chef-bcs
 cd /bootstrap/vms/vagrant
 ./CEPH_UP
 
-**NOTE: If using the latest version of chef-bcs, you can enable an automatic development environment to be built with all of the development tools. See the project for details.**
+**NOTE: If using the latest version of chef-bcs, you can enable an automatic development environment to be built with all of the development tools. See the project for details. It does it by default for Vagrant build.**
 
-This will take about 30 minutes to build out. It installs CentOS 7.2, downloads all of the parts required to get Ceph up and running with good options.
+This will take about 30 minutes to build out. It installs CentOS 7.3, downloads all of the parts required to get Ceph up and running with good options.
 
 Once complete you can then login to the first node:
 vagrant ssh ceph-vm1
@@ -42,20 +42,30 @@ There may be another way to change the link name in rust without having to creat
 
 ### Rust
 (In ceph-vm1 node)
+```
 curl -sSf https://static.rust-lang.org/rustup.sh | sh
+```
+OR
+```
+curl https://sh.rustup.rs -sSf | sh
+```
 
 ### Yum
-(In ceph-vm1 node)
+(In ceph-vm1 node) - Note: This is automatically done for you if you installed the environment vi Chef-bcs as noted above.
 
+```
 mkdir -p projects/lambdastack
 cd projects/lambdastack
 
 Requirements for development:
 sudo yum install -y git cmake
 sudo yum install -y openssl openssl-devel
+```
 
 Clone ceph-rust project:
+```
 git clone https://github.com/lambdastackio/ceph-rust.git
+```
 
 NOTE: Make sure you have setup your favorite editor. Vim is automatically installed.
 
@@ -68,7 +78,9 @@ Crate (binary): s3lsio at https://github.com/lambdastackio/s3lsio
 ### Ceph Admin Commands
 
 An example of finding a mon socket in a generic like environment.
+```
 ceph-conf --name mon.$(hostname -s) --show-config-value admin_socket
+```
 
 The raw admin_socket commands can be found in:
 /src/ceph_admin_socket_mon_commands.json

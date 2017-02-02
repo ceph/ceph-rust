@@ -25,6 +25,8 @@ use std::{ptr, str, slice};
 use ceph_rust::ceph as ceph_helpers;
 #[cfg(target_os = "linux")]
 use ceph_rust::rados as ceph;
+#[cfg(target_os = "linux")]
+use ceph_rust::admin_sockets::*;
 
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {
@@ -52,6 +54,14 @@ fn main() {
     // However, work for the higher level pur Rust is being worked on in the ceph.rs module of
     // the library. A few of those are present below. We will create a common Result or Option
     // return and allow for pattern matching.
+
+    // Example of accessing the `Admin Socket` for mon
+    match admin_socket_command("help", "/var/run/ceph/ceph-mon.ceph-vm1.asok") {
+        Ok(json) => {
+            println!("{}", json);
+        },
+        Err(e) => { println!("{}", e); },
+    }
 
     unsafe {
         ceph::rados_version(&mut major, &mut minor, &mut extra);
