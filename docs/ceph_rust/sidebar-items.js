@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["rados",""]]});
+initSidebarItems({"mod":[["rados",""],["utils",""]]});

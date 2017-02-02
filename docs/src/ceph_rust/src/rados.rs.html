@@ -661,7 +661,7 @@
 <span id="617">617</span>
 <span id="618">618</span>
 </pre><pre class='rust '>
-<span class='comment'>// Copyright 2016 LambdaStack All rights reserved.</span>
+<span class='comment'>// Copyright 2017 LambdaStack All rights reserved.</span>
 <span class='comment'>//</span>
 <span class='comment'>// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class='comment'>// you may not use this file except in compliance with the License.</span>
@@ -968,8 +968,8 @@
 
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_nobjects_list_seek</span>(<span class='ident'>ctx</span>: <span class='ident'>rados_list_ctx_t</span>, <span class='ident'>pos</span>: <span class='ident'>uint32_t</span>) <span class='op'>-&gt;</span> <span class='ident'>uint32_t</span>;
 
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_nobjects_list_next</span>(<span class='ident'>ctx</span>: <span class='ident'>rados_list_ctx_t</span>, <span class='ident'>entry</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>,
-                                    <span class='ident'>key</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>, <span class='ident'>nspace</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>)
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_nobjects_list_next</span>(<span class='ident'>ctx</span>: <span class='ident'>rados_list_ctx_t</span>, <span class='ident'>entry</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>,
+                                    <span class='ident'>key</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>, <span class='ident'>nspace</span>: <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw-2'>mut</span> <span class='op'>*</span><span class='kw'>const</span> ::<span class='ident'>libc</span>::<span class='ident'>c_char</span>)
                                     <span class='op'>-&gt;</span> ::<span class='ident'>libc</span>::<span class='ident'>c_int</span>;
 
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>rados_nobjects_list_close</span>(<span class='ident'>ctx</span>: <span class='ident'>rados_list_ctx_t</span>) <span class='op'>-&gt;</span> ();
