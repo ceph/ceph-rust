@@ -92,11 +92,11 @@ fn main() {
         match ceph_helpers::ceph_mon_command(cluster, "{\"prefix\": \"status\"}") {
             Ok((outbuf, outs)) => {
                 match outbuf {
-                    Some(output) => println!("{}", output),
+                    Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
                     None => {},
                 }
                 match outs {
-                    Some(output) => println!("{}", output),
+                    Some(output) => println!("Ceph mon command (outs):\n{}", output),
                     None => {},
                 }
             },
