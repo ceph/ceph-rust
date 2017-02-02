@@ -13,23 +13,24 @@
 // limitations under the License.
 #![cfg(target_os = "linux")]
 
-use byteorder::{LittleEndian, WriteBytesExt};
-use libc::{ENOENT, ERANGE, c_int, strerror_r, timeval};
-use nom::{IResult, le_u32};
-use rados::*;
-use utils::*;
-
 use std::error::Error as StdError;
 use std::ffi::{CStr, CString, IntoStringError, NulError};
-use std::fmt;
 use std::io::BufRead;
 use std::io::Cursor;
 use std::io::Error;
 use std::net::IpAddr;
-use std::ptr;
+use std::iter::FromIterator;
+use std::{ptr, fmt, slice, str};
 use std::string::FromUtf8Error;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use uuid::{ParseError, Uuid};
+use byteorder::{LittleEndian, WriteBytesExt};
+// use libc::{ENOENT, ERANGE, c_int, strerror_r, timeval};
+use nom::{IResult, le_u32};
+use rados::*;
+use utils::*;
+use libc::*;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
 const CEPH_OSD_TMAP_SET: char = 's';
@@ -1701,19 +1702,19 @@ pub fn ceph_health() -> String {
     "HEALTH_OK".to_string()
 }
 
-
-pub fn ceph_mon_command(cluster: rados_t, cmd: &str) -> Result<(String, String), RadosError> {
+/// Mon command that does not pass in a data payload.
+pub fn ceph_mon_command(cluster: rados_t, cmd: &str) -> Result<(Option<String>, Option<String>), RadosError> {
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
     ceph_mon_command_with_data(cluster, cmd, data)
 }
 
-/// Mon commands
-pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_char>) -> Result<(String, String), RadosError> {
+/// Mon command that does pass in a data payload.
+pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_char>) -> Result<(Option<String>, Option<String>), RadosError> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
 
-    let cmd_strings: Vec<String> = Vec::new();
+    let mut cmd_strings: Vec<String> = Vec::new();
     cmd_strings.push(cmd.to_string());
 
     let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
@@ -1722,27 +1723,35 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_
     let mut outbuf = ptr::null_mut();
     let mut outs = ptr::null_mut();
     let mut outbuf_len = 0;
-    let mut out_len = 0;
+    let mut outs_len = 0;
 
-    // cmd length is 1 because we only allow one command at a time.
-    ret_code = ceph::rados_mon_command(cluster, pointers.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // freed by call `rados_buffer_free`
+    let mut str_outbuf: Option<String> = None;
+    let mut str_outs: Option<String> = None;
 
-    // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
-    let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
-    let c_str_outs: &CStr = CStr::from_ptr(outs);
-    let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
-    let buf_outs: &[u8] = c_str_outs.to_bytes();
-    let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
-    let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
-    let str_outbuf: String = str_slice_outbuf.to_owned();
-    let str_outs: String = str_slice_outs.to_owned();
+    unsafe {
+        // cmd length is 1 because we only allow one command at a time.
+        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
 
-    if outbuf_len > 0 {
-        rados_buffer_free(outbuf);
-    }
+        // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+        if outbuf_len > 0 {
+            let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
+            let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
+            let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
+            str_outbuf = Some(str_slice_outbuf.to_owned());
 
-    if out_len > 0 {
-        rados_buffer_free(outs);
+            rados_buffer_free(outbuf);
+        }
+
+        if outs_len > 0 {
+            let c_str_outs: &CStr = CStr::from_ptr(outs);
+            let buf_outs: &[u8] = c_str_outs.to_bytes();
+            let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
+            str_outs = Some(str_slice_outs.to_owned());
+
+            rados_buffer_free(outs);
+        }
     }
 
     Ok((str_outbuf, str_outs))
