@@ -1,6 +1,6 @@
 [package]
 name = "ceph-rust"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["Chris Jones <chris.jones@lambdastack.io>", "Chris Holcombe"]
 license = "Apache-2.0"
 readme = "README.md"

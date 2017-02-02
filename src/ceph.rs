@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #![cfg(target_os = "linux")]
+#![allow(unused_imports)]
 
 use std::error::Error as StdError;
 use std::ffi::{CStr, CString, IntoStringError, NulError};
@@ -1733,6 +1734,9 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
         let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code))));
+        }
 
         // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
         if outbuf_len > 0 {

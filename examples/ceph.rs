@@ -19,7 +19,7 @@ extern crate libc;
 
 use libc::*;
 use std::ffi::{CStr, CString};
-use std::{ptr, str};
+use std::{ptr, str, slice};
 
 #[cfg(target_os = "linux")]
 use ceph_rust::ceph as ceph_helpers;
