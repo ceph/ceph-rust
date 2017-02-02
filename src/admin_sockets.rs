@@ -17,7 +17,7 @@
 use std::str;
 use std::io::{Read, Write, Cursor};
 use std::os::unix::net::UnixStream;
-use net::Shutdown;
+use std::net::Shutdown;
 
 use ceph::{RadosError};
 use byteorder::{BigEndian, ReadBytesExt};
@@ -46,7 +46,7 @@ pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> Result<String, Rados
     }
     // The first 4 bytes are Big Endian unsigned int
     let mut rdr = Cursor::new(buffer);
-    let len = rdr..read_u32::<BigEndian>().unwrap();
+    let len = rdr.read_u32::<BigEndian>().unwrap();
     // Not currently using the len but may...
 
     let rb = try!(stream.read_to_string(&mut output));

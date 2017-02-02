@@ -51,7 +51,6 @@ extern crate libc;
 #[macro_use]
 extern crate nom;
 extern crate uuid;
-extern crate unix_socket;
 
 pub mod rados;
 pub mod ceph;
