@@ -16,22 +16,28 @@
 
 use std::error::Error as StdError;
 use std::ffi::{CStr, CString, IntoStringError, NulError};
+
 use std::io::{BufRead, Cursor, Error};
 use std::net::IpAddr;
 use std::iter::FromIterator;
 use std::{ptr, fmt, slice, str};
-use std::string::FromUtf8Error;
+// use std::string::FromUtf8Error;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use uuid::{ParseError, Uuid};
 use byteorder::{LittleEndian, WriteBytesExt};
 use nom::{IResult, le_u32};
 use libc::*;
-use serde_json::Value;
+// use serde_json::{Value, from_str};
 
 use rados::*;
 use utils::*;
 use admin_sockets::*;
+use json::*;
+use error::*;
+use JsonValue;
+use JsonData;
+use JsonError;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
 const CEPH_OSD_TMAP_SET: char = 's';
@@ -43,94 +49,6 @@ pub enum CephHealth {
     Ok,
     Warning,
     Error,
-}
-
-/// Custom error handling for the library
-#[derive(Debug)]
-pub enum RadosError {
-    FromUtf8Error(FromUtf8Error),
-    NulError(NulError),
-    Error(String),
-    IoError(Error),
-    IntoStringError(IntoStringError),
-    ParseError(ParseError),
-}
-
-impl fmt::Display for RadosError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for RadosError {
-    fn description(&self) -> &str {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.description(),
-            RadosError::NulError(ref e) => e.description(),
-            RadosError::Error(ref e) => &e,
-            RadosError::IoError(ref e) => e.description(),
-            RadosError::IntoStringError(ref e) => e.description(),
-            RadosError::ParseError(ref e) => e.description(),
-        }
-    }
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.cause(),
-            RadosError::NulError(ref e) => e.cause(),
-            RadosError::Error(_) => None,
-            RadosError::IoError(ref e) => e.cause(),
-            RadosError::IntoStringError(ref e) => e.cause(),
-            RadosError::ParseError(ref e) => e.cause(),
-        }
-    }
-}
-
-impl RadosError {
-    /// Create a new RadosError with a String message
-    pub fn new(err: String) -> RadosError {
-        RadosError::Error(err)
-    }
-
-    /// Convert a RadosError into a String representation.
-    pub fn to_string(&self) -> String {
-        match *self {
-            RadosError::FromUtf8Error(ref err) => err.utf8_error().to_string(),
-            RadosError::NulError(ref err) => err.description().to_string(),
-            RadosError::Error(ref err) => err.to_string(),
-            RadosError::IoError(ref err) => err.description().to_string(),
-            RadosError::IntoStringError(ref err) => err.description().to_string(),
-            RadosError::ParseError(_) => "Uuid parse error".to_string(),
-        }
-    }
-}
-
-impl From<ParseError> for RadosError {
-    fn from(err: ParseError) -> RadosError {
-        RadosError::ParseError(err)
-    }
-}
-
-
-impl From<NulError> for RadosError {
-    fn from(err: NulError) -> RadosError {
-        RadosError::NulError(err)
-    }
-}
-
-impl From<FromUtf8Error> for RadosError {
-    fn from(err: FromUtf8Error) -> RadosError {
-        RadosError::FromUtf8Error(err)
-    }
-}
-impl From<IntoStringError> for RadosError {
-    fn from(err: IntoStringError) -> RadosError {
-        RadosError::IntoStringError(err)
-    }
-}
-impl From<Error> for RadosError {
-    fn from(err: Error) -> RadosError {
-        RadosError::IoError(err)
-    }
 }
 
 fn get_error(n: c_int) -> Result<String, RadosError> {
@@ -1709,11 +1627,16 @@ pub fn ceph_version() -> Option<String> {
 pub fn ceph_health_string(socket: &str) -> Result<String, RadosError> {
     match admin_socket_command("status", socket) {
         Ok(json) => {
-            let status: Value = serde_json::from_str(json)?;
-            if status.health {
-                Ok(status.health)
-            } else {
-                Err(RadosError::new("The `health` attribute was not found in the output.".to_string()))
+            match json_data(&json) {
+                Some(jsondata) => {
+                    let health = json_find(&jsondata, "health");
+                    if health.is_some() {
+                        Ok(health.unwrap())
+                    } else {
+                        Err(RadosError::new("The `health` attribute was not found in the output.".to_string()))
+                    }
+                },
+                _ => Err(RadosError::new(format!("{}", "JSON data - unable to be read.")))
             }
         },
         Err(e) => Err(e),
@@ -1726,11 +1649,13 @@ pub fn ceph_health_string(socket: &str) -> Result<String, RadosError> {
 /// CephHealth::Error
 pub fn ceph_health(socket: &str) -> CephHealth {
     match ceph_health_string(socket) {
-        Ok(string) => {
-            match string {
-                "HEALTH_OK" => CephHealth::Ok,
-                "HEALTH_WARN" => CephHealth::Warning,
-                _ => CephHealth::Error,
+        Ok(health) => {
+            if health == "HEALTH_OK".to_string() {
+                CephHealth::Ok
+            } else if health == "HEALTH_WARN".to_string() {
+                CephHealth::Warning
+            } else {
+                CephHealth::Error
             }
         },
         Err(_) => CephHealth::Error,

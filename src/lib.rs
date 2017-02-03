@@ -54,7 +54,15 @@ extern crate uuid;
 #[macro_use]
 extern crate serde_json;
 
+use serde_json::{Value, Error};
+
 pub mod rados;
 pub mod ceph;
 pub mod utils;
 pub mod admin_sockets;
+pub mod json;
+pub mod error;
+
+pub type JsonData = Value;
+pub type JsonValue = String;
+pub type JsonError = Error;

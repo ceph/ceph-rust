@@ -19,7 +19,7 @@ use std::io::{Read, Write, Cursor};
 use std::os::unix::net::UnixStream;
 use std::net::Shutdown;
 
-use ceph::{RadosError};
+use error::RadosError;
 use byteorder::{BigEndian, ReadBytesExt};
 
 /// This is a helper function that builds a raw command from the actual command. You just pass
