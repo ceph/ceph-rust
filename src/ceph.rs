@@ -16,9 +16,7 @@
 
 use std::error::Error as StdError;
 use std::ffi::{CStr, CString, IntoStringError, NulError};
-use std::io::BufRead;
-use std::io::Cursor;
-use std::io::Error;
+use std::io::{BufRead, Cursor, Error};
 use std::net::IpAddr;
 use std::iter::FromIterator;
 use std::{ptr, fmt, slice, str};
@@ -27,16 +25,25 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use uuid::{ParseError, Uuid};
 use byteorder::{LittleEndian, WriteBytesExt};
-// use libc::{ENOENT, ERANGE, c_int, strerror_r, timeval};
 use nom::{IResult, le_u32};
+use libc::*;
+use serde_json::Value;
+
 use rados::*;
 use utils::*;
-use libc::*;
+use admin_sockets::*;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
 const CEPH_OSD_TMAP_SET: char = 's';
 const CEPH_OSD_TMAP_CREATE: char = 'c';
 const CEPH_OSD_TMAP_RM: char = 'r';
+
+#[derive(Debug, Clone)]
+pub enum CephHealth {
+    Ok,
+    Warning,
+    Error,
+}
 
 /// Custom error handling for the library
 #[derive(Debug)]
@@ -1679,6 +1686,8 @@ pub fn ceph_version() -> Option<String> {
     //  version : {"prefix": "version"}
     //  git_version : {"prefix": "git_version"}
 
+
+
     match run_cli("ceph --version") {
         Ok(output) => {
             let n = output.status.code().unwrap();
@@ -1692,15 +1701,40 @@ pub fn ceph_version() -> Option<String> {
     }
 }
 
-
-/// For testing only at this point.
 /// NOTE: The health can be obtained two ways:
 /// 1. Parse the `ceph -s` output. This doesn't seem efficient and it's not but Ceph hard codes the output
 /// in the mon code.
 /// 2. Call the librados call `rados_mon_command` and and send the `mon` command of `status`. This too returns a hard coded
 /// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which is also not efficient.
-pub fn ceph_health() -> String {
-    "HEALTH_OK".to_string()
+pub fn ceph_health_string(socket: &str) -> Result<String, RadosError> {
+    match admin_socket_command("status", socket) {
+        Ok(json) => {
+            let status: Value = serde_json::from_str(json)?;
+            if status.health {
+                Ok(status.health)
+            } else {
+                Err(RadosError::new("The `health` attribute was not found in the output.".to_string()))
+            }
+        },
+        Err(e) => Err(e),
+    }
+}
+
+/// Returns an enum value of:
+/// CephHealth::Ok
+/// CephHealth::Warning
+/// CephHealth::Error
+pub fn ceph_health(socket: &str) -> CephHealth {
+    match ceph_health_string(socket) {
+        Ok(string) => {
+            match string {
+                "HEALTH_OK" => CephHealth::Ok,
+                "HEALTH_WARN" => CephHealth::Warning,
+                _ => CephHealth::Error,
+            }
+        },
+        Err(_) => CephHealth::Error,
+    }
 }
 
 /// Mon command that does not pass in a data payload.

@@ -51,6 +51,8 @@ extern crate libc;
 #[macro_use]
 extern crate nom;
 extern crate uuid;
+#[macro_use]
+extern crate serde_json;
 
 pub mod rados;
 pub mod ceph;
