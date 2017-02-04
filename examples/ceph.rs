@@ -121,9 +121,6 @@ fn main() {
         // Print Status of cluster health a different way
         println!("{}", ceph_helpers::ceph_status(cluster, &["health", "overall_status"]).unwrap());
 
-        // Another example
-        println!("{:?}", ceph_helpers::ceph_status_string_value(cluster, &["fsid"]));
-
         // This command encapsulates the lower level mon, osd, pg commands and returns JsonData objects based on the key path
         println!("{:?}", ceph_helpers::ceph_command(cluster, "prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
 
