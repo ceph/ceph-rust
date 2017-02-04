@@ -14,30 +14,33 @@
 
 use std::str;
 
-use serde_json::*;
+use rustc_serialize::json::*;
 
 use JsonData;
 use JsonValue;
 
+/// First json call that takes a JSON formatted string and converts it to JsonData object that can
+/// then be traversed using `json_find` via the key path.
 pub fn json_data(json_str: &str) -> Option<JsonData> {
-    match from_str(json_str) {
+    match Json::from_str(json_str) {
         Ok(json_data) => {
             Some(json_data)
         },
-        Err(e) => {
-            println!("{}", e);
+        Err(_) => {
             None
         }
     }
 
 }
 
-pub fn json_find(json_data: &JsonData, object: &str) -> Option<JsonValue> {
-    let json_value: Option<JsonValue> = Some(json_data.as_object().unwrap().get(object)
-                .and_then(|value| Some(value.to_string()))
-                .unwrap_or_else(|| {
-                    "".to_string()
-                }));
+/// Looks for the parent object first and then the 'child' object. If the parent object is None
+/// then it only looks for the 'child' object. The parent object is used for situations where there
+/// may be 'child' objects with the same name.
+pub fn json_find(json_data: JsonData, keys: &[&str]) -> Option<JsonData> {
+    json_data.find_path(keys).cloned()
+}
 
-    json_value
+/// More specific String cast of an individual JsonData object.
+pub fn json_as_string(json_data: &JsonData) -> String {
+    json_data.as_string().unwrap_or("").to_string()
 }

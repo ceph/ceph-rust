@@ -42,7 +42,7 @@ pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> Result<String, Rados
     let ret_val = try!(stream.read(&mut buffer));
     if ret_val < 4 {
         try!(stream.shutdown(Shutdown::Both));
-        return Err(RadosError::new("Admin socket did not return any data".to_string()));
+        return Err(RadosError::new("Admin socket: Invalid command or socket did not return any data".to_string()));
     }
     // The first 4 bytes are Big Endian unsigned int
     let mut rdr = Cursor::new(buffer);

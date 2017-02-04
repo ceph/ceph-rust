@@ -21,23 +21,23 @@ use std::io::{BufRead, Cursor, Error};
 use std::net::IpAddr;
 use std::iter::FromIterator;
 use std::{ptr, fmt, slice, str};
-// use std::string::FromUtf8Error;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use uuid::{ParseError, Uuid};
 use byteorder::{LittleEndian, WriteBytesExt};
 use nom::{IResult, le_u32};
 use libc::*;
-// use serde_json::{Value, from_str};
 
 use rados::*;
 use utils::*;
 use admin_sockets::*;
 use json::*;
 use error::*;
+use status::*;
+
 use JsonValue;
 use JsonData;
-use JsonError;
+// use JsonError;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
 const CEPH_OSD_TMAP_SET: char = 's';
@@ -49,6 +49,13 @@ pub enum CephHealth {
     Ok,
     Warning,
     Error,
+}
+
+#[derive(Debug, Clone)]
+pub enum CephCommandTypes {
+    Mon,
+    Osd,
+    Pgs,
 }
 
 fn get_error(n: c_int) -> Result<String, RadosError> {
@@ -1598,14 +1605,30 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
 /// Ceph version - Ceph during the make release process generates the version number along with
 /// the github hash of the release and embeds the hard coded value into `ceph.py` which is the
 /// the default ceph utility.
-pub fn ceph_version() -> Option<String> {
+pub fn ceph_version(socket: &str) -> Option<String> {
+    let cmd = "version";
 
-    // NOTE: This can also be obtained from the admin_socket
-    //  version : {"prefix": "version"}
-    //  git_version : {"prefix": "git_version"}
+    match admin_socket_command(&cmd, socket) {
+        Ok(json) => {
+            match json_data(&json) {
+                Some(jsondata) => {
+                    match json_find(jsondata, &[cmd]) {
+                        Some(data) => {
+                            Some(json_as_string(&data))
+                        },
+                        None => None,
+                    }
+                },
+                _ => None
+            }
+        },
+        Err(_) => None
+    }
+}
 
-
-
+/// This version call parses the `ceph -s` output. It does not need `sudo` rights like
+/// `ceph_version` does since it pulls from the admin socket.
+pub fn ceph_version_parse() -> Option<String> {
     match run_cli("ceph --version") {
         Ok(output) => {
             let n = output.status.code().unwrap();
@@ -1619,27 +1642,38 @@ pub fn ceph_version() -> Option<String> {
     }
 }
 
-/// NOTE: The health can be obtained two ways:
-/// 1. Parse the `ceph -s` output. This doesn't seem efficient and it's not but Ceph hard codes the output
-/// in the mon code.
-/// 2. Call the librados call `rados_mon_command` and and send the `mon` command of `status`. This too returns a hard coded
-/// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which is also not efficient.
-pub fn ceph_health_string(socket: &str) -> Result<String, RadosError> {
-    match admin_socket_command("status", socket) {
-        Ok(json) => {
-            match json_data(&json) {
-                Some(jsondata) => {
-                    let health = json_find(&jsondata, "health");
-                    if health.is_some() {
-                        Ok(health.unwrap())
-                    } else {
-                        Err(RadosError::new("The `health` attribute was not found in the output.".to_string()))
+/// Only single String value
+pub fn ceph_status(cluster: rados_t, keys: &[&str]) -> Result<String, RadosError> {
+    match ceph_mon_command(cluster, "prefix", "status", Some("json")) {
+        Ok((json, _)) => {
+            match json {
+                Some(json) => {
+                    match json_data(&json) {
+                        Some(jsondata) => {
+                            let data = json_find(jsondata, keys);
+                            if data.is_some() {
+                                Ok(json_as_string(&data.unwrap()))
+                            } else {
+                                Err(RadosError::new("The attributes were not found in the output.".to_string()))
+                            }
+                        },
+                        _ => Err(RadosError::new("JSON data not found.".to_string()))
                     }
                 },
-                _ => Err(RadosError::new(format!("{}", "JSON data - unable to be read.")))
+                _ => Err(RadosError::new("JSON data not found.".to_string()))
             }
         },
-        Err(e) => Err(e),
+        Err(e) => Err(RadosError::new(format!("{}", e)))
+    }
+}
+
+/// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which is also not efficient.
+pub fn ceph_health_string(cluster: rados_t) -> Result<String, RadosError> {
+    match ceph_mon_command(cluster, "prefix", "health", None) {
+        Ok((data, _)) => {
+            Ok(data.unwrap().replace("\n", ""))
+        },
+        Err(e) => Err(RadosError::new(format!("{}", e)))
     }
 }
 
@@ -1647,12 +1681,12 @@ pub fn ceph_health_string(socket: &str) -> Result<String, RadosError> {
 /// CephHealth::Ok
 /// CephHealth::Warning
 /// CephHealth::Error
-pub fn ceph_health(socket: &str) -> CephHealth {
-    match ceph_health_string(socket) {
+pub fn ceph_health(cluster: rados_t) -> CephHealth {
+    match ceph_health_string(cluster) {
         Ok(health) => {
-            if health == "HEALTH_OK".to_string() {
+            if health.contains("HEALTH_OK") {
                 CephHealth::Ok
-            } else if health == "HEALTH_WARN".to_string() {
+            } else if health.contains("HEALTH_WARN") {
                 CephHealth::Warning
             } else {
                 CephHealth::Error
@@ -1662,20 +1696,88 @@ pub fn ceph_health(socket: &str) -> CephHealth {
     }
 }
 
+/// Higher level `ceph_command`
+pub fn ceph_command(cluster: rados_t, name: &str, value: &str, cmd_type: CephCommandTypes, keys: &[&str]) -> Result<JsonData, RadosError> {
+    match cmd_type {
+        CephCommandTypes::Osd => { Err(RadosError::new("OSD CMDs Not implemented.".to_string())) },
+        CephCommandTypes::Pgs => { Err(RadosError::new("PGS CMDS Not implemented.".to_string())) },
+        _ => {
+            match ceph_mon_command(cluster, name, value, Some("json")) {
+                Ok((json, _)) => {
+                    match json {
+                        Some(json) => {
+                            match json_data(&json) {
+                                Some(jsondata) => {
+                                    let data = json_find(jsondata, keys);
+                                    if data.is_some() {
+                                        Ok(data.unwrap())
+                                    } else {
+                                        Err(RadosError::new("The attributes were not found in the output.".to_string()))
+                                    }
+                                },
+                                _ => Err(RadosError::new("JSON data not found.".to_string()))
+                            }
+                        },
+                        _ => Err(RadosError::new("JSON data not found.".to_string()))
+                    }
+                },
+                Err(e) => Err(RadosError::new(format!("{}", e)))
+            }
+        }
+    }
+}
+
+/// Returns the list of available commands
+pub fn ceph_commands(cluster: rados_t, keys: Option<&[&str]>) -> Result<JsonData, RadosError> {
+    match ceph_mon_command(cluster, "prefix", "get_command_descriptions", Some("json")) {
+        Ok((json, _)) => {
+            match json {
+                Some(json) => {
+                    match json_data(&json) {
+                        Some(jsondata) => {
+                            if keys.is_some() {
+                                let data = json_find(jsondata, keys.unwrap());
+                                if data.is_some() {
+                                    Ok(data.unwrap())
+                                } else {
+                                    Err(RadosError::new("The attributes were not found in the output.".to_string()))
+                                }
+                            } else {
+                                Ok(jsondata)
+                            }
+                        },
+                        _ => Err(RadosError::new("JSON data not found.".to_string()))
+                    }
+                },
+                _ => Err(RadosError::new("JSON data not found.".to_string()))
+            }
+        },
+        Err(e) => Err(RadosError::new(format!("{}", e)))
+    }
+}
+
 /// Mon command that does not pass in a data payload.
-pub fn ceph_mon_command(cluster: rados_t, cmd: &str) -> Result<(Option<String>, Option<String>), RadosError> {
+pub fn ceph_mon_command(cluster: rados_t, name: &str, value: &str, format: Option<&str>) -> Result<(Option<String>, Option<String>), RadosError> {
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
-    ceph_mon_command_with_data(cluster, cmd, data)
+    ceph_mon_command_with_data(cluster, name, value, format, data)
 }
 
 /// Mon command that does pass in a data payload.
-pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_char>) -> Result<(Option<String>, Option<String>), RadosError> {
+/// Most all of the commands pass through this function.
+pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> Result<(Option<String>, Option<String>), RadosError> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
 
     let mut cmd_strings: Vec<String> = Vec::new();
-    cmd_strings.push(cmd.to_string());
+    match format {
+        Some(fmt) => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
+        },
+        None => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
+        }
+    }
 
     let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
     let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
@@ -1693,6 +1795,137 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, cmd: &str, data: Vec<*mut c_
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
         let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code))));
+        }
+
+        // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+        if outbuf_len > 0 {
+            let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
+            let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
+            let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
+            str_outbuf = Some(str_slice_outbuf.to_owned());
+
+            rados_buffer_free(outbuf);
+        }
+
+        if outs_len > 0 {
+            let c_str_outs: &CStr = CStr::from_ptr(outs);
+            let buf_outs: &[u8] = c_str_outs.to_bytes();
+            let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
+            str_outs = Some(str_slice_outs.to_owned());
+
+            rados_buffer_free(outs);
+        }
+    }
+
+    Ok((str_outbuf, str_outs))
+}
+
+/// OSD command that does not pass in a data payload.
+pub fn ceph_osd_command(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>) -> Result<(Option<String>, Option<String>), RadosError> {
+    let data: Vec<*mut c_char> = Vec::with_capacity(1);
+    ceph_osd_command_with_data(cluster, id, name, value, format, data)
+}
+
+/// OSD command that does pass in a data payload.
+pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> Result<(Option<String>, Option<String>), RadosError> {
+    if cluster.is_null() {
+        return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
+    }
+
+    let mut cmd_strings: Vec<String> = Vec::new();
+    match format {
+        Some(fmt) => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
+        },
+        None => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
+        }
+    }
+
+    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+
+    let mut outbuf = ptr::null_mut();
+    let mut outs = ptr::null_mut();
+    let mut outbuf_len = 0;
+    let mut outs_len = 0;
+
+    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // freed by call `rados_buffer_free`
+    let mut str_outbuf: Option<String> = None;
+    let mut str_outs: Option<String> = None;
+
+    unsafe {
+        // cmd length is 1 because we only allow one command at a time.
+        let ret_code = rados_osd_command(cluster, id, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code))));
+        }
+
+        // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+        if outbuf_len > 0 {
+            let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
+            let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
+            let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
+            str_outbuf = Some(str_slice_outbuf.to_owned());
+
+            rados_buffer_free(outbuf);
+        }
+
+        if outs_len > 0 {
+            let c_str_outs: &CStr = CStr::from_ptr(outs);
+            let buf_outs: &[u8] = c_str_outs.to_bytes();
+            let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
+            str_outs = Some(str_slice_outs.to_owned());
+
+            rados_buffer_free(outs);
+        }
+    }
+
+    Ok((str_outbuf, str_outs))
+}
+
+/// PG command that does not pass in a data payload.
+pub fn ceph_pgs_command(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>) -> Result<(Option<String>, Option<String>), RadosError> {
+    let data: Vec<*mut c_char> = Vec::with_capacity(1);
+    ceph_pgs_command_with_data(cluster, pg, name, value, format, data)
+}
+
+/// PG command that does pass in a data payload.
+pub fn ceph_pgs_command_with_data(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> Result<(Option<String>, Option<String>), RadosError> {
+    if cluster.is_null() {
+        return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
+    }
+
+    let mut cmd_strings: Vec<String> = Vec::new();
+    match format {
+        Some(fmt) => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
+        },
+        None => {
+            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
+        }
+    }
+
+    let pg_str = CString::new(pg).unwrap();
+    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+
+    let mut outbuf = ptr::null_mut();
+    let mut outs = ptr::null_mut();
+    let mut outbuf_len = 0;
+    let mut outs_len = 0;
+
+    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // freed by call `rados_buffer_free`
+    let mut str_outbuf: Option<String> = None;
+    let mut str_outs: Option<String> = None;
+
+    unsafe {
+        // cmd length is 1 because we only allow one command at a time.
+        let ret_code = rados_pg_command(cluster, pg_str.as_ptr(), cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }

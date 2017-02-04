@@ -16,27 +16,6 @@ use std::io::Result;
 
 use std::process::{Command, Output};
 
-pub fn run_args(cmd: &str, args: &[String], shell: bool) -> Result<(Output)> {
-    let output;
-
-    if args.len() > 0 {
-        if !shell {
-            output = try!(Command::new(cmd).args(&args).output());
-        } else {
-            let mut arg_string = String::new();
-            arg_string = arg_string + cmd + " ";
-            for s in args {
-                arg_string = arg_string + s + " ";
-            }
-            output = try!(run_cli(&arg_string));
-        }
-    } else {
-        output = try!(run_cli(cmd));
-    }
-
-    Ok(output)
-}
-
 /// run_cli - pass in a String of a normal command line
 ///
 /// The function will split the options into words to supply to the low_level std::process::Command

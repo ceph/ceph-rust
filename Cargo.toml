@@ -1,6 +1,6 @@
 [package]
 name = "ceph-rust"
-version = "0.1.14"
+version = "0.1.15"
 authors = ["Chris Jones <chris.jones@lambdastack.io>", "Chris Holcombe"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -21,7 +21,7 @@ byteorder = "1" #"~0.5"
 libc = "0.2"
 nom = "~1.2"
 uuid = {version = "~0.3", features = ["use_std"] }
-serde_json = "~0.9"
+rustc-serialize = "~0.3"
 
 # Run the example as follows: `cargo run --example ceph`
 

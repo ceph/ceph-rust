@@ -28,6 +28,8 @@ use ceph_rust::rados as ceph;
 #[cfg(target_os = "linux")]
 use ceph_rust::admin_sockets::*;
 
+use ceph_rust::JsonData;
+
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {
 		repeat(0).take($n).collect::<Vec<c_char>>();
@@ -99,7 +101,7 @@ fn main() {
         println!("Cluster stat: {:?}", cluster_stat);
 
         // Mon command to check the health. Same as `ceph -s`
-        match ceph_helpers::ceph_mon_command(cluster, "{\"prefix\": \"status\"}") {
+        match ceph_helpers::ceph_mon_command(cluster, "prefix", "status", None) {
             Ok((outbuf, outs)) => {
                 match outbuf {
                     Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
@@ -113,9 +115,25 @@ fn main() {
             Err(e) => {println!("{:?}", e);},
         }
 
+        // Print CephHealth of cluster
+        println!("{}", ceph_helpers::ceph_health_string(cluster).unwrap_or("".to_string()));
+
+        // Print Status of cluster health a different way
+        println!("{}", ceph_helpers::ceph_status(cluster, &["health", "overall_status"]).unwrap());
+
+        // Another example
+        println!("{:?}", ceph_helpers::ceph_status_string_value(cluster, &["fsid"]));
+
+        // This command encapsulates the lower level mon, osd, pg commands and returns JsonData objects based on the key path
+        println!("{:?}", ceph_helpers::ceph_command(cluster, "prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+
+        // Get a list of Ceph librados commands in JSON format.
+        // It's very long so it's commented out.
+        // println!("{}", ceph_helpers::ceph_commands(cluster, None).unwrap().pretty());
+
         // Currently - parses the `ceph --version` call. The admin socket commands `version` and `git_version`
         // will be called soon to replace the string parse.
-        let ceph_ver = ceph_helpers::ceph_version();
+        let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ceph-vm1.asok"); // Change to the real mon admin socket name
         println!("Ceph Version - {:?}", ceph_ver);
 
         ceph::rados_shutdown(cluster);

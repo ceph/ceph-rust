@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["run_args",""],["run_cli","run_cli - pass in a String of a normal command line"]]});
+initSidebarItems({"fn":[["run_cli","run_cli - pass in a String of a normal command line"]]});
