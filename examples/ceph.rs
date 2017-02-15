@@ -96,6 +96,9 @@ fn main() {
         let s: &str = str::from_utf8(slice).unwrap();
         println!("rados_cluster_fsid len: {} - {}", len, s);
 
+        let ping_monitor = ceph_helpers::ping_monitor(cluster, "ceph-mon.ceph-vm1"); // Change to support your mon name
+        println!("Ping monitor: {:?}", ping_monitor);
+
         // Rust specific example...
         let cluster_stat = ceph_helpers::rados_stat_cluster(cluster);
         println!("Cluster stat: {:?}", cluster_stat);

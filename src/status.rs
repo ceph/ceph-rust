@@ -83,7 +83,8 @@ pub struct CephStatusHealthMons {
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct CephStatusHealthSummary {
-    dummy: String,
+    severity: String,
+    summary: String,
 }
 
 #[derive(RustcDecodable, RustcEncodable)]

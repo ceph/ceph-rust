@@ -17,7 +17,7 @@ use std::str;
 use rustc_serialize::json::*;
 
 use JsonData;
-use JsonValue;
+// use JsonValue;
 
 /// First json call that takes a JSON formatted string and converts it to JsonData object that can
 /// then be traversed using `json_find` via the key path.

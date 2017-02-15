@@ -1579,6 +1579,15 @@ pub fn rados_fsid(cluster: rados_t) -> Result<Uuid, RadosError> {
 /// May be used as a simply way to assess liveness, or to obtain
 /// information about the monitor in a simple way even in the
 /// absence of quorum.
+/// NB: There must be a section in ceph.conf like `[mon.whatever_name]` for this to work.
+/// Example of how Chef-bcs builds a Ceph cluster for testing with VirtualBox:
+/// `[mon]`
+/// `  mon host = ceph-vm1, ceph-vm2, ceph-vm3`
+/// `  mon addr = 10.0.100.21:6789, 10.0.100.22:6789, 10.0.100.23:6789`
+///
+/// `[mon.ceph-vm1]`
+/// `  mon host = ceph-vm1`
+/// `  mon addr = 10.0.100.21:6789`
 pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
