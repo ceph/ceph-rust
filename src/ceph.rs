@@ -260,7 +260,7 @@ pub struct WriteOperation {
     /// flags are set by calling LIBRADOS_OPERATION_NOFLAG | LIBRADOS_OPERATION_ORDER_READS_WRITES
     /// all the other flags are documented in rados.rs
     pub flags: u32,
-    pub mtime: i64,
+    pub mtime: time_t,
     write_op_handle: rados_write_op_t,
 }
 
@@ -462,12 +462,12 @@ pub fn rados_get_pool_name(ctx: rados_ioctx_t) -> Result<String, RadosError> {
 
     unsafe {
         // length of string stored, or -ERANGE if buffer too small
-        let ret_code = rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut i8, buffer.capacity() as u32);
+        let ret_code = rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut c_char, buffer.capacity() as c_uint);
         if ret_code == -ERANGE {
             // Buffer was too small
             buffer.reserve(1000);
             buffer.set_len(1000);
-            let ret_code = rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut i8, buffer.capacity() as u32);
+            let ret_code = rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut c_char, buffer.capacity() as c_uint);
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
             }
@@ -692,7 +692,7 @@ pub fn rados_snap_get_name(ctx: rados_ioctx_t, snap_id: u64) -> Result<String, R
     let out_buff_size = out_buffer.capacity();
     let out_str = try!(CString::new(out_buffer));
     unsafe {
-        let ret_code = rados_ioctx_snap_get_name(ctx, snap_id, out_str.as_ptr() as *mut i8, out_buff_size as i32);
+        let ret_code = rados_ioctx_snap_get_name(ctx, snap_id, out_str.as_ptr() as *mut c_char, out_buff_size as c_int);
         if ret_code == -ERANGE {
         }
         if ret_code < 0 {
@@ -703,12 +703,12 @@ pub fn rados_snap_get_name(ctx: rados_ioctx_t, snap_id: u64) -> Result<String, R
 }
 
 /// Find when a pool snapshot occurred
-pub fn rados_snap_get_stamp(ctx: rados_ioctx_t, snap_id: u64) -> Result<i64, RadosError> {
+pub fn rados_snap_get_stamp(ctx: rados_ioctx_t, snap_id: u64) -> Result<time_t, RadosError> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
 
-    let mut time_id: i64 = 0;
+    let mut time_id: time_t = 0;
     unsafe {
         let ret_code = rados_ioctx_snap_get_stamp(ctx, snap_id, &mut time_id);
         if ret_code < 0 {
@@ -739,7 +739,7 @@ pub fn rados_object_write(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8], 
     let obj_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_write(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len(), offset);
+        let ret_code = rados_write(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const c_char, buffer.len(), offset);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -796,7 +796,7 @@ pub fn rados_object_append(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8])
     let obj_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_append(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len());
+        let ret_code = rados_append(ctx, obj_name_str.as_ptr(), buffer.as_ptr() as *const c_char, buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -821,7 +821,7 @@ pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mu
     }
 
     unsafe {
-        let ret_code = rados_read(ctx, object_name_str.as_ptr(), fill_buffer.as_mut_ptr() as *mut i8, len, read_offset);
+        let ret_code = rados_read(ctx, object_name_str.as_ptr(), fill_buffer.as_mut_ptr() as *mut c_char, len, read_offset);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -839,7 +839,7 @@ pub fn rados_object_remove(ctx: rados_ioctx_t, object_name: &str) -> Result<(), 
     let object_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_remove(ctx, object_name_str.as_ptr() as *const i8);
+        let ret_code = rados_remove(ctx, object_name_str.as_ptr() as *const c_char);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -876,9 +876,9 @@ pub fn rados_object_getxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
 
     unsafe {
         let ret_code = rados_getxattr(ctx,
-                                      object_name_str.as_ptr() as *const i8,
-                                      attr_name_str.as_ptr() as *const i8,
-                                      fill_buffer.as_mut_ptr() as *mut i8,
+                                      object_name_str.as_ptr() as *const c_char,
+                                      attr_name_str.as_ptr() as *const c_char,
+                                      fill_buffer.as_mut_ptr() as *mut c_char,
                                       fill_buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
@@ -898,9 +898,9 @@ pub fn rados_object_setxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
 
     unsafe {
         let ret_code = rados_setxattr(ctx,
-                                      object_name_str.as_ptr() as *const i8,
-                                      attr_name_str.as_ptr() as *const i8,
-                                      attr_value.as_mut_ptr() as *mut i8,
+                                      object_name_str.as_ptr() as *const c_char,
+                                      attr_name_str.as_ptr() as *const c_char,
+                                      attr_value.as_mut_ptr() as *mut c_char,
                                       attr_value.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
@@ -918,7 +918,7 @@ pub fn rados_object_rmxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &s
     let attr_name_str = try!(CString::new(attr_name));
 
     unsafe {
-        let ret_code = rados_rmxattr(ctx, object_name_str.as_ptr() as *const i8, attr_name_str.as_ptr() as *const i8);
+        let ret_code = rados_rmxattr(ctx, object_name_str.as_ptr() as *const c_char, attr_name_str.as_ptr() as *const c_char);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -948,8 +948,8 @@ impl Iterator for XAttr {
         let mut val_length: usize = 0;
         unsafe {
             let ret_code = rados_getxattrs_next(self.iter,
-                                                name_buffer.as_mut_ptr() as *mut *const i8,
-                                                value_buffer.as_mut_ptr() as *mut *const i8,
+                                                name_buffer.as_mut_ptr() as *mut *const c_char,
+                                                value_buffer.as_mut_ptr() as *mut *const c_char,
                                                 &mut val_length);
 
             if ret_code < 0 {
@@ -1016,7 +1016,7 @@ pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str, update: T
     let object_name_str = try!(CString::new(object_name));
     let buffer = try!(update.serialize());
     unsafe {
-        let ret_code = rados_tmap_update(ctx, object_name_str.as_ptr(), buffer.as_ptr() as *const i8, buffer.len());
+        let ret_code = rados_tmap_update(ctx, object_name_str.as_ptr(), buffer.as_ptr() as *const c_char, buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1042,12 +1042,12 @@ pub fn rados_object_tmap_get(ctx: rados_ioctx_t, object_name: &str) -> Result<Ve
     let mut buffer: Vec<u8> = Vec::with_capacity(500);
 
     unsafe {
-        let ret_code = rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+        let ret_code = rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
         if ret_code == -ERANGE {
             buffer.reserve(1000);
             buffer.set_len(1000);
             let ret_code =
-                rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+                rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
             }
@@ -1085,9 +1085,9 @@ pub fn rados_object_exec(ctx: rados_ioctx_t, object_name: &str, class_name: &str
                                   object_name_str.as_ptr(),
                                   class_name_str.as_ptr(),
                                   method_name_str.as_ptr(),
-                                  input_buffer.as_ptr() as *const i8,
+                                  input_buffer.as_ptr() as *const c_char,
                                   input_buffer.len(),
-                                  output_buffer.as_mut_ptr() as *mut i8,
+                                  output_buffer.as_mut_ptr() as *mut c_char,
                                   output_buffer.len());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
@@ -1145,7 +1145,7 @@ pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str, data: &[u8]) -
     let object_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_notify(ctx, object_name_str.as_ptr(), 0, data.as_ptr() as *const i8, data.len() as i32);
+        let ret_code = rados_notify(ctx, object_name_str.as_ptr(), 0, data.as_ptr() as *const c_char, data.len() as i32);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1176,7 +1176,7 @@ pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id:
                                             object_name_str.as_ptr(),
                                             notify_id,
                                             cookie,
-                                            buf.as_ptr() as *const i8,
+                                            buf.as_ptr() as *const c_char,
                                             buf.len() as i32);
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
@@ -1380,7 +1380,7 @@ pub fn rados_blacklist_client(cluster: rados_t, client: IpAddr, expire_seconds: 
     }
     let client_address = try!(CString::new(client.to_string()));
     unsafe {
-        let ret_code = rados_blacklist_add(cluster, client_address.as_ptr() as *mut i8, expire_seconds);
+        let ret_code = rados_blacklist_add(cluster, client_address.as_ptr() as *mut c_char, expire_seconds);
 
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
@@ -1410,11 +1410,11 @@ pub fn rados_pools(cluster: rados_t) -> Result<Vec<String>, RadosError> {
     let mut pool_buffer: Vec<u8> = Vec::with_capacity(500);
 
     unsafe {
-        let len = rados_pool_list(cluster, pool_buffer.as_mut_ptr() as *mut i8, pool_buffer.capacity());
+        let len = rados_pool_list(cluster, pool_buffer.as_mut_ptr() as *mut c_char, pool_buffer.capacity());
         if len > pool_buffer.capacity() as i32 {
             // rados_pool_list requires more buffer than we gave it
             pool_buffer.reserve(len as usize);
-            let len = rados_pool_list(cluster, pool_buffer.as_mut_ptr() as *mut i8, pool_buffer.capacity());
+            let len = rados_pool_list(cluster, pool_buffer.as_mut_ptr() as *mut c_char, pool_buffer.capacity());
             // Tell the Vec how much Ceph read into the buffer
             pool_buffer.set_len(len as usize);
         } else {
@@ -1498,13 +1498,13 @@ pub fn rados_reverse_lookup_pool(cluster: rados_t, pool_id: i64) -> Result<Strin
     let mut buffer: Vec<u8> = Vec::with_capacity(500);
 
     unsafe {
-        let ret_code = rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+        let ret_code = rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
         if ret_code == -ERANGE {
             // Buffer was too small
             buffer.reserve(1000);
             buffer.set_len(1000);
             let ret_code =
-                rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut i8, buffer.capacity());
+                rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
             }
@@ -1559,14 +1559,14 @@ pub fn rados_fsid(cluster: rados_t) -> Result<Uuid, RadosError> {
     let mut fsid_buffer: Vec<u8> = Vec::with_capacity(37);
     let fsid: Uuid;
     unsafe {
-        let ret_code = rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut i8, fsid_buffer.capacity());
+        let ret_code = rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut c_char, fsid_buffer.capacity());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
         if ret_code > 0 {
             // Length of buffer required for fsid
             fsid_buffer.reserve(ret_code as usize);
-            rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut i8, fsid_buffer.capacity());
+            rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut c_char, fsid_buffer.capacity());
             // Tell the Vec how much Ceph read into the buffer
             fsid_buffer.set_len(ret_code as usize);
         }
@@ -1600,7 +1600,7 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> Result<String, RadosError
     unsafe {
         let ret_code = rados_ping_monitor(cluster,
                                           mon_id_str.as_ptr(),
-                                          out_str.as_ptr() as *mut *mut i8,
+                                          out_str.as_ptr() as *mut *mut c_char,
                                           out_buff_size as *mut usize);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
@@ -1803,7 +1803,7 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, for
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
@@ -1868,7 +1868,7 @@ pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: 
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_osd_command(cluster, id, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_osd_command(cluster, id, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
@@ -1934,7 +1934,7 @@ pub fn ceph_pgs_command_with_data(cluster: rados_t, pg: &str, name: &str, value:
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_pg_command(cluster, pg_str.as_ptr(), cmds.as_mut_ptr(), 1, data.as_ptr() as *mut i8, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_pg_command(cluster, pg_str.as_ptr(), cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }

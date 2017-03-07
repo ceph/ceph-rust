@@ -91,7 +91,7 @@ fn main() {
         let buf_size: usize = 37; // 36 is the constant size +1 for null.
         let mut fs_id: Vec<u8> = Vec::with_capacity(buf_size);
 
-        let len = ceph::rados_cluster_fsid(cluster, fs_id.as_mut_ptr() as *mut i8, buf_size);
+        let len = ceph::rados_cluster_fsid(cluster, fs_id.as_mut_ptr() as *mut c_char, buf_size);
         let slice = slice::from_raw_parts(fs_id.as_mut_ptr(), buf_size - 1);
         let s: &str = str::from_utf8(slice).unwrap();
         println!("rados_cluster_fsid len: {} - {}", len, s);
