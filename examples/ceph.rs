@@ -17,18 +17,18 @@
 extern crate ceph_rust;
 extern crate libc;
 
-use libc::*;
-use std::ffi::{CStr, CString};
-use std::{ptr, str, slice};
+
+use ceph_rust::JsonData;
+#[cfg(target_os = "linux")]
+use ceph_rust::admin_sockets::*;
 
 #[cfg(target_os = "linux")]
 use ceph_rust::ceph as ceph_helpers;
 #[cfg(target_os = "linux")]
 use ceph_rust::rados as ceph;
-#[cfg(target_os = "linux")]
-use ceph_rust::admin_sockets::*;
-
-use ceph_rust::JsonData;
+use libc::*;
+use std::{ptr, slice, str};
+use std::ffi::{CStr, CString};
 
 macro_rules! zeroed_c_char_buf {
 	($n:expr) => {
@@ -62,13 +62,15 @@ fn main() {
         Ok(json) => {
             println!("{}", json);
         },
-        Err(e) => { println!("{}", e); },
+        Err(e) => {
+            println!("{}", e);
+        },
     }
 
+    ceph::rados_libversion(&mut major, &mut minor, &mut extra);
+    ret_code = ceph::rados_create(&mut cluster, std::ptr::null());
+    println!("Return code: {} - {:?}", ret_code, cluster);
     unsafe {
-        ceph::rados_version(&mut major, &mut minor, &mut extra);
-        ret_code = ceph::rados_create(&mut cluster, std::ptr::null());
-        println!("Return code: {} - {:?}", ret_code, cluster);
 
         ret_code = ceph::rados_conf_read_file(cluster, config_file.as_ptr());
         println!("Return code: {} - {:?}", ret_code, cluster);
@@ -112,7 +114,9 @@ fn main() {
                     None => {},
                 }
             },
-            Err(e) => {println!("{:?}", e);},
+            Err(e) => {
+                println!("{:?}", e);
+            },
         }
 
         // Print CephHealth of cluster
@@ -121,16 +125,24 @@ fn main() {
         // Print Status of cluster health a different way
         println!("{}", ceph_helpers::ceph_status(cluster, &["health", "overall_status"]).unwrap());
 
-        // This command encapsulates the lower level mon, osd, pg commands and returns JsonData objects based on the key path
-        println!("{:?}", ceph_helpers::ceph_command(cluster, "prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+        // This command encapsulates the lower level mon, osd, pg commands and returns JsonData
+        // objects based on the key path
+        println!("{:?}",
+                 ceph_helpers::ceph_command(cluster,
+                                            "prefix",
+                                            "status",
+                                            ceph_helpers::CephCommandTypes::Mon,
+                                            &["health"]));
 
         // Get a list of Ceph librados commands in JSON format.
         // It's very long so it's commented out.
         // println!("{}", ceph_helpers::ceph_commands(cluster, None).unwrap().pretty());
 
-        // Currently - parses the `ceph --version` call. The admin socket commands `version` and `git_version`
+        // Currently - parses the `ceph --version` call. The admin socket commands `version`
+        // and `git_version`
         // will be called soon to replace the string parse.
-        let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ceph-vm1.asok"); // Change to the real mon admin socket name
+        // Change to the real mon admin socket name
+        let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ceph-vm1.asok");
         println!("Ceph Version - {:?}", ceph_ver);
 
         ceph::rados_shutdown(cluster);
