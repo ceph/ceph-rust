@@ -40,7 +40,7 @@ fn main() {
     // return and allow for pattern matching.
 
     // Example of accessing the `Admin Socket` for mon
-    match admin_socket_command("help", "/var/run/ceph/ceph-mon.ceph-vm1.asok") {
+    match admin_socket_command("help", "/var/run/ceph/ceph-mon.ip-172-31-31-247.asok") {
         Ok(json) => {
             println!("{}", json);
         },
@@ -51,16 +51,24 @@ fn main() {
 
     let rados_version = ceph_helpers::rados_libversion();
     println!("Librados version: {:?}", rados_version);
+
+    println!("Connecting to ceph");
     let cluster = ceph_helpers::connect_to_ceph("admin", "/etc/ceph/ceph.conf").unwrap();
+    println!("Creating pool {}", pool_name);
     ceph_helpers::rados_create_pool(cluster, pool_name).unwrap();
 
+    println!("Listing pools");
     let pools_list = ceph_helpers::rados_pools(cluster).unwrap();
-    println!("{:?}", pools_list);
+	for pool in pools_list{
+		println!("pool: {}", pool);
+	}
 
+    println!("Deleting pool: {}", pool_name);
     ceph_helpers::rados_delete_pool(cluster, pool_name).unwrap();
 
-    let fsid = ceph_helpers::rados_fsid(cluster).unwrap();
-    println!("rados_cluster_fsid {}", fsid);
+    println!("Getting cluster fsid");
+    let fsid = ceph_helpers::rados_fsid(cluster);
+    println!("rados_cluster_fsid {:?}", fsid);
 
     let cluster_stat = ceph_helpers::rados_stat_cluster(cluster).unwrap();
     println!("Cluster stat: {:?}", cluster_stat);
@@ -74,7 +82,7 @@ fn main() {
     // and `git_version`
     // will be called soon to replace the string parse.
     // Change to the real mon admin socket name
-    let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ceph-vm1.asok");
+    let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ip-172-31-31-247.asok");
     println!("Ceph Version - {:?}", ceph_ver);
     // Mon command to check the health. Same as `ceph -s`
     match ceph_helpers::ceph_mon_command(cluster, "prefix", "status", None) {
@@ -102,6 +110,7 @@ fn main() {
     // It's very long so it's commented out.
     // println!("{}", ceph_helpers::ceph_commands(cluster, None).unwrap().pretty());
     unsafe {
+		println!("Getting rados instance id");
         let instance_id = ceph::rados_get_instance_id(cluster);
         println!("Instance ID: {}", instance_id);
     }

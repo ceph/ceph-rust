@@ -14,16 +14,14 @@
 #![cfg(target_os = "linux")]
 #![allow(unused_imports)]
 
-use std::error::Error as StdError;
-use std::ffi::{CStr, CString, IntoStringError, NulError};
+use std::ffi::{CStr, CString};
 
-use std::io::{BufRead, Cursor, Error};
+use std::io::{BufRead, Cursor};
 use std::net::IpAddr;
-use std::iter::FromIterator;
-use std::{ptr, fmt, slice, str};
+use std::{ptr, str};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use uuid::{ParseError, Uuid};
+use uuid::{Uuid};
 use byteorder::{LittleEndian, WriteBytesExt};
 use nom::{IResult, le_u32};
 use libc::*;
@@ -1557,22 +1555,18 @@ pub fn rados_fsid(cluster: rados_t) -> Result<Uuid, RadosError> {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
     let mut fsid_buffer: Vec<u8> = Vec::with_capacity(37);
-    let fsid: Uuid;
     unsafe {
         let ret_code = rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut c_char, fsid_buffer.capacity());
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
-        if ret_code > 0 {
-            // Length of buffer required for fsid
-            fsid_buffer.reserve(ret_code as usize);
-            rados_cluster_fsid(cluster, fsid_buffer.as_mut_ptr() as *mut c_char, fsid_buffer.capacity());
-            // Tell the Vec how much Ceph read into the buffer
-            fsid_buffer.set_len(ret_code as usize);
-        }
+        // Tell the Vec how much Ceph read into the buffer
+        fsid_buffer.set_len(ret_code as usize);
     }
-    fsid = try!(Uuid::from_bytes(&fsid_buffer));
-    Ok(fsid)
+    //Ceph actually returns the fsid as a uuid string
+    let fsid_str = String::from_utf8(fsid_buffer)?;
+    // Parse into a UUID and return
+    Ok(fsid_str.parse()?)
 }
 
 /// Ping a monitor to assess liveness
