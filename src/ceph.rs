@@ -1657,7 +1657,7 @@ pub fn ceph_status(cluster: rados_t, keys: &[&str]) -> RadosResult<String> {
                 _ => Err(RadosError::new("JSON data not found.".to_string()))
             }
         },
-        Err(e) => Err(RadosError::new(format!("{}", e)))
+        Err(e) => Err(e)
     }
 }
 
@@ -1667,7 +1667,7 @@ pub fn ceph_health_string(cluster: rados_t) -> RadosResult<String> {
         Ok((data, _)) => {
             Ok(data.unwrap().replace("\n", ""))
         },
-        Err(e) => Err(RadosError::new(format!("{}", e)))
+        Err(e) => Err(e)
     }
 }
 
@@ -1715,7 +1715,7 @@ pub fn ceph_command(cluster: rados_t, name: &str, value: &str, cmd_type: CephCom
                         _ => Err(RadosError::new("JSON data not found.".to_string()))
                     }
                 },
-                Err(e) => Err(RadosError::new(format!("{}", e)))
+                Err(e) => Err(e)
             }
         }
     }
@@ -1746,7 +1746,7 @@ pub fn ceph_commands(cluster: rados_t, keys: Option<&[&str]>) -> RadosResult<Jso
                 _ => Err(RadosError::new("JSON data not found.".to_string()))
             }
         },
-        Err(e) => Err(RadosError::new(format!("{}", e)))
+        Err(e) => Err(e)
     }
 }
 
