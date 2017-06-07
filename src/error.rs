@@ -31,6 +31,8 @@ pub enum RadosError {
     ParseError(ParseError),
 }
 
+pub type RadosResult<T> = Result<T, RadosError>;
+
 impl fmt::Display for RadosError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(self.description())
