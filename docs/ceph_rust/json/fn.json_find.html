@@ -9,6 +9,7 @@
 
     <title>ceph_rust::json::json_find - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
     <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../../main.css">
     
@@ -16,7 +17,7 @@
     <link rel="shortcut icon" href="https://lambdastackio.github.io/static/images/favicon.ico">
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc fn">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,13 +43,13 @@
         </form>
     </nav>
 
-    <section id='main' class="content fn">
-<h1 class='fqn'><span class='in-band'>Function <a href='../index.html'>ceph_rust</a>::<wbr><a href='index.html'>json</a>::<wbr><a class='fn' href=''>json_find</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Function <a href='../index.html'>ceph_rust</a>::<wbr><a href='index.html'>json</a>::<wbr><a class="fn" href=''>json_find</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-83' class='srclink' href='../../src/ceph_rust/src/json.rs.html#39-41' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn json_find(json_data: <a class='type' href='../../ceph_rust/type.JsonData.html' title='ceph_rust::JsonData'>JsonData</a>, keys: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a>&amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='type' href='../../ceph_rust/type.JsonData.html' title='ceph_rust::JsonData'>JsonData</a>&gt;</pre><div class='docblock'><p>Looks for the parent object first and then the &#39;child&#39; object. If the parent object is None
+               </span><a class='srclink' href='../../src/ceph_rust/json.rs.html#39-41' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn json_find(json_data: <a class="type" href="../../ceph_rust/type.JsonData.html" title="type ceph_rust::JsonData">JsonData</a>, keys: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">&amp;[</a>&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">]</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="../../ceph_rust/type.JsonData.html" title="type ceph_rust::JsonData">JsonData</a>&gt;</pre><div class='docblock'><p>Looks for the parent object first and then the &#39;child&#39; object. If the parent object is None
 then it only looks for the &#39;child&#39; object. The parent object is used for situations where there
 may be &#39;child&#39; objects with the same name.</p>
 </div></section>
@@ -108,7 +109,6 @@ may be &#39;child&#39; objects with the same name.</p>
         window.rootPath = "../../";
         window.currentCrate = "ceph_rust";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
     <script defer src="../../search-index.js"></script>
 </body>
