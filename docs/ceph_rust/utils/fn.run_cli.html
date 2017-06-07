@@ -9,6 +9,7 @@
 
     <title>ceph_rust::utils::run_cli - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
     <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../../main.css">
     
@@ -16,7 +17,7 @@
     <link rel="shortcut icon" href="https://lambdastackio.github.io/static/images/favicon.ico">
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc fn">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,20 +43,20 @@
         </form>
     </nav>
 
-    <section id='main' class="content fn">
-<h1 class='fqn'><span class='in-band'>Function <a href='../index.html'>ceph_rust</a>::<wbr><a href='index.html'>utils</a>::<wbr><a class='fn' href=''>run_cli</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Function <a href='../index.html'>ceph_rust</a>::<wbr><a href='index.html'>utils</a>::<wbr><a class="fn" href=''>run_cli</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-72' class='srclink' href='../../src/ceph_rust/src/utils.rs.html#30-33' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn run_cli(cmd_line: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/process/struct.Output.html' title='std::process::Output'>Output</a>&gt;</pre><div class='docblock'><p>run_cli - pass in a String of a normal command line</p>
+               </span><a class='srclink' href='../../src/ceph_rust/utils.rs.html#30-33' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn run_cli(cmd_line: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/std/process/struct.Output.html" title="struct std::process::Output">Output</a>&gt;</pre><div class='docblock'><p>run_cli - pass in a String of a normal command line</p>
 
 <p>The function will split the options into words to supply to the low_level std::process::Command
 which returns Result&lt;(Output)&gt;</p>
 
 <h1 id='example' class='section-header'><a href='#example'>Example</a></h1>
-<pre class='rust rust-example-rendered'>
-<span class='ident'>run_cli</span>(<span class='string'>&quot;ps aux&quot;</span>);</pre>
+<pre class="rust rust-example-rendered">
+<span class="ident">run_cli</span>(<span class="string">&quot;ps aux&quot;</span>);</pre>
 </div></section>
     <section id='search' class="content hidden"></section>
 
@@ -113,7 +114,6 @@ which returns Result&lt;(Output)&gt;</p>
         window.rootPath = "../../";
         window.currentCrate = "ceph_rust";
     </script>
-    <script src="../../jquery.js"></script>
     <script src="../../main.js"></script>
     <script defer src="../../search-index.js"></script>
 </body>

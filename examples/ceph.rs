@@ -113,7 +113,6 @@ fn main() {
 		println!("Getting rados instance id");
         let instance_id = ceph::rados_get_instance_id(cluster);
         println!("Instance ID: {}", instance_id);
-<<<<<<< HEAD
 
         let buf_size: usize = 37; // 36 is the constant size +1 for null.
         let mut fs_id: Vec<u8> = Vec::with_capacity(buf_size);
@@ -164,8 +163,6 @@ fn main() {
         println!("Ceph Version - {:?}", ceph_ver);
 
         ceph::rados_shutdown(cluster);
-=======
->>>>>>> 35d831707aa957a5375e64ab1e36a1d83b57e5ee
     }
 
     ceph_helpers::disconnect_from_ceph(cluster);
