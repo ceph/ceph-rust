@@ -1602,22 +1602,10 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> RadosResult<String> {
 pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
-    match admin_socket_command(&cmd, socket) {
-        Ok(json) => {
-            match json_data(&json) {
-                Some(jsondata) => {
-                    match json_find(jsondata, &[cmd]) {
-                        Some(data) => {
-                            Some(json_as_string(&data))
-                        },
-                        None => None,
-                    }
-                },
-                _ => None
-            }
-        },
-        Err(_) => None
-    }
+    admin_socket_command(&cmd, socket).ok()
+        .and_then(|json| json_data(&json)
+        .and_then(|jsondata| json_find(jsondata, &[cmd])
+        .and_then(|data| Some(json_as_string(&data)))))
 }
 
 /// This version call parses the `ceph -s` output. It does not need `sudo` rights like
