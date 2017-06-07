@@ -140,27 +140,27 @@ pub enum TmapOperation {
 impl TmapOperation {
     fn serialize(&self) -> RadosResult<Vec<u8>> {
         let mut buffer: Vec<u8> = Vec::new();
-        match self {
-            &TmapOperation::Header { ref data } => {
+        match *self {
+            TmapOperation::Header { ref data } => {
                 buffer.push(CEPH_OSD_TMAP_HDR as u8);
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
             },
-            &TmapOperation::Set { ref key, ref data } => {
+            TmapOperation::Set { ref key, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_SET as u8);
                 try!(buffer.write_u32::<LittleEndian>(key.len() as u32));
                 buffer.extend(key.as_bytes());
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
             },
-            &TmapOperation::Create { ref name, ref data } => {
+            TmapOperation::Create { ref name, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_CREATE as u8);
                 try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
                 buffer.extend(name.as_bytes());
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
             },
-            &TmapOperation::Remove { ref name } => {
+            TmapOperation::Remove { ref name } => {
                 buffer.push(CEPH_OSD_TMAP_RM as u8);
                 try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
                 buffer.extend(name.as_bytes());
