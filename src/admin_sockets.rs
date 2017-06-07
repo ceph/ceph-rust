@@ -19,12 +19,12 @@ use std::io::{Read, Write, Cursor};
 use std::os::unix::net::UnixStream;
 use std::net::Shutdown;
 
-use error::RadosError;
+use error::{RadosError, RadosResult};
 use byteorder::{BigEndian, ReadBytesExt};
 
 /// This is a helper function that builds a raw command from the actual command. You just pass
 /// in a command like "help". The returned `String` will be a JSON String.
-pub fn admin_socket_command(cmd: &str, socket: &str) -> Result<String, RadosError> {
+pub fn admin_socket_command(cmd: &str, socket: &str) -> RadosResult<String> {
     let raw_cmd = format!("{{\"{}\": \"{}\"}}", "prefix", cmd);
     admin_socket_raw_command(&raw_cmd, socket)
 }
@@ -32,7 +32,7 @@ pub fn admin_socket_command(cmd: &str, socket: &str) -> Result<String, RadosErro
 /// This function supports a raw command in the format of something like: `{"prefix": "help"}`.
 /// The returned `String` will be a JSON String.
 #[allow(unused_variables)]
-pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> Result<String, RadosError> {
+pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> RadosResult<String> {
     let mut output = String::new();
     let mut buffer = vec![0;4];  // Should return 4 bytes with size or indicator.
     let cmd = &format!("{}\0", cmd);  // Terminator so don't add one to commands.
