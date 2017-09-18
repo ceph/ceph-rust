@@ -55,7 +55,6 @@ pub enum CephCommandTypes {
     Osd,
     Pgs,
 }
-
 fn get_error(n: c_int) -> RadosResult<String> {
     let mut buf = vec![0u8; 256];
     unsafe {
@@ -318,6 +317,34 @@ pub fn disconnect_from_ceph(cluster: rados_t) {
     }
     unsafe {
         rados_shutdown(cluster);
+    }
+}
+
+/// Set the value of a configuration option
+pub fn config_set(cluster: rados_t, name: &str, value: &str) -> RadosResult<()> {
+    let name_str = try!(CString::new(name));
+    let value_str = try!(CString::new(value));
+    unsafe {
+        let ret_code = rados_conf_set(cluster, name_str.as_ptr(), value_str.as_ptr());
+        if ret_code < 0 {
+            return Err(RadosError::new(get_error(ret_code as i32)?));
+        }
+    }
+    Ok(())
+}
+
+/// Get the value of a configuration option
+pub fn config_get(cluster: rados_t, name: &str) -> RadosResult<String> {
+    let name_str = try!(CString::new(name));
+    //5K should be plenty for a config key right?
+    let mut buffer: Vec<u8> = Vec::with_capacity(5120);
+    unsafe {
+        let ret_code =
+            rados_conf_get(cluster, name_str.as_ptr(), buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
+        if ret_code < 0 {
+            return Err(RadosError::new(get_error(ret_code as i32)?));
+        }
+        Ok(String::from_utf8_lossy(&buffer).into_owned())
     }
 }
 
@@ -1744,6 +1771,63 @@ pub fn ceph_mon_command(cluster: rados_t, name: &str, value: &str, format: Optio
     ceph_mon_command_with_data(cluster, name, value, format, data)
 }
 
+pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult<(Option<String>, Option<String>)> {
+    if cluster.is_null() {
+        return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
+    }
+    let data: Vec<*mut c_char> = Vec::with_capacity(1);
+    let mut cmd_strings: Vec<String> = Vec::new();
+    cmd_strings.push(cmd.into());
+
+    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+
+    let mut outbuf = ptr::null_mut();
+    let mut outs = ptr::null_mut();
+    let mut outbuf_len = 0;
+    let mut outs_len = 0;
+
+    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // freed by call `rados_buffer_free`
+    let mut str_outbuf: Option<String> = None;
+    let mut str_outs: Option<String> = None;
+
+    debug!("Calling rados_mon_command with {:?}", cstrings);
+
+    unsafe {
+        // cmd length is 1 because we only allow one command at a time.
+        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1,
+                                         data.as_ptr() as *mut c_char,
+                                         data.len() as usize, &mut outbuf,
+                                         &mut outbuf_len, &mut outs,
+                                         &mut outs_len);
+        if ret_code < 0 {
+            return Err(RadosError::new(try!(get_error(ret_code))));
+        }
+
+        // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+        if outbuf_len > 0 {
+            let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
+            let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
+            let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
+            str_outbuf = Some(str_slice_outbuf.to_owned());
+
+            rados_buffer_free(outbuf);
+        }
+
+        if outs_len > 0 {
+            let c_str_outs: &CStr = CStr::from_ptr(outs);
+            let buf_outs: &[u8] = c_str_outs.to_bytes();
+            let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
+            str_outs = Some(str_slice_outs.to_owned());
+
+            rados_buffer_free(outs);
+        }
+    }
+
+    Ok((str_outbuf, str_outs))
+}
+
 /// Mon command that does pass in a data payload.
 /// Most all of the commands pass through this function.
 pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> RadosResult<(Option<String>, Option<String>)> {
@@ -1773,6 +1857,8 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, for
     // freed by call `rados_buffer_free`
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
+
+    debug!("Calling rados_mon_command with {:?}", cstrings);
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
