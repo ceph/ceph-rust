@@ -1801,6 +1801,7 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
                                          data.len() as usize, &mut outbuf,
                                          &mut outbuf_len, &mut outs,
                                          &mut outs_len);
+        debug!("return code: {}", ret_code);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
