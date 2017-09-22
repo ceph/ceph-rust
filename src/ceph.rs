@@ -1776,11 +1776,7 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
-    let mut cmd_strings: Vec<String> = Vec::new();
-    cmd_strings.push(cmd.into());
-
-    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
-    let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
+    let mut cmds = CString::new(cmd).unwrap();
 
     let mut outbuf = ptr::null_mut();
     let mut outs = ptr::null_mut();
@@ -1792,11 +1788,11 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
 
-    debug!("Calling rados_mon_command with {:?}", cstrings);
+    debug!("Calling rados_mon_command with {:?}", cmd);
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1,
+        let ret_code = rados_mon_command(cluster, &mut cmds.as_ptr(), 1,
                                          data.as_ptr() as *mut c_char,
                                          data.len() as usize, &mut outbuf,
                                          &mut outbuf_len, &mut outs,
@@ -1807,20 +1803,16 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
         }
 
         // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
-        if outbuf_len > 0 {
-            let c_str_outbuf: &CStr = CStr::from_ptr(outbuf);
-            let buf_outbuf: &[u8] = c_str_outbuf.to_bytes();
-            let str_slice_outbuf: &str = str::from_utf8(buf_outbuf).unwrap();
-            str_outbuf = Some(str_slice_outbuf.to_owned());
+        if outbuf_len > 0 && !outbuf.is_null() {
+            let slice = ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize);
+            str_outbuf = Some(String::from_utf8_lossy(slice).into_owned());
 
             rados_buffer_free(outbuf);
         }
 
-        if outs_len > 0 {
-            let c_str_outs: &CStr = CStr::from_ptr(outs);
-            let buf_outs: &[u8] = c_str_outs.to_bytes();
-            let str_slice_outs: &str = str::from_utf8(buf_outs).unwrap();
-            str_outs = Some(str_slice_outs.to_owned());
+        if outs_len > 0 && !outs.is_null(){
+            let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
+            str_outs = Some(String::from_utf8_lossy(slice).into_owned());
 
             rados_buffer_free(outs);
         }
