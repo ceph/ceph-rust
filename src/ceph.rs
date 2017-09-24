@@ -14,27 +14,27 @@
 #![cfg(target_os = "linux")]
 #![allow(unused_imports)]
 
+use JsonData;
+
+use JsonValue;
+use admin_sockets::*;
+use byteorder::{LittleEndian, WriteBytesExt};
+use error::*;
+use json::*;
+use libc::*;
+use nom::{IResult, le_u32};
+
+use rados::*;
+use status::*;
+use std::{ptr, str};
 use std::ffi::{CStr, CString};
 
 use std::io::{BufRead, Cursor};
 use std::net::IpAddr;
-use std::{ptr, str};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-use uuid::{Uuid};
-use byteorder::{LittleEndian, WriteBytesExt};
-use nom::{IResult, le_u32};
-use libc::*;
-
-use rados::*;
 use utils::*;
-use admin_sockets::*;
-use json::*;
-use error::*;
-use status::*;
 
-use JsonValue;
-use JsonData;
+use uuid::Uuid;
 // use JsonError;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
@@ -130,10 +130,10 @@ named!(parse_remove<TmapOperation>,
 
 #[derive(Debug)]
 pub enum TmapOperation {
-    Header { data: Vec<u8>, },
-    Set { key: String, data: Vec<u8>, },
-    Create { name: String, data: Vec<u8>, },
-    Remove { name: String, },
+    Header { data: Vec<u8> },
+    Set { key: String, data: Vec<u8> },
+    Create { name: String, data: Vec<u8> },
+    Remove { name: String },
 }
 
 impl TmapOperation {
@@ -231,11 +231,13 @@ impl Iterator for Pool {
 }
 
 /// A helper to create rados read operation
-/// An object read operation stores a number of operations which can be executed atomically.
+/// An object read operation stores a number of operations which can be
+/// executed atomically.
 #[derive(Debug)]
 pub struct ReadOperation {
     pub object_name: String,
-    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG | LIBRADOS_OPERATION_BALANCE_READS
+    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG |
+    /// LIBRADOS_OPERATION_BALANCE_READS
     /// all the other flags are documented in rados.rs
     pub flags: u32,
     read_op_handle: rados_read_op_t,
@@ -250,11 +252,13 @@ impl Drop for ReadOperation {
 }
 
 /// A helper to create rados write operation
-/// An object write operation stores a number of operations which can be executed atomically.
+/// An object write operation stores a number of operations which can be
+/// executed atomically.
 #[derive(Debug)]
 pub struct WriteOperation {
     pub object_name: String,
-    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG | LIBRADOS_OPERATION_ORDER_READS_WRITES
+    /// flags are set by calling LIBRADOS_OPERATION_NOFLAG |
+    /// LIBRADOS_OPERATION_ORDER_READS_WRITES
     /// all the other flags are documented in rados.rs
     pub flags: u32,
     pub mtime: time_t,
@@ -336,7 +340,7 @@ pub fn config_set(cluster: rados_t, name: &str, value: &str) -> RadosResult<()> 
 /// Get the value of a configuration option
 pub fn config_get(cluster: rados_t, name: &str) -> RadosResult<String> {
     let name_str = try!(CString::new(name));
-    //5K should be plenty for a config key right?
+    // 5K should be plenty for a config key right?
     let mut buffer: Vec<u8> = Vec::with_capacity(5120);
     unsafe {
         let ret_code =
@@ -348,7 +352,8 @@ pub fn config_get(cluster: rados_t, name: &str) -> RadosResult<String> {
     }
 }
 
-/// Create an io context. The io context allows you to perform operations within a particular pool.
+/// Create an io context. The io context allows you to perform operations
+/// within a particular pool.
 /// For more details see rados_ioctx_t.
 pub fn get_rados_ioctx(cluster: rados_t, pool_name: &str) -> RadosResult<rados_ioctx_t> {
     if cluster.is_null() {
@@ -365,7 +370,8 @@ pub fn get_rados_ioctx(cluster: rados_t, pool_name: &str) -> RadosResult<rados_i
     }
 }
 
-/// Create an io context. The io context allows you to perform operations within a particular pool.
+/// Create an io context. The io context allows you to perform operations
+/// within a particular pool.
 /// For more details see rados_ioctx_t.
 pub fn get_rados_ioctx2(cluster: rados_t, pool_id: i64) -> RadosResult<rados_ioctx_t> {
     if cluster.is_null() {
@@ -382,9 +388,11 @@ pub fn get_rados_ioctx2(cluster: rados_t, pool_id: i64) -> RadosResult<rados_ioc
 }
 
 /// This just tells librados that you no longer need to use the io context.
-/// It may not be freed immediately if there are pending asynchronous requests on it, but you
+/// It may not be freed immediately if there are pending asynchronous requests
+/// on it, but you
 /// should not use an io context again after calling this function on it.
-/// This does not guarantee any asynchronous writes have completed. You must call rados_aio_flush()
+/// This does not guarantee any asynchronous writes have completed. You must
+/// call rados_aio_flush()
 /// on the io context before destroying it to do that.
 pub fn destroy_rados_ioctx(ctx: rados_ioctx_t) {
     if ctx.is_null() {
@@ -492,7 +500,8 @@ pub fn rados_get_pool_name(ctx: rados_ioctx_t) -> RadosResult<String> {
             // Buffer was too small
             buffer.reserve(1000);
             buffer.set_len(1000);
-            let ret_code = rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut c_char, buffer.capacity() as c_uint);
+            let ret_code =
+                rados_ioctx_get_pool_name(ctx, buffer.as_mut_ptr() as *mut c_char, buffer.capacity() as c_uint);
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
             }
@@ -613,7 +622,8 @@ pub fn rados_snap_set_read(ctx: rados_ioctx_t, snap_id: u64) -> RadosResult<()> 
 
 /// Allocate an ID for a self-managed snapshot
 /// Get a unique ID to put in the snaphot context to create a snapshot.
-/// A clone of an object is not created until a write with the new snapshot context is completed.
+/// A clone of an object is not created until a write with the new snapshot
+/// context is completed.
 pub fn rados_selfmanaged_snap_create(ctx: rados_ioctx_t) -> RadosResult<u64> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -629,7 +639,8 @@ pub fn rados_selfmanaged_snap_create(ctx: rados_ioctx_t) -> RadosResult<u64> {
 }
 
 /// Remove a self-managed snapshot
-/// This increases the snapshot sequence number, which will cause snapshots to be removed lazily.
+/// This increases the snapshot sequence number, which will cause snapshots to
+/// be removed lazily.
 pub fn rados_selfmanaged_snap_remove(ctx: rados_ioctx_t, snap_id: u64) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -663,9 +674,11 @@ pub fn rados_selfmanaged_snap_rollback(ctx: rados_ioctx_t, object_name: &str, sn
 
 /// Set the snapshot context for use when writing to objects
 /// This is stored in the io context, and applies to all future writes.
-// pub fn rados_selfmanaged_snap_set_write_ctx(ctx: rados_ioctx_t) -> RadosResult<()> {
+// pub fn rados_selfmanaged_snap_set_write_ctx(ctx: rados_ioctx_t) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
@@ -673,9 +686,11 @@ pub fn rados_selfmanaged_snap_rollback(ctx: rados_ioctx_t, object_name: &str, sn
 // }
 //
 /// List all the ids of pool snapshots
-// pub fn rados_snap_list(ctx: rados_ioctx_t, snaps: *mut rados_snap_t) -> RadosResult<()> {
+// pub fn rados_snap_list(ctx: rados_ioctx_t, snaps: *mut rados_snap_t) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 // let mut buffer: Vec<u64> = Vec::with_capacity(500);
 //
@@ -718,8 +733,7 @@ pub fn rados_snap_get_name(ctx: rados_ioctx_t, snap_id: u64) -> RadosResult<Stri
     let out_str = try!(CString::new(out_buffer));
     unsafe {
         let ret_code = rados_ioctx_snap_get_name(ctx, snap_id, out_str.as_ptr() as *mut c_char, out_buff_size as c_int);
-        if ret_code == -ERANGE {
-        }
+        if ret_code == -ERANGE {}
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -744,7 +758,8 @@ pub fn rados_snap_get_stamp(ctx: rados_ioctx_t, snap_id: u64) -> RadosResult<tim
 }
 
 /// Return the version of the last object read or written to.
-/// This exposes the internal version number of the last object read or written via this io context
+/// This exposes the internal version number of the last object read or written
+/// via this io context
 pub fn rados_get_object_last_version(ctx: rados_ioctx_t) -> RadosResult<u64> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -772,7 +787,8 @@ pub fn rados_object_write(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8], 
     Ok(())
 }
 
-/// The object is filled with the provided data. If the object exists, it is atomically
+/// The object is filled with the provided data. If the object exists, it is
+/// atomically
 /// truncated and then written.
 pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8]) -> RadosResult<()> {
     if ctx.is_null() {
@@ -791,12 +807,13 @@ pub fn rados_object_write_full(ctx: rados_ioctx_t, object_name: &str, buffer: &[
 }
 
 /// Efficiently copy a portion of one object to another
-/// If the underlying filesystem on the OSD supports it, this will be a copy-on-write clone.
-/// The src and dest objects must be in the same pg. To ensure this, the io context should
+/// If the underlying filesystem on the OSD supports it, this will be a
+/// copy-on-write clone.
+/// The src and dest objects must be in the same pg. To ensure this, the io
+/// context should
 /// have a locator key set (see rados_ioctx_locator_set_key()).
-pub fn rados_object_clone_range(ctx: rados_ioctx_t, dst_object_name: &str, dst_offset: u64, src_object_name: &str,
-                                src_offset: u64, length: usize)
-                                -> RadosResult<()> {
+pub fn rados_object_clone_range(ctx: rados_ioctx_t, dst_object_name: &str, dst_offset: u64, src_object_name: &str, src_offset: u64, length: usize)
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -829,12 +846,14 @@ pub fn rados_object_append(ctx: rados_ioctx_t, object_name: &str, buffer: &[u8])
     Ok(())
 }
 
-/// Read data from an object.  This fills the slice given and returns the amount of bytes read
+/// Read data from an object.  This fills the slice given and returns the
+/// amount of bytes read
 /// The io context determines the snapshot to read from, if any was set by
 /// rados_ioctx_snap_set_read().
-/// Default read size is 64K unless you call Vec::with_capacity(1024*128) with a larger size.
+/// Default read size is 64K unless you call Vec::with_capacity(1024*128) with
+/// a larger size.
 pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mut Vec<u8>, read_offset: u64)
-                         -> RadosResult<i32> {
+    -> RadosResult<i32> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -846,7 +865,8 @@ pub fn rados_object_read(ctx: rados_ioctx_t, object_name: &str, fill_buffer: &mu
     }
 
     unsafe {
-        let ret_code = rados_read(ctx, object_name_str.as_ptr(), fill_buffer.as_mut_ptr() as *mut c_char, len, read_offset);
+        let ret_code =
+            rados_read(ctx, object_name_str.as_ptr(), fill_buffer.as_mut_ptr() as *mut c_char, len, read_offset);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -892,7 +912,7 @@ pub fn rados_object_trunc(ctx: rados_ioctx_t, object_name: &str, new_size: u64) 
 
 /// Get the value of an extended attribute on an object.
 pub fn rados_object_getxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &str, fill_buffer: &mut [u8])
-                             -> RadosResult<i32> {
+    -> RadosResult<i32> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -900,11 +920,13 @@ pub fn rados_object_getxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
     let attr_name_str = try!(CString::new(attr_name));
 
     unsafe {
-        let ret_code = rados_getxattr(ctx,
-                                      object_name_str.as_ptr() as *const c_char,
-                                      attr_name_str.as_ptr() as *const c_char,
-                                      fill_buffer.as_mut_ptr() as *mut c_char,
-                                      fill_buffer.len());
+        let ret_code = rados_getxattr(
+            ctx,
+            object_name_str.as_ptr() as *const c_char,
+            attr_name_str.as_ptr() as *const c_char,
+            fill_buffer.as_mut_ptr() as *mut c_char,
+            fill_buffer.len(),
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -914,7 +936,7 @@ pub fn rados_object_getxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
 
 /// Set an extended attribute on an object.
 pub fn rados_object_setxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &str, attr_value: &mut [u8])
-                             -> RadosResult<()> {
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -922,11 +944,13 @@ pub fn rados_object_setxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &
     let attr_name_str = try!(CString::new(attr_name));
 
     unsafe {
-        let ret_code = rados_setxattr(ctx,
-                                      object_name_str.as_ptr() as *const c_char,
-                                      attr_name_str.as_ptr() as *const c_char,
-                                      attr_value.as_mut_ptr() as *mut c_char,
-                                      attr_value.len());
+        let ret_code = rados_setxattr(
+            ctx,
+            object_name_str.as_ptr() as *const c_char,
+            attr_name_str.as_ptr() as *const c_char,
+            attr_value.as_mut_ptr() as *mut c_char,
+            attr_value.len(),
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -943,7 +967,8 @@ pub fn rados_object_rmxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &s
     let attr_name_str = try!(CString::new(attr_name));
 
     unsafe {
-        let ret_code = rados_rmxattr(ctx, object_name_str.as_ptr() as *const c_char, attr_name_str.as_ptr() as *const c_char);
+        let ret_code =
+            rados_rmxattr(ctx, object_name_str.as_ptr() as *const c_char, attr_name_str.as_ptr() as *const c_char);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -952,7 +977,8 @@ pub fn rados_object_rmxattr(ctx: rados_ioctx_t, object_name: &str, attr_name: &s
 }
 
 impl XAttr {
-    /// Creates a new XAttr.  Call rados_getxattrs to create the iterator for this struct
+    /// Creates a new XAttr.  Call rados_getxattrs to create the iterator for
+    /// this struct
     pub fn new(iter: rados_xattrs_iter_t) -> XAttr {
         XAttr {
             name: String::new(),
@@ -972,10 +998,12 @@ impl Iterator for XAttr {
         let mut value_buffer: Vec<u8> = Vec::with_capacity(64 * 1024);
         let mut val_length: usize = 0;
         unsafe {
-            let ret_code = rados_getxattrs_next(self.iter,
-                                                name_buffer.as_mut_ptr() as *mut *const c_char,
-                                                value_buffer.as_mut_ptr() as *mut *const c_char,
-                                                &mut val_length);
+            let ret_code = rados_getxattrs_next(
+                self.iter,
+                name_buffer.as_mut_ptr() as *mut *const c_char,
+                value_buffer.as_mut_ptr() as *mut *const c_char,
+                &mut val_length,
+            );
 
             if ret_code < 0 {
                 // Something failed, however Iterator doesn't return Result so we return None
@@ -1033,8 +1061,7 @@ pub fn rados_object_stat(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<(
 }
 
 /// Update tmap (trivial map)
-pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str, update: TmapOperation)
-                                -> RadosResult<()> {
+pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str, update: TmapOperation) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1049,9 +1076,11 @@ pub fn rados_object_tmap_update(ctx: rados_ioctx_t, object_name: &str, update: T
     Ok(())
 }
 
-// pub fn rados_object_tmap_put(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<()> {
+// pub fn rados_object_tmap_put(ctx: rados_ioctx_t, object_name: &str) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
@@ -1067,7 +1096,8 @@ pub fn rados_object_tmap_get(ctx: rados_ioctx_t, object_name: &str) -> RadosResu
     let mut buffer: Vec<u8> = Vec::with_capacity(500);
 
     unsafe {
-        let ret_code = rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
+        let ret_code =
+            rados_tmap_get(ctx, object_name_str.as_ptr(), buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
         if ret_code == -ERANGE {
             buffer.reserve(1000);
             buffer.set_len(1000);
@@ -1091,13 +1121,17 @@ pub fn rados_object_tmap_get(ctx: rados_ioctx_t, object_name: &str) -> RadosResu
 }
 
 /// Execute an OSD class method on an object
-/// The OSD has a plugin mechanism for performing complicated operations on an object atomically.
-/// These plugins are called classes. This function allows librados users to call the custom
-/// methods. The input and output formats are defined by the class. Classes in ceph.git can
+/// The OSD has a plugin mechanism for performing complicated operations on an
+/// object atomically.
+/// These plugins are called classes. This function allows librados users to
+/// call the custom
+/// methods. The input and output formats are defined by the class. Classes in
+/// ceph.git can
 /// be found in src/cls subdirectories
-pub fn rados_object_exec(ctx: rados_ioctx_t, object_name: &str, class_name: &str, method_name: &str,
-                         input_buffer: &[u8], output_buffer: &mut [u8])
-                         -> RadosResult<()> {
+pub fn rados_object_exec(
+    ctx: rados_ioctx_t, object_name: &str, class_name: &str, method_name: &str, input_buffer: &[u8],
+    output_buffer: &mut [u8]
+) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1106,55 +1140,67 @@ pub fn rados_object_exec(ctx: rados_ioctx_t, object_name: &str, class_name: &str
     let method_name_str = try!(CString::new(method_name));
 
     unsafe {
-        let ret_code = rados_exec(ctx,
-                                  object_name_str.as_ptr(),
-                                  class_name_str.as_ptr(),
-                                  method_name_str.as_ptr(),
-                                  input_buffer.as_ptr() as *const c_char,
-                                  input_buffer.len(),
-                                  output_buffer.as_mut_ptr() as *mut c_char,
-                                  output_buffer.len());
+        let ret_code = rados_exec(
+            ctx,
+            object_name_str.as_ptr(),
+            class_name_str.as_ptr(),
+            method_name_str.as_ptr(),
+            input_buffer.as_ptr() as *const c_char,
+            input_buffer.len(),
+            output_buffer.as_mut_ptr() as *mut c_char,
+            output_buffer.len(),
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
     }
     Ok(())
 }
-// pub fn rados_object_watch(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<()> {
+// pub fn rados_object_watch(ctx: rados_ioctx_t, object_name: &str) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
 // }
 // }
-// pub fn rados_object_watch2(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<()> {
+// pub fn rados_object_watch2(ctx: rados_ioctx_t, object_name: &str) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
 // }
 // }
-// pub fn rados_object_watch_check(ctx: rados_ioctx_t, cookie: u64) -> RadosResult<()> {
+// pub fn rados_object_watch_check(ctx: rados_ioctx_t, cookie: u64) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
 // }
 // }
-// pub fn rados_object_unwatch(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<()> {
+// pub fn rados_object_unwatch(ctx: rados_ioctx_t, object_name: &str) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
 // }
 // }
-// pub fn rados_object_unwatch2(ctx: rados_ioctx_t, cookie: u64) -> RadosResult<()> {
+// pub fn rados_object_unwatch2(ctx: rados_ioctx_t, cookie: u64) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
@@ -1162,7 +1208,8 @@ pub fn rados_object_exec(ctx: rados_ioctx_t, object_name: &str, class_name: &str
 // }
 //
 /// Sychronously notify watchers of an object
-/// This blocks until all watchers of the object have received and reacted to the notify, or a timeout is reached.
+/// This blocks until all watchers of the object have received and reacted to
+/// the notify, or a timeout is reached.
 pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str, data: &[u8]) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -1170,16 +1217,19 @@ pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str, data: &[u8]) -
     let object_name_str = try!(CString::new(object_name));
 
     unsafe {
-        let ret_code = rados_notify(ctx, object_name_str.as_ptr(), 0, data.as_ptr() as *const c_char, data.len() as i32);
+        let ret_code =
+            rados_notify(ctx, object_name_str.as_ptr(), 0, data.as_ptr() as *const c_char, data.len() as i32);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
     }
     Ok(())
 }
-// pub fn rados_object_notify2(ctx: rados_ioctx_t, object_name: &str) -> RadosResult<()> {
+// pub fn rados_object_notify2(ctx: rados_ioctx_t, object_name: &str) ->
+// RadosResult<()> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 //
 // unsafe {
@@ -1187,9 +1237,8 @@ pub fn rados_object_notify(ctx: rados_ioctx_t, object_name: &str, data: &[u8]) -
 // }
 //
 /// Acknolwedge receipt of a notify
-pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id: u64, cookie: u64,
-                               buffer: Option<&[u8]>)
-                               -> RadosResult<()> {
+pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id: u64, cookie: u64, buffer: Option<&[u8]>)
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1197,12 +1246,14 @@ pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id:
 
     match buffer {
         Some(buf) => unsafe {
-            let ret_code = rados_notify_ack(ctx,
-                                            object_name_str.as_ptr(),
-                                            notify_id,
-                                            cookie,
-                                            buf.as_ptr() as *const c_char,
-                                            buf.len() as i32);
+            let ret_code = rados_notify_ack(
+                ctx,
+                object_name_str.as_ptr(),
+                notify_id,
+                cookie,
+                buf.as_ptr() as *const c_char,
+                buf.len() as i32,
+            );
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code as i32))));
             }
@@ -1218,11 +1269,12 @@ pub fn rados_object_notify_ack(ctx: rados_ioctx_t, object_name: &str, notify_id:
     Ok(())
 }
 /// Set allocation hint for an object
-/// This is an advisory operation, it will always succeed (as if it was submitted with a
-/// LIBRADOS_OP_FLAG_FAILOK flag set) and is not guaranteed to do anything on the backend.
-pub fn rados_object_set_alloc_hint(ctx: rados_ioctx_t, object_name: &str, expected_object_size: u64,
-                                   expected_write_size: u64)
-                                   -> RadosResult<()> {
+/// This is an advisory operation, it will always succeed (as if it was
+/// submitted with a
+/// LIBRADOS_OP_FLAG_FAILOK flag set) and is not guaranteed to do anything on
+/// the backend.
+pub fn rados_object_set_alloc_hint(ctx: rados_ioctx_t, object_name: &str, expected_object_size: u64, expected_write_size: u64)
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1262,11 +1314,13 @@ pub fn rados_commit_write_operations(write_op: &mut WriteOperation, ctx: rados_i
     let object_name_str = try!(CString::new(write_op.object_name.clone()));
 
     unsafe {
-        let ret_code = rados_write_op_operate(write_op.write_op_handle,
-                                              ctx,
-                                              object_name_str.as_ptr(),
-                                              &mut write_op.mtime,
-                                              write_op.flags as i32);
+        let ret_code = rados_write_op_operate(
+            write_op.write_op_handle,
+            ctx,
+            object_name_str.as_ptr(),
+            &mut write_op.mtime,
+            write_op.flags as i32,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1275,9 +1329,10 @@ pub fn rados_commit_write_operations(write_op: &mut WriteOperation, ctx: rados_i
 }
 
 /// Take an exclusive lock on an object.
-pub fn rados_object_lock_exclusive(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str,
-                                   description: &str, duration_time: &mut timeval, lock_flags: u8)
-                                   -> RadosResult<()> {
+pub fn rados_object_lock_exclusive(
+    ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str, description: &str,
+    duration_time: &mut timeval, lock_flags: u8
+) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1287,13 +1342,15 @@ pub fn rados_object_lock_exclusive(ctx: rados_ioctx_t, object_name: &str, lock_n
     let description_str = try!(CString::new(description));
 
     unsafe {
-        let ret_code = rados_lock_exclusive(ctx,
-                                            object_name_str.as_ptr(),
-                                            lock_name_str.as_ptr(),
-                                            cookie_name_str.as_ptr(),
-                                            description_str.as_ptr(),
-                                            duration_time,
-                                            lock_flags);
+        let ret_code = rados_lock_exclusive(
+            ctx,
+            object_name_str.as_ptr(),
+            lock_name_str.as_ptr(),
+            cookie_name_str.as_ptr(),
+            description_str.as_ptr(),
+            duration_time,
+            lock_flags,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1302,9 +1359,10 @@ pub fn rados_object_lock_exclusive(ctx: rados_ioctx_t, object_name: &str, lock_n
 }
 
 /// Take a shared lock on an object.
-pub fn rados_object_lock_shared(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str,
-                                description: &str, tag_name: &str, duration_time: &mut timeval, lock_flags: u8)
-                                -> RadosResult<()> {
+pub fn rados_object_lock_shared(
+    ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str, description: &str, tag_name: &str,
+    duration_time: &mut timeval, lock_flags: u8
+) -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1315,14 +1373,16 @@ pub fn rados_object_lock_shared(ctx: rados_ioctx_t, object_name: &str, lock_name
     let tag_name_str = try!(CString::new(tag_name));
 
     unsafe {
-        let ret_code = rados_lock_shared(ctx,
-                                         object_name_str.as_ptr(),
-                                         lock_name_str.as_ptr(),
-                                         cookie_name_str.as_ptr(),
-                                         tag_name_str.as_ptr(),
-                                         description_str.as_ptr(),
-                                         duration_time,
-                                         lock_flags);
+        let ret_code = rados_lock_shared(
+            ctx,
+            object_name_str.as_ptr(),
+            lock_name_str.as_ptr(),
+            cookie_name_str.as_ptr(),
+            tag_name_str.as_ptr(),
+            description_str.as_ptr(),
+            duration_time,
+            lock_flags,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1332,7 +1392,7 @@ pub fn rados_object_lock_shared(ctx: rados_ioctx_t, object_name: &str, lock_name
 
 /// Release a shared or exclusive lock on an object.
 pub fn rados_object_unlock(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, cookie_name: &str)
-                           -> RadosResult<()> {
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1349,13 +1409,18 @@ pub fn rados_object_unlock(ctx: rados_ioctx_t, object_name: &str, lock_name: &st
     Ok(())
 }
 
-/// List clients that have locked the named object lock and information about the lock.
-/// The number of bytes required in each buffer is put in the corresponding size out parameter.
-/// If any of the provided buffers are too short, -ERANGE is returned after these sizes are filled in.
-// pub fn rados_object_list_lockers(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, exclusive: u8, ) ->
+/// List clients that have locked the named object lock and information about
+/// the lock.
+/// The number of bytes required in each buffer is put in the corresponding
+/// size out parameter.
+/// If any of the provided buffers are too short, -ERANGE is returned after
+/// these sizes are filled in.
+// pub fn rados_object_list_lockers(ctx: rados_ioctx_t, object_name: &str,
+// lock_name: &str, exclusive: u8, ) ->
 // RadosResult<isize> {
 // if ctx.is_null() {
-// return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
+// return Err(RadosError::new("Rados ioctx not created.  Please initialize
+// first".to_string()));
 // }
 // let object_name_str = try!(CString::new(object_name));
 //
@@ -1374,10 +1439,10 @@ pub fn rados_object_unlock(ctx: rados_ioctx_t, object_name: &str, lock_name: &st
 // addrs_len: *mut size_t);
 // }
 // }
-/// Releases a shared or exclusive lock on an object, which was taken by the specified client.
-pub fn rados_object_break_lock(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, client_name: &str,
-                               cookie_name: &str)
-                               -> RadosResult<()> {
+/// Releases a shared or exclusive lock on an object, which was taken by the
+/// specified client.
+pub fn rados_object_break_lock(ctx: rados_ioctx_t, object_name: &str, lock_name: &str, client_name: &str, cookie_name: &str)
+    -> RadosResult<()> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
     }
@@ -1387,11 +1452,13 @@ pub fn rados_object_break_lock(ctx: rados_ioctx_t, object_name: &str, lock_name:
     let client_name_str = try!(CString::new(client_name));
 
     unsafe {
-        let ret_code = rados_break_lock(ctx,
-                                        object_name_str.as_ptr(),
-                                        lock_name_str.as_ptr(),
-                                        client_name_str.as_ptr(),
-                                        cookie_name_str.as_ptr());
+        let ret_code = rados_break_lock(
+            ctx,
+            object_name_str.as_ptr(),
+            lock_name_str.as_ptr(),
+            client_name_str.as_ptr(),
+            cookie_name_str.as_ptr(),
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code as i32))));
         }
@@ -1467,7 +1534,8 @@ pub fn rados_pools(cluster: rados_t) -> RadosResult<Vec<String>> {
 }
 
 /// Create a pool with default settings
-/// The default owner is the admin user (auid 0). The default crush rule is rule 0.
+/// The default owner is the admin user (auid 0). The default crush rule is
+/// rule 0.
 pub fn rados_create_pool(cluster: rados_t, pool_name: &str) -> RadosResult<()> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
@@ -1482,7 +1550,8 @@ pub fn rados_create_pool(cluster: rados_t, pool_name: &str) -> RadosResult<()> {
     return Ok(());
 }
 /// Delete a pool and all data inside it
-/// The pool is removed from the cluster immediately, but the actual data is deleted in
+/// The pool is removed from the cluster immediately, but the actual data is
+/// deleted in
 /// the background.
 pub fn rados_delete_pool(cluster: rados_t, pool_name: &str) -> RadosResult<()> {
     if cluster.is_null() {
@@ -1523,7 +1592,8 @@ pub fn rados_reverse_lookup_pool(cluster: rados_t, pool_id: i64) -> RadosResult<
     let mut buffer: Vec<u8> = Vec::with_capacity(500);
 
     unsafe {
-        let ret_code = rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
+        let ret_code =
+            rados_pool_reverse_lookup(cluster, pool_id, buffer.as_mut_ptr() as *mut c_char, buffer.capacity());
         if ret_code == -ERANGE {
             // Buffer was too small
             buffer.reserve(1000);
@@ -1559,8 +1629,10 @@ pub fn rados_libversion() -> RadosVersion {
 }
 
 /// Read usage info about the cluster
-/// This tells you total space, space used, space available, and number of objects.
-/// These are not updated immediately when data is written, they are eventually consistent.
+/// This tells you total space, space used, space available, and number of
+/// objects.
+/// These are not updated immediately when data is written, they are eventually
+/// consistent.
 pub fn rados_stat_cluster(cluster: rados_t) -> RadosResult<Struct_rados_cluster_stat_t> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
@@ -1590,7 +1662,7 @@ pub fn rados_fsid(cluster: rados_t) -> RadosResult<Uuid> {
         // Tell the Vec how much Ceph read into the buffer
         fsid_buffer.set_len(ret_code as usize);
     }
-    //Ceph actually returns the fsid as a uuid string
+    // Ceph actually returns the fsid as a uuid string
     let fsid_str = String::from_utf8(fsid_buffer)?;
     // Parse into a UUID and return
     Ok(fsid_str.parse()?)
@@ -1610,10 +1682,12 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> RadosResult<String> {
     let out_buff_size = out_buffer.capacity();
     let out_str = try!(CString::new(out_buffer));
     unsafe {
-        let ret_code = rados_ping_monitor(cluster,
-                                          mon_id_str.as_ptr(),
-                                          out_str.as_ptr() as *mut *mut c_char,
-                                          out_buff_size as *mut usize);
+        let ret_code = rados_ping_monitor(
+            cluster,
+            mon_id_str.as_ptr(),
+            out_str.as_ptr() as *mut *mut c_char,
+            out_buff_size as *mut usize,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
@@ -1623,19 +1697,21 @@ pub fn ping_monitor(cluster: rados_t, mon_id: &str) -> RadosResult<String> {
 }
 
 
-/// Ceph version - Ceph during the make release process generates the version number along with
-/// the github hash of the release and embeds the hard coded value into `ceph.py` which is the
+/// Ceph version - Ceph during the make release process generates the version
+/// number along with
+/// the github hash of the release and embeds the hard coded value into
+/// `ceph.py` which is the
 /// the default ceph utility.
 pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
-    admin_socket_command(&cmd, socket).ok()
-        .and_then(|json| json_data(&json)
-        .and_then(|jsondata| json_find(jsondata, &[cmd])
-        .and_then(|data| Some(json_as_string(&data)))))
+    admin_socket_command(&cmd, socket).ok().and_then(|json| {
+        json_data(&json).and_then(|jsondata| json_find(jsondata, &[cmd]).and_then(|data| Some(json_as_string(&data))))
+    })
 }
 
-/// This version call parses the `ceph -s` output. It does not need `sudo` rights like
+/// This version call parses the `ceph -s` output. It does not need `sudo`
+/// rights like
 /// `ceph_version` does since it pulls from the admin socket.
 pub fn ceph_version_parse() -> Option<String> {
     match run_cli("ceph --version") {
@@ -1647,7 +1723,7 @@ pub fn ceph_version_parse() -> Option<String> {
                 Some(String::from_utf8_lossy(&output.stderr).to_string())
             }
         },
-        Err(_) => None
+        Err(_) => None,
     }
 }
 
@@ -1666,23 +1742,22 @@ pub fn ceph_status(cluster: rados_t, keys: &[&str]) -> RadosResult<String> {
                                 Err(RadosError::new("The attributes were not found in the output.".to_string()))
                             }
                         },
-                        _ => Err(RadosError::new("JSON data not found.".to_string()))
+                        _ => Err(RadosError::new("JSON data not found.".to_string())),
                     }
                 },
-                _ => Err(RadosError::new("JSON data not found.".to_string()))
+                _ => Err(RadosError::new("JSON data not found.".to_string())),
             }
         },
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 
-/// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which is also not efficient.
+/// string with the `health HEALTH_OK` or `HEALTH_WARN` or `HEALTH_ERR` which
+/// is also not efficient.
 pub fn ceph_health_string(cluster: rados_t) -> RadosResult<String> {
     match ceph_mon_command(cluster, "prefix", "health", None) {
-        Ok((data, _)) => {
-            Ok(data.unwrap().replace("\n", ""))
-        },
-        Err(e) => Err(e)
+        Ok((data, _)) => Ok(data.unwrap().replace("\n", "")),
+        Err(e) => Err(e),
     }
 }
 
@@ -1706,10 +1781,11 @@ pub fn ceph_health(cluster: rados_t) -> CephHealth {
 }
 
 /// Higher level `ceph_command`
-pub fn ceph_command(cluster: rados_t, name: &str, value: &str, cmd_type: CephCommandTypes, keys: &[&str]) -> RadosResult<JsonData> {
+pub fn ceph_command(cluster: rados_t, name: &str, value: &str, cmd_type: CephCommandTypes, keys: &[&str])
+    -> RadosResult<JsonData> {
     match cmd_type {
-        CephCommandTypes::Osd => { Err(RadosError::new("OSD CMDs Not implemented.".to_string())) },
-        CephCommandTypes::Pgs => { Err(RadosError::new("PGS CMDS Not implemented.".to_string())) },
+        CephCommandTypes::Osd => Err(RadosError::new("OSD CMDs Not implemented.".to_string())),
+        CephCommandTypes::Pgs => Err(RadosError::new("PGS CMDS Not implemented.".to_string())),
         _ => {
             match ceph_mon_command(cluster, name, value, Some("json")) {
                 Ok((json, _)) => {
@@ -1724,15 +1800,15 @@ pub fn ceph_command(cluster: rados_t, name: &str, value: &str, cmd_type: CephCom
                                         Err(RadosError::new("The attributes were not found in the output.".to_string()))
                                     }
                                 },
-                                _ => Err(RadosError::new("JSON data not found.".to_string()))
+                                _ => Err(RadosError::new("JSON data not found.".to_string())),
                             }
                         },
-                        _ => Err(RadosError::new("JSON data not found.".to_string()))
+                        _ => Err(RadosError::new("JSON data not found.".to_string())),
                     }
                 },
-                Err(e) => Err(e)
+                Err(e) => Err(e),
             }
-        }
+        },
     }
 }
 
@@ -1755,18 +1831,19 @@ pub fn ceph_commands(cluster: rados_t, keys: Option<&[&str]>) -> RadosResult<Jso
                                 Ok(jsondata)
                             }
                         },
-                        _ => Err(RadosError::new("JSON data not found.".to_string()))
+                        _ => Err(RadosError::new("JSON data not found.".to_string())),
                     }
                 },
-                _ => Err(RadosError::new("JSON data not found.".to_string()))
+                _ => Err(RadosError::new("JSON data not found.".to_string())),
             }
         },
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 
 /// Mon command that does not pass in a data payload.
-pub fn ceph_mon_command(cluster: rados_t, name: &str, value: &str, format: Option<&str>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_mon_command(cluster: rados_t, name: &str, value: &str, format: Option<&str>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
     ceph_mon_command_with_data(cluster, name, value, format, data)
 }
@@ -1783,7 +1860,8 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
     let mut outbuf_len = 0;
     let mut outs_len = 0;
 
-    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // Ceph librados allocates these buffers internally and the pointer that comes
+    // back must be
     // freed by call `rados_buffer_free`
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
@@ -1792,11 +1870,17 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_mon_command(cluster, &mut cmds.as_ptr(), 1,
-                                         data.as_ptr() as *mut c_char,
-                                         data.len() as usize, &mut outbuf,
-                                         &mut outbuf_len, &mut outs,
-                                         &mut outs_len);
+        let ret_code = rados_mon_command(
+            cluster,
+            &mut cmds.as_ptr(),
+            1,
+            data.as_ptr() as *mut c_char,
+            data.len() as usize,
+            &mut outbuf,
+            &mut outbuf_len,
+            &mut outs,
+            &mut outs_len,
+        );
         debug!("return code: {}", ret_code);
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
@@ -1810,7 +1894,7 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
             rados_buffer_free(outbuf);
         }
 
-        if outs_len > 0 && !outs.is_null(){
+        if outs_len > 0 && !outs.is_null() {
             let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
             str_outs = Some(String::from_utf8_lossy(slice).into_owned());
 
@@ -1823,22 +1907,22 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
 
 /// Mon command that does pass in a data payload.
 /// Most all of the commands pass through this function.
-pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
 
     let mut cmd_strings: Vec<String> = Vec::new();
     match format {
-        Some(fmt) => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
-        },
-        None => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
-        }
+        Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+        None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
     }
 
-    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let cstrings: Vec<CString> = cmd_strings[..]
+        .iter()
+        .map(|s| CString::new(s.clone()).unwrap())
+        .collect();
     let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
 
     let mut outbuf = ptr::null_mut();
@@ -1846,7 +1930,8 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, for
     let mut outbuf_len = 0;
     let mut outs_len = 0;
 
-    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // Ceph librados allocates these buffers internally and the pointer that comes
+    // back must be
     // freed by call `rados_buffer_free`
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
@@ -1855,7 +1940,17 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, for
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_mon_command(cluster, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_mon_command(
+            cluster,
+            cmds.as_mut_ptr(),
+            1,
+            data.as_ptr() as *mut c_char,
+            data.len() as usize,
+            &mut outbuf,
+            &mut outbuf_len,
+            &mut outs,
+            &mut outs_len,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
@@ -1884,28 +1979,29 @@ pub fn ceph_mon_command_with_data(cluster: rados_t, name: &str, value: &str, for
 }
 
 /// OSD command that does not pass in a data payload.
-pub fn ceph_osd_command(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_osd_command(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
     ceph_osd_command_with_data(cluster, id, name, value, format, data)
 }
 
 /// OSD command that does pass in a data payload.
-pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
 
     let mut cmd_strings: Vec<String> = Vec::new();
     match format {
-        Some(fmt) => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
-        },
-        None => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
-        }
+        Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+        None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
     }
 
-    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let cstrings: Vec<CString> = cmd_strings[..]
+        .iter()
+        .map(|s| CString::new(s.clone()).unwrap())
+        .collect();
     let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
 
     let mut outbuf = ptr::null_mut();
@@ -1913,14 +2009,26 @@ pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: 
     let mut outbuf_len = 0;
     let mut outs_len = 0;
 
-    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // Ceph librados allocates these buffers internally and the pointer that comes
+    // back must be
     // freed by call `rados_buffer_free`
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_osd_command(cluster, id, cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_osd_command(
+            cluster,
+            id,
+            cmds.as_mut_ptr(),
+            1,
+            data.as_ptr() as *mut c_char,
+            data.len() as usize,
+            &mut outbuf,
+            &mut outbuf_len,
+            &mut outs,
+            &mut outs_len,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
@@ -1949,29 +2057,30 @@ pub fn ceph_osd_command_with_data(cluster: rados_t, id: i32, name: &str, value: 
 }
 
 /// PG command that does not pass in a data payload.
-pub fn ceph_pgs_command(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_pgs_command(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
     ceph_pgs_command_with_data(cluster, pg, name, value, format, data)
 }
 
 /// PG command that does pass in a data payload.
-pub fn ceph_pgs_command_with_data(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_pgs_command_with_data(cluster: rados_t, pg: &str, name: &str, value: &str, format: Option<&str>, data: Vec<*mut c_char>)
+    -> RadosResult<(Option<String>, Option<String>)> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
 
     let mut cmd_strings: Vec<String> = Vec::new();
     match format {
-        Some(fmt) => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt))
-        },
-        None => {
-            cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value))
-        }
+        Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+        None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
     }
 
     let pg_str = CString::new(pg).unwrap();
-    let cstrings: Vec<CString> = cmd_strings[..].iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+    let cstrings: Vec<CString> = cmd_strings[..]
+        .iter()
+        .map(|s| CString::new(s.clone()).unwrap())
+        .collect();
     let mut cmds: Vec<*const c_char> = cstrings.iter().map(|c| c.as_ptr()).collect();
 
     let mut outbuf = ptr::null_mut();
@@ -1979,14 +2088,26 @@ pub fn ceph_pgs_command_with_data(cluster: rados_t, pg: &str, name: &str, value:
     let mut outbuf_len = 0;
     let mut outs_len = 0;
 
-    // Ceph librados allocates these buffers internally and the pointer that comes back must be
+    // Ceph librados allocates these buffers internally and the pointer that comes
+    // back must be
     // freed by call `rados_buffer_free`
     let mut str_outbuf: Option<String> = None;
     let mut str_outs: Option<String> = None;
 
     unsafe {
         // cmd length is 1 because we only allow one command at a time.
-        let ret_code = rados_pg_command(cluster, pg_str.as_ptr(), cmds.as_mut_ptr(), 1, data.as_ptr() as *mut c_char, data.len() as usize, &mut outbuf, &mut outbuf_len, &mut outs, &mut outs_len);
+        let ret_code = rados_pg_command(
+            cluster,
+            pg_str.as_ptr(),
+            cmds.as_mut_ptr(),
+            1,
+            data.as_ptr() as *mut c_char,
+            data.len() as usize,
+            &mut outbuf,
+            &mut outbuf_len,
+            &mut outs,
+            &mut outs_len,
+        );
         if ret_code < 0 {
             return Err(RadosError::new(try!(get_error(ret_code))));
         }
