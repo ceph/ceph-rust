@@ -17,8 +17,10 @@
        html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
        html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph_rust/index.html")]
 
-//! Ceph-rust is a thin layer over the librados C interface. A little higher abstraction layer will
-//! be coming next that will encapsulate all of the "C" specific features so that only pure Rust will be needed.
+//! Ceph-rust is a thin layer over the librados C interface. A little higher
+//! abstraction layer will
+//! be coming next that will encapsulate all of the "C" specific features so
+//! that only pure Rust will be needed.
 //!
 //! Only works on Linux
 //! The documentation for librados can be found:
@@ -39,7 +41,8 @@
 //! Ubuntu:
 //! sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
 //!
-//! NOTE: If someone know of another way for Rust to find the librados file then please issue
+//! NOTE: If someone know of another way for Rust to find the librados file
+//! then please issue
 //! a PR for it. Thanks!
 //!
 //! See the /examples/ceph.rs for how to use the library.
@@ -48,6 +51,8 @@
 extern crate bitflags;
 extern crate byteorder;
 extern crate libc;
+#[macro_use]
+extern crate log;
 #[macro_use]
 extern crate nom;
 extern crate uuid;
