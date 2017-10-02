@@ -1432,7 +1432,7 @@ pub fn rados_pools(cluster: rados_t) -> RadosResult<Vec<String>> {
             break;
         } else {
             // Read a String
-            pools.push(String::from_utf8_lossy(&string_buf).into_owned());
+            pools.push(String::from_utf8_lossy(&string_buf[..read-1]).into_owned());
         }
     }
 
