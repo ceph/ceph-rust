@@ -1853,7 +1853,7 @@ pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
-    let mut cmds = CString::new(cmd).unwrap();
+    let cmds = CString::new(cmd).unwrap();
 
     let mut outbuf = ptr::null_mut();
     let mut outs = ptr::null_mut();
