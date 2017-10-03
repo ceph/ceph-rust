@@ -404,6 +404,7 @@ pub fn destroy_rados_ioctx(ctx: rados_ioctx_t) {
     }
 }
 
+/// Note: Ceph uses kibibytes: https://en.wikipedia.org/wiki/Kibibyte
 pub fn rados_stat_pool(ctx: rados_ioctx_t) -> RadosResult<Struct_rados_pool_stat_t> {
     if ctx.is_null() {
         return Err(RadosError::new("Rados ioctx not created.  Please initialize first".to_string()));
@@ -1633,6 +1634,7 @@ pub fn rados_libversion() -> RadosVersion {
 /// objects.
 /// These are not updated immediately when data is written, they are eventually
 /// consistent.
+/// Note: Ceph uses kibibytes: https://en.wikipedia.org/wiki/Kibibyte
 pub fn rados_stat_cluster(cluster: rados_t) -> RadosResult<Struct_rados_cluster_stat_t> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
