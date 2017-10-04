@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{str, fmt};
+use std::{fmt, str};
 use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;

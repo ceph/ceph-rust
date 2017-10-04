@@ -55,11 +55,14 @@ extern crate libc;
 extern crate log;
 #[macro_use]
 extern crate nom;
-extern crate uuid;
 extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_json;
+extern crate uuid;
 
 pub mod rados;
 pub mod ceph;
+pub mod cmd;
 pub mod utils;
 pub mod admin_sockets;
 pub mod json;
@@ -68,4 +71,3 @@ pub mod status;
 
 pub type JsonData = rustc_serialize::json::Json;
 pub type JsonValue = rustc_serialize::json::Json;
-// pub type JsonError = Error;
