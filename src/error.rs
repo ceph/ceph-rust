@@ -16,6 +16,7 @@ use std::{fmt, str};
 use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
+use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 
 use uuid::ParseError;
@@ -28,6 +29,7 @@ pub enum RadosError {
     Error(String),
     IoError(Error),
     IntoStringError(IntoStringError),
+    ParseIntError(ParseIntError),
     ParseError(ParseError),
 }
 
@@ -48,6 +50,7 @@ impl StdError for RadosError {
             RadosError::IoError(ref e) => e.description(),
             RadosError::IntoStringError(ref e) => e.description(),
             RadosError::ParseError(ref e) => e.description(),
+            RadosError::ParseIntError(ref e) => e.description(),
         }
     }
     fn cause(&self) -> Option<&StdError> {
@@ -58,6 +61,7 @@ impl StdError for RadosError {
             RadosError::IoError(ref e) => e.cause(),
             RadosError::IntoStringError(ref e) => e.cause(),
             RadosError::ParseError(ref e) => e.cause(),
+            RadosError::ParseIntError(ref e) => e.cause(),
         }
     }
 }
@@ -77,6 +81,7 @@ impl RadosError {
             RadosError::IoError(ref err) => err.description().to_string(),
             RadosError::IntoStringError(ref err) => err.description().to_string(),
             RadosError::ParseError(_) => "Uuid parse error".to_string(),
+            RadosError::ParseIntError(ref err) => err.description().to_string(),
         }
     }
 }
@@ -84,6 +89,12 @@ impl RadosError {
 impl From<ParseError> for RadosError {
     fn from(err: ParseError) -> RadosError {
         RadosError::ParseError(err)
+    }
+}
+
+impl From<ParseIntError> for RadosError {
+    fn from(err: ParseIntError) -> RadosError {
+        RadosError::ParseIntError(err)
     }
 }
 
