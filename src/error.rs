@@ -11,14 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+extern crate serde_json;
 
+
+use serde_json::error::Error as SerdeJsonError;
 use std::{fmt, str};
 use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
-
 use uuid::ParseError;
 
 /// Custom error handling for the library
@@ -31,6 +33,7 @@ pub enum RadosError {
     IntoStringError(IntoStringError),
     ParseIntError(ParseIntError),
     ParseError(ParseError),
+    SerdeError(SerdeJsonError),
 }
 
 pub type RadosResult<T> = Result<T, RadosError>;
@@ -51,6 +54,7 @@ impl StdError for RadosError {
             RadosError::IntoStringError(ref e) => e.description(),
             RadosError::ParseError(ref e) => e.description(),
             RadosError::ParseIntError(ref e) => e.description(),
+            RadosError::SerdeError(ref e) => e.description(),
         }
     }
     fn cause(&self) -> Option<&StdError> {
@@ -62,6 +66,7 @@ impl StdError for RadosError {
             RadosError::IntoStringError(ref e) => e.cause(),
             RadosError::ParseError(ref e) => e.cause(),
             RadosError::ParseIntError(ref e) => e.cause(),
+            RadosError::SerdeError(ref e) => e.cause(),
         }
     }
 }
@@ -82,6 +87,7 @@ impl RadosError {
             RadosError::IntoStringError(ref err) => err.description().to_string(),
             RadosError::ParseError(_) => "Uuid parse error".to_string(),
             RadosError::ParseIntError(ref err) => err.description().to_string(),
+            RadosError::SerdeError(ref err) => err.description().to_string(),
         }
     }
 }
@@ -98,6 +104,11 @@ impl From<ParseIntError> for RadosError {
     }
 }
 
+impl From<SerdeJsonError> for RadosError {
+    fn from(err: SerdeJsonError) -> RadosError {
+        RadosError::SerdeError(err)
+    }
+}
 
 impl From<NulError> for RadosError {
     fn from(err: NulError) -> RadosError {
