@@ -348,6 +348,11 @@ pub fn config_get(cluster: rados_t, name: &str) -> RadosResult<String> {
         if ret_code < 0 {
             return Err(RadosError::new(get_error(ret_code as i32)?));
         }
+        // Ceph doesn't return how many bytes were written
+        buffer.set_len(5120);
+        // We need to search for the first NUL byte
+        let num_bytes = buffer.iter().position(|x| x==&0u8);
+        buffer.set_len(num_bytes.unwrap_or(0));
         Ok(String::from_utf8_lossy(&buffer).into_owned())
     }
 }
