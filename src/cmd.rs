@@ -121,8 +121,7 @@ pub fn osd_pool_set(cluster_handle: rados_t, pool: &str, key: &str, value: &str,
 /// full|pause|noup|nodown|noout|noin|nobackfill|norebalance|norecover|noscrub|nodeep-scrub
 /// |notieragent|sortbitwise|recovery_deletes|require_jewel_osds|require_kraken_osds.
 /// Check src/mon/MonCommands.h in the ceph github repo for more possible
-/// options
-/// Setting force=true will add --yes-i-really-mean-it
+/// options Setting force=true will add --yes-i-really-mean-it
 pub fn osd_set(cluster_handle: rados_t, key: &str, force: bool, simulate: bool) -> Result<(), RadosError> {
     let cmd = match force {
         true => {
@@ -163,7 +162,7 @@ pub fn osd_unset(cluster_handle: rados_t, key: &str, simulate: bool) -> Result<(
     Ok(())
 }
 
-pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError>{
+pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError> {
     let cmd = json!({
         "prefix": "osd tree",
         "format": "json"
@@ -187,7 +186,7 @@ pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError>{
 }
 
 /// List all the monitors in the cluster and their current rank
-pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError>{
+pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
     let cmd = json!({
         "prefix": "mon dump",
         "format": "json"
