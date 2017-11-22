@@ -10,6 +10,7 @@ extern crate serde_json;
 use ceph::ceph_mon_command_without_data;
 use error::RadosError;
 use rados::rados_t;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 #[derive(Deserialize, Debug)]
@@ -17,16 +18,6 @@ pub struct CephMon {
     pub rank: i64,
     pub name: String,
     pub addr: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct MonDump {
-    pub epoch: i64,
-    pub fsid: String,
-    pub modified: String,
-    pub created: String,
-    pub mons: Vec<CephMon>,
-    pub quorum: Vec<i64>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -49,6 +40,52 @@ pub struct CrushNode {
 pub struct CrushTree {
     pub nodes: Vec<CrushNode>,
     pub stray: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MgrMetadata {
+    pub id: String,
+    pub arch: String,
+    pub ceph_version: String,
+    pub cpu: String,
+    pub distro: String,
+    pub distro_description: String,
+    pub distro_version: String,
+    pub hostname: String,
+    pub kernel_description: String,
+    pub kernel_version: String,
+    pub mem_swap_kb: u64,
+    pub mem_total_kb: u64,
+    pub os: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MgrStandby {
+    pub gid: u64,
+    pub name: String,
+    pub available_modules: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MgrDump {
+    pub epoch: u64,
+    pub active_gid: u64,
+    pub active_name: String,
+    pub active_addr: String,
+    pub available: bool,
+    pub standbys: Vec<MgrStandby>,
+    pub modules: Vec<String>,
+    pub available_modules: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MonDump {
+    pub epoch: i64,
+    pub fsid: String,
+    pub modified: String,
+    pub created: String,
+    pub mons: Vec<CephMon>,
+    pub quorum: Vec<i64>,
 }
 
 pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
@@ -117,11 +154,6 @@ pub fn osd_pool_set(cluster_handle: rados_t, pool: &str, key: &str, value: &str,
     Ok(())
 }
 
-/// Possible values for the key are:
-/// full|pause|noup|nodown|noout|noin|nobackfill|norebalance|norecover|noscrub|nodeep-scrub
-/// |notieragent|sortbitwise|recovery_deletes|require_jewel_osds|require_kraken_osds.
-/// Check src/mon/MonCommands.h in the ceph github repo for more possible
-/// options Setting force=true will add --yes-i-really-mean-it
 pub fn osd_set(cluster_handle: rados_t, key: &str, force: bool, simulate: bool) -> Result<(), RadosError> {
     let cmd = match force {
         true => {
@@ -438,4 +470,204 @@ pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &s
         ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
     }
     Ok(())
+}
+
+// Luminous mgr commands below
+
+/// dump the latest MgrMap
+pub fn mgr_dump(cluster_handle: rados_t) -> Result<MgrDump, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr dump",
+    });
+    debug!("mgr dump: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr dump: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr dump output: {:?}", result)))
+}
+
+/// Treat the named manager daemon as failed
+pub fn mgr_fail(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Result<(), RadosError> {
+    let cmd = json!({
+        "prefix": "mgr fail",
+        "name": mgr_id,
+    });
+    debug!("mgr fail cmd: {:?}", cmd.to_string());
+
+    if !simulate {
+        ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    }
+    Ok(())
+}
+
+/// List active mgr modules
+pub fn mgr_list_modules(cluster_handle: rados_t) -> Result<Vec<String>, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr module ls",
+    });
+    debug!("mgr module ls: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr module ls: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr ls output: {:?}", result)))
+}
+
+/// List service endpoints provided by mgr modules
+pub fn mgr_list_services(cluster_handle: rados_t) -> Result<Vec<String>, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr services",
+    });
+    debug!("mgr services: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr services: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr services output: {:?}", result)))
+}
+
+/// Enable a mgr module
+pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, simulate: bool) -> Result<(), RadosError> {
+    let cmd = match force {
+        true => {
+            json!({
+                    "prefix": "mgr module enable",
+                    "module": module,
+                    "force": "--force",
+                })
+        },
+        false => {
+            json!({
+                    "prefix": "mgr module enable",
+                    "module": module,
+                })
+        },
+    };
+    debug!("mgr module enable cmd: {:?}", cmd.to_string());
+
+    if !simulate {
+        ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    }
+    Ok(())
+}
+
+/// Disable a mgr module
+pub fn mgr_disable_module(cluster_handle: rados_t, module: &str, simulate: bool) -> Result<(), RadosError> {
+    let cmd = json!({
+        "prefix": "mgr module disable",
+        "module": module,
+    });
+    debug!("mgr module disable cmd: {:?}", cmd.to_string());
+
+    if !simulate {
+        ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    }
+    Ok(())
+}
+
+/// dump metadata for all daemons
+pub fn mgr_metadata(cluster_handle: rados_t) -> Result<MgrMetadata, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr metadata",
+    });
+    debug!("mgr metadata: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr metadata: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr metadata output: {:?}", result)))
+}
+
+/// count ceph-mgr daemons by metadata field property
+pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> Result<HashMap<String, u64>, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr count-metadata",
+        "name": property,
+    });
+    debug!("mgr count-metadata: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr count-metadata: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr count-metadata output: {:?}", result)))
+}
+
+/// check running versions of ceph-mgr daemons
+pub fn mgr_versions(cluster_handle: rados_t) -> Result<HashMap<String, u64>, RadosError> {
+    let cmd = json!({
+        "prefix": "mgr versions",
+    });
+    debug!("mgr versions: {:?}", cmd.to_string());
+
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse mgr versions: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(format!("Unable to parse mgr versions output: {:?}", result)))
 }
