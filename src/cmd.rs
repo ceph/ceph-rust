@@ -185,6 +185,30 @@ pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError> {
     Err(RadosError::Error("No response from ceph for osd tree".into()))
 }
 
+// Get cluster status
+pub fn status(cluster_handle: rados_t) -> Result<String, RadosError> {
+    let cmd = json!({
+        "prefix": "status",
+        "format": "json"
+    });
+    debug!("status {:?}", cmd.to_string());
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(res.into()),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse status output: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error("No response from ceph for status".into()))
+}
+
 /// List all the monitors in the cluster and their current rank
 pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
     let cmd = json!({
@@ -207,6 +231,30 @@ pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
         }
     }
     Err(RadosError::Error("No response from ceph for mon dump".into()))
+}
+
+/// Get the mon quorum
+pub fn mon_quorum(cluster_handle: rados_t) -> Result<String, RadosError> {
+    let cmd = json!({
+        "prefix": "quorum_status",
+        "format": "json"
+    });
+    debug!("quorum_status {:?}", cmd.to_string());
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    if result.0.is_some() {
+        let return_data = result.0.unwrap();
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse quorum_status output: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error("No response from ceph for quorum_status".into()))
 }
 
 // Show mon daemon version
@@ -320,7 +368,23 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
     Err(RadosError::Error(format!("Unable to parse osd create output: {:?}", result)))
 }
 
-pub fn auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+// Add a new mgr to the cluster
+pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: u64, simulate: bool) -> Result<(), RadosError> {
+    let cmd = json!({
+        "prefix": "auth add",
+        "entity": format!("mgr.{}", mgr_id),
+        "caps": ["mon", "allow profile mgr", "osd", "allow *", "mds", "allow *"],
+    });
+    debug!("auth_add: {:?}", cmd.to_string());
+
+    if !simulate {
+        ceph_mon_command_without_data(cluster_handle, &cmd.to_string())?;
+    }
+    Ok(())
+}
+
+// Add a new osd to the cluster
+pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("osd.{}", osd_id),
