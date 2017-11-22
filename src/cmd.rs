@@ -430,10 +430,12 @@ pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Res
     Ok(())
 }
 
-pub fn auth_get_key(cluster_handle: rados_t, osd_id: u64) -> Result<String, RadosError> {
+/// Get a ceph-x key.  The id parameter can be either a number or a string
+/// depending on the type of client so I went with string.
+pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> Result<String, RadosError> {
     let cmd = json!({
         "prefix": "auth get-key",
-        "entity": format!("osd.{}", osd_id),
+        "entity": format!("{}.{}", client_type, id),
     });
     debug!("auth_get_key: {:?}", cmd.to_string());
 
