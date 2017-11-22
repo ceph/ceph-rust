@@ -401,7 +401,7 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
 }
 
 // Add a new mgr to the cluster
-pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: u64, simulate: bool) -> Result<(), RadosError> {
+pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Result<(), RadosError> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("mgr.{}", mgr_id),
