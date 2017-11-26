@@ -1,11 +1,15 @@
 use std::collections::HashMap;
 
-use ceph_rust::rados::rados_t;
+use ceph_rust::rados::{self, rados_t};
 use ceph_rust::ceph::connect_to_ceph;
 use ceph_rust::cmd;
 
+use libc::{c_char};
+use std::{ptr, str};
+use std::ffi::{CString};
+
 use errors::*;
-use {CephChoices, CephVersion};
+use {CephChoices, CephVersion, MonCommand, ceph_helpers};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
@@ -52,7 +56,15 @@ impl CephClient {
     }
 
     pub fn osd_out(&self, osd_id: u64) -> Result<()> {
-        cmd::osd_out(self.rados_t, osd_id, self.simulate).map_err(|a| a.into())
+        let osd_id = osd_id.to_string();
+        let cmd = MonCommand::new()
+            .with_prefix("osd out")
+            .with("ids", &osd_id);
+
+        if !self.simulate {
+            self.run_command(&cmd)?;
+        }
+        Ok(())
     }
 
     pub fn osd_crush_remove(&self, osd_id: u64) -> Result<()> {
@@ -110,7 +122,17 @@ impl CephClient {
 
     /// Get cluster status
     pub fn status(&self) -> Result<String> {
-        Ok(cmd::status(self.rados_t)?)
+        let cmd = MonCommand::new()
+            .with_prefix("status")
+            .with_format("json");
+        let return_data = self.run_command(&cmd)?;
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(res.into()),
+            None => {
+                return Err(ErrorKind::Rados(format!("Unable to parse status output: {:?}",return_data)).into())
+            },
+        }
     }
 
     /// List all the monitors in the cluster and their current rank
@@ -218,5 +240,73 @@ impl CephClient {
 
     pub fn mgr_versions(&self) -> Result<HashMap<String, u64>> {
         Ok(cmd::mgr_versions(self.rados_t)?)
+    }
+
+    pub fn run_command(&self, command: &MonCommand) -> Result<String> {
+        let cmd = command.as_json();
+        let data: Vec<*mut c_char> = Vec::with_capacity(1);
+
+        debug!("Calling rados_mon_command with {:?}", cmd);
+        let cmds = CString::new(cmd).unwrap();
+
+        let mut outbuf = ptr::null_mut();
+        let mut outs = ptr::null_mut();
+        let mut outbuf_len = 0;
+        let mut outs_len = 0;
+
+        // Ceph librados allocates these buffers internally and the pointer that comes
+        // back must be freed by call `rados_buffer_free`
+        let mut str_outbuf: String = String::new();
+        let mut str_outs: String = String::new();
+
+        let ret_code = unsafe {
+            // cmd length is 1 because we only allow one command at a time.
+            rados::rados_mon_command(
+                self.rados_t,
+                &mut cmds.as_ptr(),
+                1,
+                data.as_ptr() as *mut c_char,
+                data.len() as usize,
+                &mut outbuf,
+                &mut outbuf_len,
+                &mut outs,
+                &mut outs_len,
+            )
+        };
+        debug!("return code: {}", ret_code);
+        if ret_code < 0 {
+            if outs_len > 0 && !outs.is_null() {
+                let slice = unsafe {
+                    ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize)
+                };
+                str_outs = String::from_utf8_lossy(slice).into_owned();
+
+                unsafe { rados::rados_buffer_free(outs); }
+            }
+            return Err(ErrorKind::Rados(format!("{} : {}", ceph_helpers::get_error(ret_code)?, str_outs)).into());
+        }
+
+        // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+        if outbuf_len > 0 && !outbuf.is_null() {
+            let slice = unsafe {
+                ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize)
+            };
+            str_outbuf = String::from_utf8_lossy(slice).into_owned();
+
+            unsafe { rados::rados_buffer_free(outbuf); }
+        }
+
+        // if outs_len > 0 && !outs.is_null() {
+        //     let slice = unsafe {
+        //         ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize)
+        //     };
+        //     str_outs = String::from_utf8_lossy(slice).into_owned();
+
+        //     unsafe { rados::rados_buffer_free(outs); }
+        // }
+        // println!("outs: {}", str_outs);
+
+        // Ok((str_outbuf, str_outs))
+        Ok(str_outbuf)
     }
 }

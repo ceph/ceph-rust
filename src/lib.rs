@@ -5,13 +5,21 @@
 // `Cargo.toml`!
 #[macro_use]
 extern crate error_chain;
-
+extern crate libc;
+#[macro_use]
+extern crate log;
 extern crate ceph_rust;
+// #[macro_use]
+// extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 
 mod ceph_choices;
 mod ceph_client;
+mod ceph_helpers;
 mod ceph_types;
 mod ceph_version;
+mod mon_command;
 pub mod errors;
 
 // use errors::*;
@@ -20,6 +28,7 @@ pub use ceph_choices::CephChoices;
 pub use ceph_client::CephClient;
 pub use ceph_version::CephVersion;
 pub use ceph_types::*;
+pub use mon_command::MonCommand;
 
 #[cfg(test)]
 mod tests {

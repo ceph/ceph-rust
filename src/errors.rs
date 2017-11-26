@@ -11,8 +11,12 @@ error_chain!{
                 description("Ceph version is too low")
                 display("{:?} minimum, your version is {:?}", min, current_version)
             }
+            Rados(error: String) {
+                description("Rados error")
+                display("Rados Error: {:?}", error)
+            }
     }
     foreign_links {
-        Rados(ceph_error::RadosError) #[doc = "Ceph Client Error"];
+        RadosClient(ceph_error::RadosError) #[doc = "Ceph Client Error"];
     }
 }
