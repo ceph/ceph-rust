@@ -5,5 +5,5 @@ authors = ["Chris MacNaughton <chris@centaurisolutions.nl>"]
 
 [dependencies]
 # ceph-rust = "0.1.17"
-ceph-rust = { git="https://github.com/cholcombe973/ceph-rust" }
+ceph-rust = { git="https://github.com/ceph/ceph-rust" }
 error-chain = "0.11"
