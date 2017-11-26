@@ -23,6 +23,7 @@ use error::*;
 use json::*;
 use libc::*;
 use nom::{IResult, le_u32};
+use serde_json;
 
 use rados::*;
 use status::*;
@@ -1850,12 +1851,14 @@ pub fn ceph_mon_command(cluster: rados_t, name: &str, value: &str, format: Optio
     ceph_mon_command_with_data(cluster, name, value, format, data)
 }
 
-pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &str) -> RadosResult<(Option<String>, Option<String>)> {
+pub fn ceph_mon_command_without_data(cluster: rados_t, cmd: &serde_json::Value) -> RadosResult<(Option<String>, Option<String>)> {
     if cluster.is_null() {
         return Err(RadosError::new("Rados not connected.  Please initialize cluster".to_string()));
     }
+    let cmd_string = cmd.to_string();
+    debug!("ceph_mon_command_without_data: {}", cmd_string);
     let data: Vec<*mut c_char> = Vec::with_capacity(1);
-    let cmds = CString::new(cmd).unwrap();
+    let cmds = CString::new(cmd_string).unwrap();
 
     let mut outbuf = ptr::null_mut();
     let mut outs = ptr::null_mut();
