@@ -14,28 +14,31 @@
 
 #![cfg(target_os = "linux")]
 
-use std::str;
-use std::io::{Read, Write, Cursor};
-use std::os::unix::net::UnixStream;
-use std::net::Shutdown;
-
-use error::{RadosError, RadosResult};
 use byteorder::{BigEndian, ReadBytesExt};
 
-/// This is a helper function that builds a raw command from the actual command. You just pass
+use error::{RadosError, RadosResult};
+use std::io::{Cursor, Read, Write};
+use std::net::Shutdown;
+use std::os::unix::net::UnixStream;
+use std::str;
+
+/// This is a helper function that builds a raw command from the actual
+/// command. You just pass
 /// in a command like "help". The returned `String` will be a JSON String.
 pub fn admin_socket_command(cmd: &str, socket: &str) -> RadosResult<String> {
-    let raw_cmd = format!("{{\"{}\": \"{}\"}}", "prefix", cmd);
-    admin_socket_raw_command(&raw_cmd, socket)
+    let raw_cmd = json!({
+        "prefix": cmd,
+    });
+    admin_socket_raw_command(&raw_cmd.to_string(), socket)
 }
 
-/// This function supports a raw command in the format of something like: `{"prefix": "help"}`.
+/// This function supports a raw command in the format of something like:
+/// `{"prefix": "help"}`.
 /// The returned `String` will be a JSON String.
 #[allow(unused_variables)]
 pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> RadosResult<String> {
-    let mut output = String::new();
-    let mut buffer = vec![0;4];  // Should return 4 bytes with size or indicator.
-    let cmd = &format!("{}\0", cmd);  // Terminator so don't add one to commands.
+    let mut buffer = vec![0; 4]; // Should return 4 bytes with size or indicator.
+    let cmd = &format!("{}\0", cmd); // Terminator so don't add one to commands.
 
     let mut stream = try!(UnixStream::connect(socket));
     let wb = try!(stream.write(cmd.as_bytes()));
@@ -46,11 +49,10 @@ pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> RadosResult<String> 
     }
     // The first 4 bytes are Big Endian unsigned int
     let mut rdr = Cursor::new(buffer);
-    let len = rdr.read_u32::<BigEndian>().unwrap();
-    // Not currently using the len but may...
+    let len = rdr.read_u32::<BigEndian>()?;
+    let mut output_buffer = vec![0; len as usize];
+    stream.read_exact(&mut output_buffer)?;
+    stream.shutdown(Shutdown::Both)?;
 
-    let rb = try!(stream.read_to_string(&mut output));
-    try!(stream.shutdown(Shutdown::Both));
-
-    Ok(output)
+    Ok(String::from_utf8_lossy(&output_buffer).into_owned())
 }
