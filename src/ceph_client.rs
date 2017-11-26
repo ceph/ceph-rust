@@ -68,10 +68,38 @@ impl CephClient {
         cmd::osd_pool_set(self.rados_t, pool, key, value, self.simulate).map_err(|a| a.into())
     }
 
-    pub fn osd_set(&self, key: &str, force: bool) -> Result<()> {
-        cmd::osd_set(self.rados_t, key, force, self.simulate).map_err(|a| a.into())
+    /// Can be used to set options on an OSD
+    ///
+    /// ```rust,no_run
+    /// # use ceph_client::errors::*;
+    /// # use ceph_client::{CephChoices, CephClient};
+    /// # fn main() {
+    /// #   let _ = run();
+    /// # }
+    /// # fn run() -> Result<()> {
+    /// let client = CephClient::new("admin", "/etc/ceph/ceph.conf")?;
+    /// client.osd_set(CephChoices::NoDown, false)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn osd_set(&self, key: CephChoices, force: bool) -> Result<()> {
+        cmd::osd_set(self.rados_t, key.as_ref(), force, self.simulate).map_err(|a| a.into())
     }
 
+    /// Can be used to unset options on an OSD
+    ///
+    /// ```rust,no_run
+    /// # use ceph_client::errors::*;
+    /// # use ceph_client::{CephChoices, CephClient};
+    /// # fn main() {
+    /// #   let _ = run();
+    /// # }
+    /// # fn run() -> Result<()> {
+    /// let client = CephClient::new("admin", "/etc/ceph/ceph.conf")?;
+    /// client.osd_unset(CephChoices::NoDown)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn osd_unset(&self, key: CephChoices) -> Result<()> {
         cmd::osd_unset(self.rados_t, key.as_ref(), self.simulate).map_err(|a| a.into())
     }
@@ -80,62 +108,63 @@ impl CephClient {
         cmd::osd_tree(self.rados_t).map_err(|a| a.into())
     }
 
-    // Get cluster status
+    /// Get cluster status
     pub fn status(&self) -> Result<String> {
-        cmd::status(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::status(self.rados_t)?)
     }
 
     /// List all the monitors in the cluster and their current rank
     pub fn mon_dump(&self) -> Result<cmd::MonDump> {
-        cmd::mon_dump(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mon_dump(self.rados_t)?)
     }
 
     /// Get the mon quorum
     pub fn mon_quorum(&self) -> Result<String> {
-        cmd::mon_quorum(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mon_quorum(self.rados_t)?)
     }
 
-    // Show mon daemon version
-    pub fn version(&self) -> Result<String> {
-        cmd::version(self.rados_t).map_err(|e| e.into())
+    /// Show mon daemon version
+    pub fn version(&self) -> Result<CephVersion> {
+        cmd::version(self.rados_t)?
+            .parse()
     }
 
     pub fn osd_pool_quota_get(&self, pool: &str) -> Result<u64> {
-        cmd::osd_pool_quota_get(self.rados_t, pool).map_err(|e| e.into())
+        Ok(cmd::osd_pool_quota_get(self.rados_t, pool)?)
     }
 
     pub fn auth_del(&self, osd_id: u64) -> Result<()> {
-        cmd::auth_del(self.rados_t, osd_id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::auth_del(self.rados_t, osd_id, self.simulate)?)
     }
 
     pub fn osd_rm(&self, osd_id: u64) -> Result<()> {
-        cmd::osd_rm(self.rados_t, osd_id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::osd_rm(self.rados_t, osd_id, self.simulate)?)
     }
 
     pub fn osd_create(&self, id: Option<u64>) -> Result<u64> {
-        cmd::osd_create(self.rados_t, id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::osd_create(self.rados_t, id, self.simulate)?)
     }
 
     // Add a new mgr to the cluster
     pub fn mgr_auth_add(&self, mgr_id: &str) -> Result<()> {
-        cmd::mgr_auth_add(self.rados_t, mgr_id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::mgr_auth_add(self.rados_t, mgr_id, self.simulate)?)
     }
 
     // Add a new osd to the cluster
     pub fn osd_auth_add(&self, osd_id: u64) -> Result<()> {
-        cmd::osd_auth_add(self.rados_t, osd_id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::osd_auth_add(self.rados_t, osd_id, self.simulate)?)
     }
 
     /// Get a ceph-x key.  The id parameter can be either a number or a string
     /// depending on the type of client so I went with string.
     pub fn auth_get_key(&self, client_type: &str, id: &str) -> Result<String> {
-        cmd::auth_get_key(self.rados_t, client_type, id).map_err(|e| e.into())
+        Ok(cmd::auth_get_key(self.rados_t, client_type, id)?)
     }
 
     // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
     /// add or update crushmap position and weight for an osd
     pub fn osd_crush_add(&self, osd_id: u64, weight: f64, host: &str) -> Result<()> {
-        cmd::osd_crush_add(self.rados_t, osd_id, weight, host, self.simulate).map_err(|e| e.into())
+        Ok(cmd::osd_crush_add(self.rados_t, osd_id, weight, host, self.simulate)?)
     }
 
     // Luminous + only
@@ -146,7 +175,7 @@ impl CephClient {
                 ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
             );
         }
-        cmd::mgr_dump(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mgr_dump(self.rados_t)?)
     }
 
     pub fn mgr_fail(&self, mgr_id: &str) -> Result<()> {
@@ -155,7 +184,7 @@ impl CephClient {
                 ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
             );
         }
-        cmd::mgr_fail(self.rados_t, mgr_id, self.simulate).map_err(|e| e.into())
+        Ok(cmd::mgr_fail(self.rados_t, mgr_id, self.simulate)?)
     }
 
     pub fn mgr_list_modules(&self) -> Result<Vec<String>> {
@@ -164,30 +193,30 @@ impl CephClient {
                 ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
             );
         }
-        cmd::mgr_list_modules(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mgr_list_modules(self.rados_t)?)
     }
 
     pub fn mgr_list_services(&self) -> Result<Vec<String>> {
-        cmd::mgr_list_services(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mgr_list_services(self.rados_t)?)
     }
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<()> {
-        cmd::mgr_enable_module(self.rados_t, module, force, self.simulate).map_err(|e| e.into())
+        Ok(cmd::mgr_enable_module(self.rados_t, module, force, self.simulate)?)
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<()> {
-        cmd::mgr_disable_module(self.rados_t, module, self.simulate).map_err(|e| e.into())
+        Ok(cmd::mgr_disable_module(self.rados_t, module, self.simulate)?)
     }
 
     pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata> {
-        cmd::mgr_metadata(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mgr_metadata(self.rados_t)?)
     }
 
     pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>> {
-        cmd::mgr_count_metadata(self.rados_t, property).map_err(|e| e.into())
+        Ok(cmd::mgr_count_metadata(self.rados_t, property)?)
     }
 
     pub fn mgr_versions(&self) -> Result<HashMap<String, u64>> {
-        cmd::mgr_versions(self.rados_t).map_err(|e| e.into())
+        Ok(cmd::mgr_versions(self.rados_t)?)
     }
 }
