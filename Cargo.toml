@@ -1,0 +1,8 @@
+[package]
+name = "ceph-client"
+version = "0.1.0"
+authors = ["Chris MacNaughton <chris@centaurisolutions.nl>"]
+
+[dependencies]
+ceph-rust = { git = "https://github.com/cholcombe973/ceph-rust.git" }
+error-chain = "*"
