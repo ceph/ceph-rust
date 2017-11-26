@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use ceph_rust::rados::{self, rados_t};
-use ceph_rust::ceph::connect_to_ceph;
+use ceph_rust::ceph::{connect_to_ceph, disconnect_from_ceph};
 use ceph_rust::cmd;
 
 use libc::{c_char};
@@ -30,6 +30,12 @@ pub struct CephClient {
     rados_t: rados_t,
     simulate: bool,
     version: CephVersion,
+}
+
+impl Drop for CephClient {
+    fn drop(&mut self) {
+        disconnect_from_ceph(self.rados_t);
+    }
 }
 
 impl CephClient {
