@@ -14,7 +14,9 @@ mod tests {
 
     #[test]
     fn it_parses_jewel() {
-        let version: CephVersion = "ceph version 10.2.9 (2ee413f77150c0f375ff6f10edd6c8f9c7d060d0)".parse().unwrap();
+        let version: CephVersion = "ceph version 10.2.9 (2ee413f77150c0f375ff6f10edd6c8f9c7d060d0)"
+            .parse()
+            .unwrap();
         assert_eq!(version, CephVersion::Jewel);
     }
 }
@@ -42,12 +44,20 @@ impl FromStr for CephVersion {
     /// rados version commands give them:
     /// `ceph version 10.2.9 (2ee413f77150c0f375ff6f10edd6c8f9c7d060d0)`
     fn from_str(s: &str) -> Result<Self> {
-        
+
         use CephVersion::*;
-        let mut parts =  s.split(" ");
-        if let (Some(_ceph), Some(_version), Some(version_str)) = (parts.next(), parts.next(), parts.next()) {
+        let mut parts = s.split(" ");
+        if let (Some(_ceph), Some(_version), Some(version_str)) =
+            (parts.next(), parts.next(), parts.next())
+        {
             let mut version_parts = version_str.split(".");
-            if let (Some(major), Some(minor), Some(_patch)) = (version_parts.next(), version_parts.next(), version_parts.next()) {
+            if let (Some(major), Some(minor), Some(_patch)) =
+                (
+                    version_parts.next(),
+                    version_parts.next(),
+                    version_parts.next(),
+                )
+            {
                 match major {
                     "12" => return Ok(Luminous),
                     "11" => return Ok(Kraken),

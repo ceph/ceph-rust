@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use ceph_rust::rados::rados_t;
 use ceph_rust::ceph::connect_to_ceph;
 use ceph_rust::cmd;
 
 use errors::*;
-use CephVersion;
+use {CephChoices, CephVersion};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
@@ -11,7 +13,7 @@ use CephVersion;
 /// ```rust,no_run
 /// # use ceph_client::errors::*;
 /// # use ceph_client::{CephClient, CrushTree};
-/// # fn main() { 
+/// # fn main() {
 /// #   let _ = run();
 /// # }
 /// # fn run() -> Result<CrushTree> {
@@ -23,7 +25,7 @@ use CephVersion;
 pub struct CephClient {
     rados_t: rados_t,
     simulate: bool,
-    version: CephVersion
+    version: CephVersion,
 }
 
 impl CephClient {
@@ -32,13 +34,9 @@ impl CephClient {
             Ok(rados_t) => rados_t,
             Err(e) => return Err(e.into()),
         };
-        let version_s = match cmd::version(rados_t) {
+        let version: CephVersion = match cmd::version(rados_t)?.parse() {
             Ok(v) => v,
             Err(e) => return Err(e.into()),
-        };
-        let version: CephVersion = match version_s.parse() {
-            Ok(v) => v,
-            Err(e) => return Err(e.into())
         };
 
         Ok(CephClient {
@@ -74,13 +72,8 @@ impl CephClient {
         cmd::osd_set(self.rados_t, key, force, self.simulate).map_err(|a| a.into())
     }
 
-    /// Possible values for the key are:
-    /// full|pause|noup|nodown|noout|noin|nobackfill|norebalance|norecover|noscrub|
-    /// nodeep-scrub|notieragent
-    /// Check src/mon/MonCommands.h in the ceph github repo for more possible
-    /// options
-    pub fn osd_unset(&self, key: &str) -> Result<()> {
-        cmd::osd_unset(self.rados_t, key, self.simulate).map_err(|a| a.into())
+    pub fn osd_unset(&self, key: CephChoices) -> Result<()> {
+        cmd::osd_unset(self.rados_t, key.as_ref(), self.simulate).map_err(|a| a.into())
     }
 
     pub fn osd_tree(&self) -> Result<cmd::CrushTree> {
@@ -107,7 +100,7 @@ impl CephClient {
         cmd::version(self.rados_t).map_err(|e| e.into())
     }
 
-    pub fn osd_pool_quota_get(&self, pool: &str) -> Result<u64>  {
+    pub fn osd_pool_quota_get(&self, pool: &str) -> Result<u64> {
         cmd::osd_pool_quota_get(self.rados_t, pool).map_err(|e| e.into())
     }
 
@@ -133,24 +126,68 @@ impl CephClient {
         cmd::osd_auth_add(self.rados_t, osd_id, self.simulate).map_err(|e| e.into())
     }
 
+    /// Get a ceph-x key.  The id parameter can be either a number or a string
+    /// depending on the type of client so I went with string.
+    pub fn auth_get_key(&self, client_type: &str, id: &str) -> Result<String> {
+        cmd::auth_get_key(self.rados_t, client_type, id).map_err(|e| e.into())
+    }
+
+    // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
+    /// add or update crushmap position and weight for an osd
+    pub fn osd_crush_add(&self, osd_id: u64, weight: f64, host: &str) -> Result<()> {
+        cmd::osd_crush_add(self.rados_t, osd_id, weight, host, self.simulate).map_err(|e| e.into())
+    }
+
     // Luminous + only
 
     pub fn mgr_dump(&self) -> Result<cmd::MgrDump> {
         if self.version < CephVersion::Luminous {
-            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
         }
         cmd::mgr_dump(self.rados_t).map_err(|e| e.into())
     }
+
     pub fn mgr_fail(&self, mgr_id: &str) -> Result<()> {
         if self.version < CephVersion::Luminous {
-            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
         }
         cmd::mgr_fail(self.rados_t, mgr_id, self.simulate).map_err(|e| e.into())
     }
+
     pub fn mgr_list_modules(&self) -> Result<Vec<String>> {
         if self.version < CephVersion::Luminous {
-            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
         }
         cmd::mgr_list_modules(self.rados_t).map_err(|e| e.into())
+    }
+
+    pub fn mgr_list_services(&self) -> Result<Vec<String>> {
+        cmd::mgr_list_services(self.rados_t).map_err(|e| e.into())
+    }
+
+    pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<()> {
+        cmd::mgr_enable_module(self.rados_t, module, force, self.simulate).map_err(|e| e.into())
+    }
+
+    pub fn mgr_disable_module(&self, module: &str) -> Result<()> {
+        cmd::mgr_disable_module(self.rados_t, module, self.simulate).map_err(|e| e.into())
+    }
+
+    pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata> {
+        cmd::mgr_metadata(self.rados_t).map_err(|e| e.into())
+    }
+
+    pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>> {
+        cmd::mgr_count_metadata(self.rados_t, property).map_err(|e| e.into())
+    }
+
+    pub fn mgr_versions(&self) -> Result<HashMap<String, u64>> {
+        cmd::mgr_versions(self.rados_t).map_err(|e| e.into())
     }
 }

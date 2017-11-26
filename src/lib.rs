@@ -8,6 +8,7 @@ extern crate error_chain;
 
 extern crate ceph_rust;
 
+mod ceph_choices;
 mod ceph_client;
 mod ceph_types;
 mod ceph_version;
@@ -15,6 +16,7 @@ pub mod errors;
 
 // use errors::*;
 
+pub use ceph_choices::CephChoices;
 pub use ceph_client::CephClient;
 pub use ceph_version::CephVersion;
 pub use ceph_types::*;
@@ -26,4 +28,3 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 }
-
