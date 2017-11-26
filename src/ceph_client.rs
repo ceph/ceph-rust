@@ -4,6 +4,13 @@ use ceph_rust::cmd;
 
 use errors::*;
 
+/// A CephClient is a struct that handles communicating with Ceph
+/// in a nicer, Rustier way
+///
+/// ```
+/// let client = CephClient::new("admin", "/etc/ceph/ceph.conf");
+/// let tree = client.osd_tree();
+/// ```
 pub struct CephClient {
     rados_t: rados_t,
     simulate: bool,
