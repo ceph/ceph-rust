@@ -9,11 +9,15 @@ extern crate error_chain;
 extern crate ceph_rust;
 
 mod ceph_client;
-mod errors;
+mod ceph_types;
+mod ceph_version;
+pub mod errors;
 
-pub use errors::*;
+// use errors::*;
 
 pub use ceph_client::CephClient;
+pub use ceph_version::CephVersion;
+pub use ceph_types::*;
 
 #[cfg(test)]
 mod tests {

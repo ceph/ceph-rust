@@ -3,28 +3,49 @@ use ceph_rust::ceph::connect_to_ceph;
 use ceph_rust::cmd;
 
 use errors::*;
+use CephVersion;
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
 ///
-/// ```
-/// let client = CephClient::new("admin", "/etc/ceph/ceph.conf");
-/// let tree = client.osd_tree();
+/// ```rust,no_run
+/// # use ceph_client::errors::*;
+/// # use ceph_client::{CephClient, CrushTree};
+/// # fn main() { 
+/// #   let _ = run();
+/// # }
+/// # fn run() -> Result<CrushTree> {
+/// let client = CephClient::new("admin", "/etc/ceph/ceph.conf")?;
+/// let tree = client.osd_tree()?;
+/// # Ok(tree)
+/// # }
 /// ```
 pub struct CephClient {
     rados_t: rados_t,
     simulate: bool,
+    version: CephVersion
 }
 
 impl CephClient {
     pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient> {
-        match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
-            Ok(rados_t) => Ok(CephClient {
-                rados_t: rados_t,
-                simulate: false,
-            }),
-            Err(e) => Err(e.into())
-        }
+        let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
+            Ok(rados_t) => rados_t,
+            Err(e) => return Err(e.into()),
+        };
+        let version_s = match cmd::version(rados_t) {
+            Ok(v) => v,
+            Err(e) => return Err(e.into()),
+        };
+        let version: CephVersion = match version_s.parse() {
+            Ok(v) => v,
+            Err(e) => return Err(e.into())
+        };
+
+        Ok(CephClient {
+            rados_t: rados_t,
+            simulate: false,
+            version: version,
+        })
     }
 
     pub fn simulate(mut self) -> Self {
@@ -110,5 +131,26 @@ impl CephClient {
     // Add a new osd to the cluster
     pub fn osd_auth_add(&self, osd_id: u64) -> Result<()> {
         cmd::osd_auth_add(self.rados_t, osd_id, self.simulate).map_err(|e| e.into())
+    }
+
+    // Luminous + only
+
+    pub fn mgr_dump(&self) -> Result<cmd::MgrDump> {
+        if self.version < CephVersion::Luminous {
+            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+        }
+        cmd::mgr_dump(self.rados_t).map_err(|e| e.into())
+    }
+    pub fn mgr_fail(&self, mgr_id: &str) -> Result<()> {
+        if self.version < CephVersion::Luminous {
+            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+        }
+        cmd::mgr_fail(self.rados_t, mgr_id, self.simulate).map_err(|e| e.into())
+    }
+    pub fn mgr_list_modules(&self) -> Result<Vec<String>> {
+        if self.version < CephVersion::Luminous {
+            return Err(ErrorKind::MinVersion(CephVersion::Luminous, self.version).into());
+        }
+        cmd::mgr_list_modules(self.rados_t).map_err(|e| e.into())
     }
 }
