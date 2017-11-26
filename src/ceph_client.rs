@@ -68,22 +68,53 @@ impl CephClient {
             .with("ids", &osd_id);
 
         if !self.simulate {
-            self.run_command(&cmd)?;
+            self.run_command(cmd)?;
         }
         Ok(())
     }
 
     pub fn osd_crush_remove(&self, osd_id: u64) -> Result<()> {
-        cmd::osd_crush_remove(self.rados_t, osd_id, self.simulate).map_err(|a| a.into())
+        let osd_id = format!("osd.{}", osd_id);
+        let cmd = MonCommand::new()
+            .with_prefix("osd crush remove")
+            .with_name(&osd_id);
+        if !self.simulate {
+            self.run_command(cmd)?;
+        }
+        Ok(())
     }
 
     /// Query a ceph pool.
     pub fn osd_pool_get(&self, pool: &str, choice: &str) -> Result<String> {
-        cmd::osd_pool_get(self.rados_t, pool, choice).map_err(|a| a.into())
+        let cmd = MonCommand::new()
+            .with_prefix("osd pool get")
+            .with("pool", pool)
+            .with("var", choice);
+        if let Ok(result) = self.run_command(cmd) {
+            let mut l = result.lines();
+            match l.next() {
+                Some(res) => return Ok(res.into()),
+                None => {
+                    return Err(ErrorKind::Rados(format!(
+                        "Unable to parse osd pool get output: {:?}",
+                        result,
+                    )).into())
+                },
+            }
+        }
+        Err(ErrorKind::Rados("No response from ceph for osd pool get".to_string()).into())
     }
     /// Set a pool value
     pub fn osd_pool_set(&self, pool: &str, key: &str, value: &str) -> Result<()> {
-        cmd::osd_pool_set(self.rados_t, pool, key, value, self.simulate).map_err(|a| a.into())
+        let cmd = MonCommand::new()
+            .with_prefix("osd pool set")
+            .with("pool", pool)
+            .with("var", key)
+            .with("value", value);
+        if !self.simulate {
+            self.run_command(cmd)?;
+        }
+        Ok(())
     }
 
     /// Can be used to set options on an OSD
@@ -101,7 +132,19 @@ impl CephClient {
     /// # }
     /// ```
     pub fn osd_set(&self, key: CephChoices, force: bool) -> Result<()> {
-        cmd::osd_set(self.rados_t, key.as_ref(), force, self.simulate).map_err(|a| a.into())
+        let cmd = {
+            let mut c = MonCommand::new()
+                .with_prefix("osd set")
+                .with("key", key.as_ref());
+            if force {
+                c = c.with("sure", "--yes-i-really-mean-it");
+            }
+            c
+        };
+        if !self.simulate {
+            self.run_command(cmd)?;
+        }
+        Ok(())
     }
 
     /// Can be used to unset options on an OSD
@@ -131,7 +174,7 @@ impl CephClient {
         let cmd = MonCommand::new()
             .with_prefix("status")
             .with_format("json");
-        let return_data = self.run_command(&cmd)?;
+        let return_data = self.run_command(cmd)?;
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.into()),
@@ -225,30 +268,60 @@ impl CephClient {
     }
 
     pub fn mgr_list_services(&self) -> Result<Vec<String>> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_list_services(self.rados_t)?)
     }
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<()> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_enable_module(self.rados_t, module, force, self.simulate)?)
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<()> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_disable_module(self.rados_t, module, self.simulate)?)
     }
 
     pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_metadata(self.rados_t)?)
     }
 
     pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_count_metadata(self.rados_t, property)?)
     }
 
     pub fn mgr_versions(&self) -> Result<HashMap<String, u64>> {
+        if self.version < CephVersion::Luminous {
+            return Err(
+                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
+            );
+        }
         Ok(cmd::mgr_versions(self.rados_t)?)
     }
 
-    pub fn run_command(&self, command: &MonCommand) -> Result<String> {
+    pub fn run_command(&self, command: MonCommand) -> Result<String> {
         let cmd = command.as_json();
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
 
