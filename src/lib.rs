@@ -14,7 +14,6 @@ extern crate ceph_rust;
 extern crate serde;
 extern crate serde_json;
 
-mod ceph_choices;
 mod ceph_client;
 mod ceph_helpers;
 mod ceph_types;
@@ -24,11 +23,11 @@ pub mod errors;
 
 // use errors::*;
 
-pub use ceph_choices::CephChoices;
 pub use ceph_client::CephClient;
 pub use ceph_version::CephVersion;
 pub use ceph_types::*;
 pub use mon_command::MonCommand;
+pub use ceph_rust::cmd::OsdOption;
 
 #[cfg(test)]
 mod tests {

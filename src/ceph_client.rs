@@ -9,7 +9,7 @@ use std::{ptr, str};
 use std::ffi::{CString};
 
 use errors::*;
-use {CephChoices, CephVersion, MonCommand, ceph_helpers};
+use {CephVersion, MonCommand, OsdOption, ceph_helpers};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
@@ -121,21 +121,22 @@ impl CephClient {
     ///
     /// ```rust,no_run
     /// # use ceph_client::errors::*;
-    /// # use ceph_client::{CephChoices, CephClient};
+    /// # use ceph_client::{OsdOption, CephClient};
     /// # fn main() {
     /// #   let _ = run();
     /// # }
     /// # fn run() -> Result<()> {
     /// let client = CephClient::new("admin", "/etc/ceph/ceph.conf")?;
-    /// client.osd_set(CephChoices::NoDown, false)?;
+    /// client.osd_set(OsdOption::NoDown, false)?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn osd_set(&self, key: CephChoices, force: bool) -> Result<()> {
+    pub fn osd_set(&self, key: OsdOption, force: bool) -> Result<()> {
+        let key = key.to_string();
         let cmd = {
             let mut c = MonCommand::new()
                 .with_prefix("osd set")
-                .with("key", key.as_ref());
+                .with("key", &key);
             if force {
                 c = c.with("sure", "--yes-i-really-mean-it");
             }
@@ -151,18 +152,18 @@ impl CephClient {
     ///
     /// ```rust,no_run
     /// # use ceph_client::errors::*;
-    /// # use ceph_client::{CephChoices, CephClient};
+    /// # use ceph_client::{OsdOption, CephClient};
     /// # fn main() {
     /// #   let _ = run();
     /// # }
     /// # fn run() -> Result<()> {
     /// let client = CephClient::new("admin", "/etc/ceph/ceph.conf")?;
-    /// client.osd_unset(CephChoices::NoDown)?;
+    /// client.osd_unset(OsdOption::NoDown)?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn osd_unset(&self, key: CephChoices) -> Result<()> {
-        cmd::osd_unset(self.rados_t, key.as_ref(), self.simulate).map_err(|a| a.into())
+    pub fn osd_unset(&self, key: OsdOption) -> Result<()> {
+        cmd::osd_unset(self.rados_t, &key, self.simulate).map_err(|a| a.into())
     }
 
     pub fn osd_tree(&self) -> Result<cmd::CrushTree> {
