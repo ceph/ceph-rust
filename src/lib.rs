@@ -79,7 +79,7 @@ mod mon_command;
 pub use ceph_client::CephClient;
 pub use ceph_version::CephVersion;
 pub use mon_command::MonCommand;
-pub use cmd::OsdOption;
+pub use cmd::{OsdOption, PoolOption};
 
 pub type JsonData = rustc_serialize::json::Json;
 pub type JsonValue = rustc_serialize::json::Json;

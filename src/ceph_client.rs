@@ -9,7 +9,7 @@ use std::{ptr, str};
 use std::ffi::{CString};
 
 use error::RadosError;
-use {CephVersion, MonCommand, OsdOption};
+use {CephVersion, MonCommand, OsdOption, PoolOption};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
@@ -100,11 +100,11 @@ impl CephClient {
     }
 
     /// Query a ceph pool.
-    pub fn osd_pool_get(&self, pool: &str, choice: &str) -> Result<String, RadosError> {
+    pub fn osd_pool_get(&self, pool: &str, choice: &PoolOption) -> Result<String, RadosError> {
         let cmd = MonCommand::new()
             .with_prefix("osd pool get")
             .with("pool", pool)
-            .with("var", choice);
+            .with("var", choice.as_ref());
         if let Ok(result) = self.run_command(cmd) {
             let mut l = result.lines();
             match l.next() {

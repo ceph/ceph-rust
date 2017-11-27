@@ -11,7 +11,7 @@ mod tests {
         let command = MonCommand::new().
             with_prefix("osd set").
             with("key", "osdout");
-            
+
         let actual: HashMap<String, String> = serde_json::from_str(&command.as_json()).unwrap();
         let expected: HashMap<String, String> = serde_json::from_str(r#"{"prefix":"osd set","format":"json","key":"osdout"}"#).unwrap();
 
@@ -47,7 +47,7 @@ impl<'a> MonCommand<'a> {
     }
 
     pub fn with(mut self, name: &'a str, value: &'a str) -> MonCommand<'a> {
-        self.map.insert(name, value.as_ref());
+        self.map.insert(name, value);
         self
     }
 
