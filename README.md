@@ -2,7 +2,7 @@
 ### Official Ceph Rust interface
 
 [![Build Status](https://travis-ci.org/ceph/ceph-rust.svg?branch=master)](https://travis-ci.org/ceph/ceph-rust)
-[![Version info](https://img.shields.io/crates/v/ceph-client.svg)](https://crates.io/crates/ceph)
+[![Version info](https://img.shields.io/crates/v/ceph.svg)](https://crates.io/crates/ceph)
 
 Official Ceph Rust-lang interface. Contributions welcomed!
 
