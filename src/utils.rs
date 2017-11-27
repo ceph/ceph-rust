@@ -18,11 +18,13 @@ use std::process::{Command, Output};
 
 /// run_cli - pass in a String of a normal command line
 ///
-/// The function will split the options into words to supply to the low_level std::process::Command
+/// The function will split the options into words to supply to the low_level
+/// std::process::Command
 /// which returns Result<(Output)>
 /// # Example
 ///
 /// ```
+/// use ceph_rust::utils::run_cli;
 /// run_cli("ps aux");
 /// ```
 
