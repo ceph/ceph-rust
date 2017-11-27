@@ -521,8 +521,7 @@ pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError> {
         "format": "json"
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -544,8 +543,7 @@ pub fn status(cluster_handle: rados_t) -> Result<String, RadosError> {
         "format": "json"
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.into()),
@@ -567,8 +565,7 @@ pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
         "format": "json"
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -590,8 +587,7 @@ pub fn mon_quorum(cluster_handle: rados_t) -> Result<String, RadosError> {
         "format": "json"
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -633,8 +629,7 @@ pub fn version(cluster_handle: rados_t) -> Result<String, RadosError> {
         "prefix": "version",
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.to_string()),
@@ -656,8 +651,7 @@ pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> Result<u64, Ra
         "pool": pool
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(u64::from_str(res)?),
@@ -717,8 +711,7 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
     }
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(num) => return Ok(u64::from_str(num)?),
@@ -770,8 +763,7 @@ pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> Res
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(key) => return Ok(key.into()),
@@ -812,8 +804,7 @@ pub fn mgr_dump(cluster_handle: rados_t) -> Result<MgrDump, RadosError> {
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -848,8 +839,7 @@ pub fn mgr_list_modules(cluster_handle: rados_t) -> Result<Vec<String>, RadosErr
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -871,8 +861,7 @@ pub fn mgr_list_services(cluster_handle: rados_t) -> Result<Vec<String>, RadosEr
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -931,8 +920,7 @@ pub fn mgr_metadata(cluster_handle: rados_t) -> Result<MgrMetadata, RadosError> 
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -955,8 +943,7 @@ pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> Result<Has
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -978,8 +965,7 @@ pub fn mgr_versions(cluster_handle: rados_t) -> Result<HashMap<String, u64>, Rad
     });
 
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
-    if result.0.is_some() {
-        let return_data = result.0.unwrap();
+    if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
