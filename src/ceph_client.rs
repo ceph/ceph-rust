@@ -15,8 +15,9 @@ use {CephVersion, MonCommand, OsdOption};
 /// in a nicer, Rustier way
 ///
 /// ```rust,no_run
-/// # use ceph_client::errors::*;
-/// # use ceph_client::{CephClient, CrushTree};
+/// # use ceph::CephClient;
+/// # use ceph::cmd::CrushTree;
+/// # use ceph::error::RadosError;
 /// # fn main() {
 /// #   let _ = run();
 /// # }
@@ -135,8 +136,8 @@ impl CephClient {
     /// Can be used to set options on an OSD
     ///
     /// ```rust,no_run
-    /// # use ceph_client::errors::*;
-    /// # use ceph_client::{OsdOption, CephClient};
+    /// # use ceph::{OsdOption, CephClient};
+    /// # use ceph::error::RadosError;
     /// # fn main() {
     /// #   let _ = run();
     /// # }
@@ -166,8 +167,8 @@ impl CephClient {
     /// Can be used to unset options on an OSD
     ///
     /// ```rust,no_run
-    /// # use ceph_client::errors::*;
-    /// # use ceph_client::{OsdOption, CephClient};
+    /// # use ceph::{OsdOption, CephClient};
+    /// # use ceph::error::RadosError;
     /// # fn main() {
     /// #   let _ = run();
     /// # }
@@ -342,7 +343,7 @@ impl CephClient {
 
                 unsafe { rados::rados_buffer_free(outs); }
             }
-            return Err(RadosError::new( ceph::get_error(ret_code)? ));
+            return Err(RadosError::new( format!("{:?} : {}", ceph::get_error(ret_code)?, str_outs )));
         }
 
         // Copy the data from outbuf and then  call rados_buffer_free instead libc::free

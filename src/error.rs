@@ -61,7 +61,7 @@ impl StdError for RadosError {
             RadosError::ParseIntError(ref e) => e.description(),
             RadosError::SerdeError(ref e) => e.description(),
             RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
-            RadosError::Parse(ref input) => "An error occurred during parsing",
+            RadosError::Parse(ref _input) => "An error occurred during parsing",
 
         }
     }
@@ -98,8 +98,6 @@ impl RadosError {
             RadosError::ParseError(_) => "Uuid parse error".to_string(),
             RadosError::ParseIntError(ref err) => err.description().to_string(),
             RadosError::SerdeError(ref err) => err.description().to_string(),
-            RadosError::MinVersion(ref _min, ref _curr) => self.description().to_string(),
-            RadosError::Parse(ref err) => err.to_string(),
             RadosError::MinVersion(ref min, ref current_version) => {
                 format!("{:?} minimum, your version is {:?}", min, current_version)
             },

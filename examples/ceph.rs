@@ -17,13 +17,13 @@
 extern crate ceph;
 extern crate libc;
 
-use ceph_rust::JsonData;
+use ceph::JsonData;
 #[cfg(target_os = "linux")]
-use ceph_rust::admin_sockets::*;
+use ceph::admin_sockets::*;
 #[cfg(target_os = "linux")]
-use ceph_rust::ceph as ceph_helpers;
+use ceph::ceph as ceph_helpers;
 #[cfg(target_os = "linux")]
-use ceph_rust::rados as ceph;
+use ceph::rados;
 
 #[cfg(not(target_os = "linux"))]
 fn main() {}
@@ -110,13 +110,13 @@ fn main() {
     // println!("{}", ceph_helpers::ceph_commands(cluster, None).unwrap().pretty());
     unsafe {
 		println!("Getting rados instance id");
-        let instance_id = ceph::rados_get_instance_id(cluster);
+        let instance_id = rados::rados_get_instance_id(cluster);
         println!("Instance ID: {}", instance_id);
 
         let buf_size: usize = 37; // 36 is the constant size +1 for null.
         let mut fs_id: Vec<u8> = Vec::with_capacity(buf_size);
 
-        let len = ceph::rados_cluster_fsid(cluster, fs_id.as_mut_ptr() as *mut ::libc::c_char, buf_size);
+        let len = rados::rados_cluster_fsid(cluster, fs_id.as_mut_ptr() as *mut ::libc::c_char, buf_size);
         let slice = ::std::slice::from_raw_parts(fs_id.as_mut_ptr(), buf_size - 1);
         let s: &str = ::std::str::from_utf8(slice).unwrap();
         println!("rados_cluster_fsid len: {} - {}", len, s);
@@ -161,7 +161,7 @@ fn main() {
         let ceph_ver = ceph_helpers::ceph_version("/var/run/ceph/ceph-mon.ceph-vm1.asok"); // Change to the real mon admin socket name
         println!("Ceph Version - {:?}", ceph_ver);
 
-        ceph::rados_shutdown(cluster);
+        rados::rados_shutdown(cluster);
     }
 
     ceph_helpers::disconnect_from_ceph(cluster);

@@ -1,9 +1,9 @@
-extern crate ceph_rust;
+extern crate ceph;
 extern crate serde;
 extern crate serde_json;
 
 
-use ceph_rust::cmd::{CrushTree, MonStatus};
+use ceph::cmd::{CrushTree, MonStatus};
 use std::fs::File;
 use std::io::Read;
 

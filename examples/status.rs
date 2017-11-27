@@ -1,6 +1,6 @@
-extern crate ceph_client;
+extern crate ceph;
 
-use ceph_client::CephClient;
+use ceph::CephClient;
 
 pub fn main() {
     let ceph_client = CephClient::new("admin", "/etc/ceph/ceph.conf").unwrap();
