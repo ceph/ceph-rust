@@ -32,7 +32,7 @@ for development etc. See README.md for details.
 
 [badges]
 
-travis-ci = { repository = "CentauriSolutions/ceph_client", branch = "master" }
+travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 
 [dependencies]
