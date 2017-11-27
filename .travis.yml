@@ -1,3 +1,4 @@
+dist: trusty
 language: rust
 rust:
   - stable
@@ -6,3 +7,8 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+
+addons:
+  apt:
+    packages:
+    - librados-dev
