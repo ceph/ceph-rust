@@ -23,6 +23,8 @@ use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use uuid::ParseError;
 
+use ceph_version::CephVersion;
+
 /// Custom error handling for the library
 #[derive(Debug)]
 pub enum RadosError {
@@ -34,6 +36,9 @@ pub enum RadosError {
     ParseIntError(ParseIntError),
     ParseError(ParseError),
     SerdeError(SerdeJsonError),
+    /// This should be the minimum version and the current version
+    MinVersion(CephVersion, CephVersion),
+    Parse(String),
 }
 
 pub type RadosResult<T> = Result<T, RadosError>;
@@ -55,6 +60,9 @@ impl StdError for RadosError {
             RadosError::ParseError(ref e) => e.description(),
             RadosError::ParseIntError(ref e) => e.description(),
             RadosError::SerdeError(ref e) => e.description(),
+            RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
+            RadosError::Parse(ref _input) => "An error occurred during parsing",
+
         }
     }
     fn cause(&self) -> Option<&StdError> {
@@ -67,6 +75,8 @@ impl StdError for RadosError {
             RadosError::ParseError(ref e) => e.cause(),
             RadosError::ParseIntError(ref e) => e.cause(),
             RadosError::SerdeError(ref e) => e.cause(),
+            RadosError::MinVersion(ref _min, ref _current_version) => None,
+            RadosError::Parse(ref _input) => None
         }
     }
 }
@@ -88,6 +98,12 @@ impl RadosError {
             RadosError::ParseError(_) => "Uuid parse error".to_string(),
             RadosError::ParseIntError(ref err) => err.description().to_string(),
             RadosError::SerdeError(ref err) => err.description().to_string(),
+            RadosError::MinVersion(ref min, ref current_version) => {
+                format!("{:?} minimum, your version is {:?}", min, current_version)
+            },
+            RadosError::Parse(ref input) => {
+                format!("Couldn't parse the CephVersion from {}", input)
+            },
         }
     }
 }

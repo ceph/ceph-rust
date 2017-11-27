@@ -56,7 +56,7 @@ pub enum CephCommandTypes {
     Osd,
     Pgs,
 }
-fn get_error(n: c_int) -> RadosResult<String> {
+pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
     let mut buf = vec![0u8; 256];
     unsafe {
         strerror_r(n, buf.as_mut_ptr() as *mut ::libc::c_char, buf.len());

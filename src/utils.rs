@@ -24,7 +24,7 @@ use std::process::{Command, Output};
 /// # Example
 ///
 /// ```
-/// use ceph_rust::utils::run_cli;
+/// use ceph::utils::run_cli;
 /// run_cli("ps aux");
 /// ```
 

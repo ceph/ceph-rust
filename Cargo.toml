@@ -1,19 +1,38 @@
 [package]
-name = "ceph-rust"
-version = "0.1.17"
-authors = ["Chris Jones <chris.jones@lambdastack.io>", "Chris Holcombe"]
+name = "ceph"
+version = "0.4.0"
+authors = [
+    "Chris Jones <chris.jones@lambdastack.io>",
+    "Chris Holcombe <xfactor973@gmail.com>",
+    "Chris MacNaughton <chris@centaurisolutions.nl>",
+]
 license = "Apache-2.0"
 readme = "README.md"
+
+# This is a list of up to five keywords that describe this crate. Keywords
+# are searchable on crates.io, and you may choose any words that would
+# help someone find this crate.
 keywords = ["ceph", "storage"]
+
+# This is a list of up to five categories where this crate would fit.
+# Categories are a fixed list available at crates.io/category_slugs, and
+# they must match exactly.
+categories = ["filesystem"]
+
+documentation = "https://docs.rs/ceph"
 repository = "https://github.com/ceph/ceph-rust"
 homepage = "https://github.com/lambdastackio/ceph-rust"
-documentation = "https://lambdastackio.github.io/ceph-rust/ceph_rust"
+
 description = """
 Official Ceph-rust. A rust-lang specific interface to Ceph librados and Admin Sockets. You can create a Ceph development environment with the
 Chef automation tools: https://github.com/bloomberg/chef-bcs or with ceph-ansible. Chef-bcs uses the ceph-chef cookbook
 created and manage at github.com/ceph/ceph-chef. It will build out a full Ceph environment which you can then use
 for development etc. See README.md for details.
 """
+
+[badges]
+
+travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 [dependencies]
 bitflags = "~0.7"

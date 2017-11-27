@@ -1,5 +1,9 @@
 ## Ceph Rust
 ### Official Ceph Rust interface
+
+[![Build Status](https://travis-ci.org/ceph/ceph-rust.svg?branch=master)](https://travis-ci.org/ceph/ceph-rust)
+[![Version info](https://img.shields.io/crates/v/ceph-client.svg)](https://crates.io/crates/ceph)
+
 Official Ceph Rust-lang interface. Contributions welcomed!
 
 This library is the core librados Rust interface for Ceph. It also supports Admin Socket commands.

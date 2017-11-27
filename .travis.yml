@@ -1,14 +1,41 @@
+sudo: false
 dist: trusty
+
 language: rust
+
+cache:
+  cargo: true
+  apt: true
+
 rust:
   - stable
   - beta
   - nightly
+
 matrix:
   allow_failures:
     - rust: nightly
 
 addons:
   apt:
+    sources:
     packages:
-    - librados-dev
+      # Cargo coverage dependencies
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      # Dependencies for this package
+      - librados-dev
+
+install:
+  - cargo install cargo-travis || echo "Cargo travis is already installed!"
+  - export PATH=$HOME/.cargo/bin:$PATH
+
+script:
+  - cargo test --all --verbose
+
+# after_success: |
+#   if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
+#     cargo coveralls
+#   fi
