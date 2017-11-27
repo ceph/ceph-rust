@@ -6,9 +6,6 @@ language: rust
 cache:
   cargo: true
   apt: true
-  directories:
-    - $HOME/lib
-    - $HOME/include
 
 rust:
   - stable
