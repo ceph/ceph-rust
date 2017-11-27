@@ -10,10 +10,10 @@ extern crate serde_json;
 use ceph::ceph_mon_command_without_data;
 use error::RadosError;
 use rados::rados_t;
-use uuid::Uuid;
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
+use uuid::Uuid;
 
 #[derive(Deserialize, Debug)]
 pub struct CephMon {
@@ -91,7 +91,7 @@ pub struct MonDump {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct MonStatus{
+pub struct MonStatus {
     pub name: String,
     pub rank: u64,
     pub state: MonState,
@@ -100,20 +100,20 @@ pub struct MonStatus{
     pub outside_quorum: Vec<u64>,
     pub extra_probe_peers: Vec<u64>,
     pub sync_provider: Vec<u64>,
-    pub monmap: MonMap
-} 
+    pub monmap: MonMap,
+}
 
 #[derive(Deserialize, Debug)]
-pub struct MonMap{
+pub struct MonMap {
     pub epoch: u64,
     pub fsid: Uuid,
     pub modified: String,
     pub created: f64,
-    pub mons: Vec<Mon>
+    pub mons: Vec<Mon>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Mon{
+pub struct Mon {
     pub rank: u64,
     pub name: String,
     pub addr: String,
@@ -132,22 +132,43 @@ pub enum MonState {
     #[serde(rename = "peon")]
     Peon,
     #[serde(rename = "shutdown")]
-    Shutdown
+    Shutdown,
 }
 
+#[derive(Deserialize, Debug, Serialize)]
 pub enum OsdOption {
+    #[serde(rename = "full")]
     Full,
+    #[serde(rename = "pause")]
     Pause,
+    #[serde(rename = "noup")]
     NoUp,
+    #[serde(rename = "nodown")]
     NoDown,
+    #[serde(rename = "noout")]
     NoOut,
+    #[serde(rename = "noin")]
     NoIn,
+    #[serde(rename = "nobackfill")]
     NoBackfill,
+    #[serde(rename = "norebalance")]
     NoRebalance,
+    #[serde(rename = "norecover")]
     NoRecover,
+    #[serde(rename = "noscrub")]
     NoScrub,
+    #[serde(rename = "nodeep-scrub")]
     NoDeepScrub,
+    #[serde(rename = "notieragent")]
     NoTierAgent,
+    #[serde(rename = "sortbitwise")]
+    SortBitwise,
+    #[serde(rename = "recovery_deletes")]
+    RecoveryDeletes,
+    #[serde(rename = "require_jewel_osds")]
+    RequireJewelOsds,
+    #[serde(rename = "require_kraken_osds")]
+    RequireKrakenOsds,
 }
 
 impl fmt::Display for OsdOption {
@@ -165,56 +186,130 @@ impl fmt::Display for OsdOption {
             &OsdOption::NoScrub => write!(f, "noscrub"),
             &OsdOption::NoDeepScrub => write!(f, "nodeep-scrub"),
             &OsdOption::NoTierAgent => write!(f, "notieragent"),
+            &OsdOption::SortBitwise => write!(f, "sortbitwise"),
+            &OsdOption::RecoveryDeletes => write!(f, "recovery_deletes"),
+            &OsdOption::RequireJewelOsds => write!(f, "require_jewel_osds"),
+            &OsdOption::RequireKrakenOsds => write!(f, "require_kraken_osds"),
         }
     }
 }
 
+impl AsRef<str> for OsdOption {
+    fn as_ref(&self) -> &str {
+        match self {
+            &OsdOption::Full => "full",
+            &OsdOption::Pause => "pause",
+            &OsdOption::NoUp => "noup",
+            &OsdOption::NoDown => "nodown",
+            &OsdOption::NoOut => "noout",
+            &OsdOption::NoIn => "noin",
+            &OsdOption::NoBackfill => "nobackfill",
+            &OsdOption::NoRebalance => "norebalance",
+            &OsdOption::NoRecover => "norecover",
+            &OsdOption::NoScrub => "noscrub",
+            &OsdOption::NoDeepScrub => "nodeep-scrub",
+            &OsdOption::NoTierAgent => "notieragent",
+            &OsdOption::SortBitwise => "sortbitwise",
+            &OsdOption::RecoveryDeletes => "recovery_deletes",
+            &OsdOption::RequireJewelOsds => "require_jewel_osds",
+            &OsdOption::RequireKrakenOsds => "require_kraken_osds",
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Serialize)]
 pub enum PoolOption {
+    #[serde(rename = "size")]
     Size,
+    #[serde(rename = "min_size")]
     MinSize,
+    #[serde(rename = "crash_replay_interval")]
     CrashReplayInterval,
+    #[serde(rename = "pg_num")]
     PgNum,
+    #[serde(rename = "pgp_num")]
     PgpNum,
+    #[serde(rename = "crush_rule")]
     CrushRule,
+    #[serde(rename = "hashpspool")]
     HashPsPool,
+    #[serde(rename = "nodelete")]
     NoDelete,
+    #[serde(rename = "nopgchange")]
     NoPgChange,
+    #[serde(rename = "nosizechange")]
     NoSizeChange,
+    #[serde(rename = "write_fadvice_dontneed")]
     WriteFadviceDontNeed,
+    #[serde(rename = "noscrub")]
     NoScrub,
+    #[serde(rename = "nodeep-scrub")]
     NoDeepScrub,
+    #[serde(rename = "hit_set_type")]
     HitSetType,
+    #[serde(rename = "hit_set_period")]
     HitSetPeriod,
+    #[serde(rename = "hit_set_count")]
     HitSetCount,
+    #[serde(rename = "hit_set_fpp")]
     HitSetFpp,
+    #[serde(rename = "use_gmt_hitset")]
     UseGmtHitset,
+    #[serde(rename = "target_max_bytes")]
     TargetMaxBytes,
+    #[serde(rename = "target_max_objects")]
     TargetMaxObjects,
+    #[serde(rename = "cache_target_dirty_ratio")]
     CacheTargetDirtyRatio,
+    #[serde(rename = "cache_target_dirty_high_ratio")]
     CacheTargetDirtyHighRatio,
+    #[serde(rename = "cache_target_full_ratio")]
     CacheTargetFullRatio,
+    #[serde(rename = "cache_min_flush_age")]
     CacheMinFlushAge,
+    #[serde(rename = "cachem_min_evict_age")]
     CacheMinEvictAge,
+    #[serde(rename = "auid")]
     Auid,
+    #[serde(rename = "min_read_recency_for_promote")]
     MinReadRecencyForPromote,
+    #[serde(rename = "min_write_recency_for_promote")]
     MinWriteRecencyForPromte,
+    #[serde(rename = "fast_read")]
     FastRead,
+    #[serde(rename = "hit_set_decay_rate")]
     HitSetGradeDecayRate,
+    #[serde(rename = "hit_set_search_last_n")]
     HitSetSearchLastN,
+    #[serde(rename = "scrub_min_interval")]
     ScrubMinInterval,
+    #[serde(rename = "scrub_max_interval")]
     ScrubMaxInterval,
+    #[serde(rename = "deep_scrub_interval")]
     DeepScrubInterval,
+    #[serde(rename = "recovery_priority")]
     RecoveryPriority,
+    #[serde(rename = "recovery_op_priority")]
     RecoveryOpPriority,
+    #[serde(rename = "scrub_priority")]
     ScrubPriority,
+    #[serde(rename = "compression_mode")]
     CompressionMode,
+    #[serde(rename = "compression_algorithm")]
     CompressionAlgorithm,
+    #[serde(rename = "compression_required_ratio")]
     CompressionRequiredRatio,
+    #[serde(rename = "compression_max_blob_size")]
     CompressionMaxBlobSize,
+    #[serde(rename = "compression_min_blob_size")]
     CompressionMinBlobSize,
+    #[serde(rename = "csum_type")]
     CsumType,
+    #[serde(rename = "csum_min_block")]
     CsumMinBlock,
+    #[serde(rename = "csum_max_block")]
     CsumMaxBlock,
+    #[serde(rename = "allow_ec_overwrites")]
     AllocEcOverwrites,
 }
 
@@ -270,6 +365,60 @@ impl fmt::Display for PoolOption {
         }
     }
 }
+
+impl AsRef<str> for PoolOption {
+    fn as_ref(&self) -> &str {
+        match self {
+            &PoolOption::Size => "size",
+            &PoolOption::MinSize => "min_size",
+            &PoolOption::CrashReplayInterval => "crash_replay_interval",
+            &PoolOption::PgNum => "pg_num",
+            &PoolOption::PgpNum => "pgp_num",
+            &PoolOption::CrushRule => "crush_rule",
+            &PoolOption::HashPsPool => "hashpspool",
+            &PoolOption::NoDelete => "nodelete",
+            &PoolOption::NoPgChange => "nopgchange",
+            &PoolOption::NoSizeChange => "nosizechange",
+            &PoolOption::WriteFadviceDontNeed => "write_fadvice_dontneed",
+            &PoolOption::NoScrub => "noscrub",
+            &PoolOption::NoDeepScrub => "nodeep-scrub",
+            &PoolOption::HitSetType => "hit_set_type",
+            &PoolOption::HitSetPeriod => "hit_set_period",
+            &PoolOption::HitSetCount => "hit_set_count",
+            &PoolOption::HitSetFpp => "hit_set_fpp",
+            &PoolOption::UseGmtHitset => "use_gmt_hitset",
+            &PoolOption::TargetMaxBytes => "target_max_bytes",
+            &PoolOption::TargetMaxObjects => "target_max_objects",
+            &PoolOption::CacheTargetDirtyRatio => "cache_target_dirty_ratio",
+            &PoolOption::CacheTargetDirtyHighRatio => "cache_target_dirty_high_ratio",
+            &PoolOption::CacheTargetFullRatio => "cache_target_full_ratio",
+            &PoolOption::CacheMinFlushAge => "cache_min_flush_age",
+            &PoolOption::CacheMinEvictAge => "cachem_min_evict_age",
+            &PoolOption::Auid => "auid",
+            &PoolOption::MinReadRecencyForPromote => "min_read_recency_for_promote",
+            &PoolOption::MinWriteRecencyForPromte => "min_write_recency_for_promote",
+            &PoolOption::FastRead => "fast_read",
+            &PoolOption::HitSetGradeDecayRate => "hit_set_decay_rate",
+            &PoolOption::HitSetSearchLastN => "hit_set_search_last_n",
+            &PoolOption::ScrubMinInterval => "scrub_min_interval",
+            &PoolOption::ScrubMaxInterval => "scrub_max_interval",
+            &PoolOption::DeepScrubInterval => "deep_scrub_interval",
+            &PoolOption::RecoveryPriority => "recovery_priority",
+            &PoolOption::RecoveryOpPriority => "recovery_op_priority",
+            &PoolOption::ScrubPriority => "scrub_priority",
+            &PoolOption::CompressionMode => "compression_mode",
+            &PoolOption::CompressionAlgorithm => "compression_algorithm",
+            &PoolOption::CompressionRequiredRatio => "compression_required_ratio",
+            &PoolOption::CompressionMaxBlobSize => "compression_max_blob_size",
+            &PoolOption::CompressionMinBlobSize => "compression_min_blob_size",
+            &PoolOption::CsumType => "csum_type",
+            &PoolOption::CsumMinBlock => "csum_min_block",
+            &PoolOption::CsumMaxBlock => "csum_max_block",
+            &PoolOption::AllocEcOverwrites => "allow_ec_overwrites",
+        }
+    }
+}
+
 pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
     let cmd = json!({
         "prefix": "osd out",
@@ -298,7 +447,7 @@ pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) ->
     let cmd = json!({
         "prefix": "osd pool get",
         "pool": pool,
-        "var": format!("{}", choice),
+        "var": choice,
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
     if let Some(return_data) = result.0 {
@@ -324,7 +473,7 @@ pub fn osd_pool_set(cluster_handle: rados_t, pool: &str, key: &PoolOption, value
     let cmd = json!({
         "prefix": "osd pool set",
         "pool": pool,
-        "var": format!("{}", key),
+        "var": key,
         "val": value,
     });
     if !simulate {
@@ -338,14 +487,14 @@ pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: 
         true => {
             json!({
                 "prefix": "osd set",
-                "key": format!("{}", key),
+                "key": key,
                 "sure": "--yes-i-really-mean-it",
             })
         },
         false => {
             json!({
                 "prefix": "osd set",
-                "key": format!("{}", key),
+                "key": key,
             })
         },
     };
@@ -358,7 +507,7 @@ pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: 
 pub fn osd_unset(cluster_handle: rados_t, key: &OsdOption, simulate: bool) -> Result<(), RadosError> {
     let cmd = json!({
         "prefix": "osd unset",
-        "key": format!("{}", key),
+        "key": key,
     });
     if !simulate {
         ceph_mon_command_without_data(cluster_handle, &cmd)?;
@@ -458,7 +607,7 @@ pub fn mon_quorum(cluster_handle: rados_t) -> Result<String, RadosError> {
 }
 
 /// Get the mon status
-pub fn mon_status(cluster_handle: rados_t) -> Result<MonStatus, RadosError>{
+pub fn mon_status(cluster_handle: rados_t) -> Result<MonStatus, RadosError> {
     let cmd = json!({
         "prefix": "mon_status",
     });
