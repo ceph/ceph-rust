@@ -1,50 +1,56 @@
 [package]
-name = "ceph-client"
-version = "0.1.0"
-authors = ["Chris MacNaughton <chris@centaurisolutions.nl>"]
-
-# A short blurb about the package. This is not rendered in any format when
-# uploaded to crates.io (aka this is not markdown).
-description = "ceph-client is an opinionated Ceph library"
-
-# These URLs point to more information about the package. These are
-# intended to be webviews of the relevant data, not necessarily compatible
-# with VCS tools and the like.
-documentation = "https://docs.rs/ceph-client"
-homepage = "https://github.com/CentauriSolutions/ceph_client"
-repository = "https://github.com/CentauriSolutions/ceph_client"
-
-# This points to a file under the package root (relative to this `Cargo.toml`).
-# The contents of this file are stored and indexed in the registry.
-# crates.io will render this file and place the result on the crate's page.
+name = "ceph"
+version = "0.2.0"
+authors = [
+    "Chris Jones <chris.jones@lambdastack.io>",
+    "Chris Holcombe <xfactor973@gmail.com>",
+    "Chris MacNaughton <chris@centaurisolutions.nl>",
+]
+license = "Apache-2.0"
 readme = "README.md"
 
 # This is a list of up to five keywords that describe this crate. Keywords
 # are searchable on crates.io, and you may choose any words that would
 # help someone find this crate.
-keywords = ["storage", "ceph"]
+keywords = ["ceph", "storage"]
 
 # This is a list of up to five categories where this crate would fit.
 # Categories are a fixed list available at crates.io/category_slugs, and
 # they must match exactly.
 categories = ["filesystem"]
 
-# This is a string description of the license for this package. Currently
-# crates.io will validate the license provided against a whitelist of known
-# license identifiers from http://spdx.org/licenses/. Multiple licenses can be
-# separated with a `/`.
-license = "MIT/Apache-2.0"
+documentation = "https://docs.rs/ceph"
+repository = "https://github.com/ceph/ceph-rust"
+homepage = "https://github.com/lambdastackio/ceph-rust"
+
+description = """
+Official Ceph-rust. A rust-lang specific interface to Ceph librados and Admin Sockets. You can create a Ceph development environment with the
+Chef automation tools: https://github.com/bloomberg/chef-bcs or with ceph-ansible. Chef-bcs uses the ceph-chef cookbook
+created and manage at github.com/ceph/ceph-chef. It will build out a full Ceph environment which you can then use
+for development etc. See README.md for details.
+"""
 
 [badges]
 
 travis-ci = { repository = "CentauriSolutions/ceph_client", branch = "master" }
 
+
 [dependencies]
-# ceph-rust = "0.1.17"
-ceph-rust = { git="https://github.com/ceph/ceph-rust" }
-libc = "*"
-log = "*"
+bitflags = "~0.7"
+byteorder = "1" #"~0.5"
+libc = "0.2"
+log = "~0.3"
+error-chain = "0.11"
+nom = "~1.2"
 serde_derive = "~1.0"
 serde = "~1.0"
 serde_json = "~1.0"
-error-chain = "0.11"
+uuid = {version = "~0.5", features = ["use_std", "serde"] }
+rustc-serialize = "~0.3"
+
+# Run the example as follows: `cargo run --example ceph`
+
+# [[bin]]
+# doc = true
+# name = "ceph"
+# path = "examples/ceph.rs"

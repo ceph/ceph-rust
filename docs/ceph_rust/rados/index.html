@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `rados` mod in crate `ceph_rust`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, rados">
+
+    <title>ceph_rust::rados - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    <link rel="shortcut icon" href="https://lambdastackio.github.io/static/images/favicon.ico">
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        <a href='../../ceph_rust/index.html'><img src='https://lambdastackio.github.io/static/images/lambdastack-200x200.png' alt='logo' width='100'></a>
+        <p class='location'>Module rados</p><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#constants">Constants</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'><a href='../index.html'>ceph_rust</a></p><script>window.sidebarCurrent = {name: 'rados', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>ceph_rust</a>::<wbr><a class="mod" href=''>rados</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/ceph_rust/rados.rs.html#38-618' title='goto source code'>[src]</a></span></h1>
+<h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.AllocFlags.html"
+                                  title='struct ceph_rust::rados::AllocFlags'>AllocFlags</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.OperationFlags.html"
+                                  title='struct ceph_rust::rados::OperationFlags'>OperationFlags</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Struct_rados_cluster_stat_t.html"
+                                  title='struct ceph_rust::rados::Struct_rados_cluster_stat_t'>Struct_rados_cluster_stat_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Struct_rados_pool_stat_t.html"
+                                  title='struct ceph_rust::rados::Struct_rados_pool_stat_t'>Struct_rados_pool_stat_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.XattrFlags.html"
+                                  title='struct ceph_rust::rados::XattrFlags'>XattrFlags</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_EQ.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_EQ'>LIBRADOS_CMPXATTR_OP_EQ</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_GT.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_GT'>LIBRADOS_CMPXATTR_OP_GT</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_GTE.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_GTE'>LIBRADOS_CMPXATTR_OP_GTE</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_LT.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_LT'>LIBRADOS_CMPXATTR_OP_LT</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_LTE.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_LTE'>LIBRADOS_CMPXATTR_OP_LTE</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_CMPXATTR_OP_NE.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_CMPXATTR_OP_NE'>LIBRADOS_CMPXATTR_OP_NE</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_BALANCE_READS.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_BALANCE_READS'>LIBRADOS_OPERATION_BALANCE_READS</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_IGNORE_CACHE.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_IGNORE_CACHE'>LIBRADOS_OPERATION_IGNORE_CACHE</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_IGNORE_OVERLAY.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_IGNORE_OVERLAY'>LIBRADOS_OPERATION_IGNORE_OVERLAY</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_LOCALIZE_READS.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_LOCALIZE_READS'>LIBRADOS_OPERATION_LOCALIZE_READS</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_NOFLAG.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_NOFLAG'>LIBRADOS_OPERATION_NOFLAG</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_ORDER_READS_WRITES.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_ORDER_READS_WRITES'>LIBRADOS_OPERATION_ORDER_READS_WRITES</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OPERATION_SKIPRWLOCKS.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OPERATION_SKIPRWLOCKS'>LIBRADOS_OPERATION_SKIPRWLOCKS</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_EXCL.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_EXCL'>LIBRADOS_OP_FLAG_EXCL</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FADVISE_DONTNEED.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FADVISE_DONTNEED'>LIBRADOS_OP_FLAG_FADVISE_DONTNEED</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FADVISE_NOCACHE.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FADVISE_NOCACHE'>LIBRADOS_OP_FLAG_FADVISE_NOCACHE</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FADVISE_RANDOM.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FADVISE_RANDOM'>LIBRADOS_OP_FLAG_FADVISE_RANDOM</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL'>LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FADVISE_WILLNEED.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FADVISE_WILLNEED'>LIBRADOS_OP_FLAG_FADVISE_WILLNEED</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.LIBRADOS_OP_FLAG_FAILOK.html"
+                                  title='constant ceph_rust::rados::LIBRADOS_OP_FLAG_FAILOK'>LIBRADOS_OP_FLAG_FAILOK</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_callback_t.html"
+                                  title='type ceph_rust::rados::rados_callback_t'>rados_callback_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_completion_t.html"
+                                  title='type ceph_rust::rados::rados_completion_t'>rados_completion_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_config_t.html"
+                                  title='type ceph_rust::rados::rados_config_t'>rados_config_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_ioctx_t.html"
+                                  title='type ceph_rust::rados::rados_ioctx_t'>rados_ioctx_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_list_ctx_t.html"
+                                  title='type ceph_rust::rados::rados_list_ctx_t'>rados_list_ctx_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_log_callback_t.html"
+                                  title='type ceph_rust::rados::rados_log_callback_t'>rados_log_callback_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_omap_iter_t.html"
+                                  title='type ceph_rust::rados::rados_omap_iter_t'>rados_omap_iter_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_read_op_t.html"
+                                  title='type ceph_rust::rados::rados_read_op_t'>rados_read_op_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_snap_t.html"
+                                  title='type ceph_rust::rados::rados_snap_t'>rados_snap_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_t.html"
+                                  title='type ceph_rust::rados::rados_t'>rados_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_watchcb2_t.html"
+                                  title='type ceph_rust::rados::rados_watchcb2_t'>rados_watchcb2_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_watchcb_t.html"
+                                  title='type ceph_rust::rados::rados_watchcb_t'>rados_watchcb_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_watcherrcb_t.html"
+                                  title='type ceph_rust::rados::rados_watcherrcb_t'>rados_watcherrcb_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_write_op_t.html"
+                                  title='type ceph_rust::rados::rados_write_op_t'>rados_write_op_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.rados_xattrs_iter_t.html"
+                                  title='type ceph_rust::rados::rados_xattrs_iter_t'>rados_xattrs_iter_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "ceph_rust";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

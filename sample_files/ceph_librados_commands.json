@@ -1,0 +1,2858 @@
+{
+  "cmd000": {
+    "sig": [
+      "pg",
+      "stat"
+    ],
+    "help": "show placement group status.",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd001": {
+    "sig": [
+      "pg",
+      "getmap"
+    ],
+    "help": "get binary pg map to -o\/stdout",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd002": {
+    "sig": [
+      "pg",
+      "send_pg_creates"
+    ],
+    "help": "trigger pg creates to be issued",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd003": {
+    "sig": [
+      "pg",
+      "dump",
+      {
+        "n": "N",
+        "name": "dumpcontents",
+        "req": "false",
+        "strings": "all|summary|sum|delta|pools|osds|pgs|pgs_brief",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show human-readable versions of pg map (only 'all' valid with plain)",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd004": {
+    "sig": [
+      "pg",
+      "dump_json",
+      {
+        "n": "N",
+        "name": "dumpcontents",
+        "req": "false",
+        "strings": "all|summary|sum|pools|osds|pgs",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show human-readable version of pg map in json only",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd005": {
+    "sig": [
+      "pg",
+      "dump_pools_json"
+    ],
+    "help": "show pg pools info in json only",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd006": {
+    "sig": [
+      "pg",
+      "dump_stuck",
+      {
+        "n": "N",
+        "name": "stuckops",
+        "req": "false",
+        "strings": "inactive|unclean|stale|undersized|degraded",
+        "type": "CephChoices"
+      },
+      {
+        "name": "threshold",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "show information about stuck pgs",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd007": {
+    "sig": [
+      "pg",
+      "ls-by-pool",
+      {
+        "name": "poolstr",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "states",
+        "req": "false",
+        "strings": "active|clean|down|replay|splitting|scrubbing|scrubq|degraded|inconsistent|peering|repair|recovering|backfill_wait|incomplete|stale|remapped|deep_scrub|backfill|backfill_toofull|recovery_wait|undersized",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "list pg with pool = [poolname | poolid]",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd008": {
+    "sig": [
+      "pg",
+      "ls-by-primary",
+      {
+        "name": "osd",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "pool",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "n": "N",
+        "name": "states",
+        "req": "false",
+        "strings": "active|clean|down|replay|splitting|scrubbing|scrubq|degraded|inconsistent|peering|repair|recovering|backfill_wait|incomplete|stale|remapped|deep_scrub|backfill|backfill_toofull|recovery_wait|undersized",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "list pg with primary = [osd]",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd009": {
+    "sig": [
+      "pg",
+      "ls-by-osd",
+      {
+        "name": "osd",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "pool",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "n": "N",
+        "name": "states",
+        "req": "false",
+        "strings": "active|clean|down|replay|splitting|scrubbing|scrubq|degraded|inconsistent|peering|repair|recovering|backfill_wait|incomplete|stale|remapped|deep_scrub|backfill|backfill_toofull|recovery_wait|undersized",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "list pg on osd [osd]",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd010": {
+    "sig": [
+      "pg",
+      "ls",
+      {
+        "name": "pool",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "n": "N",
+        "name": "states",
+        "req": "false",
+        "strings": "active|clean|down|replay|splitting|scrubbing|scrubq|degraded|inconsistent|peering|repair|recovering|backfill_wait|incomplete|stale|remapped|deep_scrub|backfill|backfill_toofull|recovery_wait|undersized",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "list pg with specific pool, osd, state",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd011": {
+    "sig": [
+      "pg",
+      "map",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      }
+    ],
+    "help": "show mapping of pg to osds",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd012": {
+    "sig": [
+      "pg",
+      "scrub",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      }
+    ],
+    "help": "start scrub on <pgid>",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd013": {
+    "sig": [
+      "pg",
+      "deep-scrub",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      }
+    ],
+    "help": "start deep-scrub on <pgid>",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd014": {
+    "sig": [
+      "pg",
+      "repair",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      }
+    ],
+    "help": "start repair on <pgid>",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd015": {
+    "sig": [
+      "pg",
+      "debug",
+      {
+        "name": "debugop",
+        "strings": "unfound_objects_exist|degraded_pgs_exist",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show debug info about pgs",
+    "module": "pg",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd016": {
+    "sig": [
+      "pg",
+      "force_create_pg",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      }
+    ],
+    "help": "force creation of pg <pgid>",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd017": {
+    "sig": [
+      "pg",
+      "set_full_ratio",
+      {
+        "name": "ratio",
+        "range": "0.0|1.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "set ratio at which pgs are considered full",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd018": {
+    "sig": [
+      "pg",
+      "set_nearfull_ratio",
+      {
+        "name": "ratio",
+        "range": "0.0|1.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "set ratio at which pgs are considered nearly full",
+    "module": "pg",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd019": {
+    "sig": [
+      "auth",
+      "export",
+      {
+        "name": "entity",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "write keyring for requested entity, or master keyring if none given",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd020": {
+    "sig": [
+      "auth",
+      "get",
+      {
+        "name": "entity",
+        "type": "CephString"
+      }
+    ],
+    "help": "write keyring file with requested key",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd021": {
+    "sig": [
+      "auth",
+      "get-key",
+      {
+        "name": "entity",
+        "type": "CephString"
+      }
+    ],
+    "help": "display requested key",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd022": {
+    "sig": [
+      "auth",
+      "print-key",
+      {
+        "name": "entity",
+        "type": "CephString"
+      }
+    ],
+    "help": "display requested key",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd023": {
+    "sig": [
+      "auth",
+      "print_key",
+      {
+        "name": "entity",
+        "type": "CephString"
+      }
+    ],
+    "help": "display requested key",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd024": {
+    "sig": [
+      "auth",
+      "list"
+    ],
+    "help": "list authentication state",
+    "module": "auth",
+    "perm": "rx",
+    "avail": "cli,rest"
+  },
+  "cmd025": {
+    "sig": [
+      "auth",
+      "import"
+    ],
+    "help": "auth import: read keyring file from -i <file>",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd026": {
+    "sig": [
+      "auth",
+      "add",
+      {
+        "name": "entity",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "caps",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "add auth info for <entity> from input file, or random key if no input is given, and\/or any caps specified in the command",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd027": {
+    "sig": [
+      "auth",
+      "get-or-create-key",
+      {
+        "name": "entity",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "caps",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "get, or add, key for <name> from system\/caps pairs specified in the command.  If key already exists, any given caps must match the existing caps for that key.",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd028": {
+    "sig": [
+      "auth",
+      "get-or-create",
+      {
+        "name": "entity",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "caps",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "add auth info for <entity> from input file, or random key if no input given, and\/or any caps specified in the command",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd029": {
+    "sig": [
+      "auth",
+      "caps",
+      {
+        "name": "entity",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "caps",
+        "type": "CephString"
+      }
+    ],
+    "help": "update caps for <name> from caps specified in the command",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd030": {
+    "sig": [
+      "auth",
+      "del",
+      {
+        "name": "entity",
+        "type": "CephString"
+      }
+    ],
+    "help": "delete all caps for <name>",
+    "module": "auth",
+    "perm": "rwx",
+    "avail": "cli,rest"
+  },
+  "cmd031": {
+    "sig": [
+      "compact"
+    ],
+    "help": "cause compaction of monitor's leveldb storage",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd032": {
+    "sig": [
+      "scrub"
+    ],
+    "help": "scrub the monitor stores",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd033": {
+    "sig": [
+      "fsid"
+    ],
+    "help": "show cluster FSID\/UUID",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd034": {
+    "sig": [
+      "log",
+      {
+        "n": "N",
+        "name": "logtext",
+        "type": "CephString"
+      }
+    ],
+    "help": "log supplied text to the monitor log",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd035": {
+    "sig": [
+      "injectargs",
+      {
+        "n": "N",
+        "name": "injected_args",
+        "type": "CephString"
+      }
+    ],
+    "help": "inject config arguments into monitor",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd036": {
+    "sig": [
+      "status"
+    ],
+    "help": "show cluster status",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd037": {
+    "sig": [
+      "health",
+      {
+        "name": "detail",
+        "req": "false",
+        "strings": "detail",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show cluster health",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd038": {
+    "sig": [
+      "df",
+      {
+        "name": "detail",
+        "req": "false",
+        "strings": "detail",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show cluster free space stats",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd039": {
+    "sig": [
+      "report",
+      {
+        "n": "N",
+        "name": "tags",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "report full status of cluster, optional title tag strings",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd040": {
+    "sig": [
+      "quorum_status"
+    ],
+    "help": "report status of monitor quorum",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd041": {
+    "sig": [
+      "mon_status"
+    ],
+    "help": "report status of monitors",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd042": {
+    "sig": [
+      "sync",
+      "force",
+      {
+        "name": "validate1",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      },
+      {
+        "name": "validate2",
+        "req": "false",
+        "strings": "--i-know-what-i-am-doing",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "force sync of and clear monitor store",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd043": {
+    "sig": [
+      "heap",
+      {
+        "name": "heapcmd",
+        "strings": "dump|start_profiler|stop_profiler|release|stats",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show heap usage info (available only if compiled with tcmalloc)",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd044": {
+    "sig": [
+      "quorum",
+      {
+        "n": "1",
+        "name": "quorumcmd",
+        "strings": "enter|exit",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "enter or exit quorum",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd045": {
+    "sig": [
+      "tell",
+      {
+        "name": "target",
+        "type": "CephName"
+      },
+      {
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "send a command to a specific daemon",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd046": {
+    "sig": [
+      "version"
+    ],
+    "help": "show mon daemon version",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd047": {
+    "sig": [
+      "mds",
+      "stat"
+    ],
+    "help": "show MDS status",
+    "module": "mds",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd048": {
+    "sig": [
+      "mds",
+      "dump",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "dump info, optionally from epoch",
+    "module": "mds",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd049": {
+    "sig": [
+      "mds",
+      "getmap",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "get MDS map, optionally from epoch",
+    "module": "mds",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd050": {
+    "sig": [
+      "mds",
+      "tell",
+      {
+        "name": "who",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "send command to particular mds",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd051": {
+    "sig": [
+      "mds",
+      "compat",
+      "show"
+    ],
+    "help": "show mds compatibility settings",
+    "module": "mds",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd052": {
+    "sig": [
+      "mds",
+      "stop",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "stop mds",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd053": {
+    "sig": [
+      "mds",
+      "deactivate",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "stop mds",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd054": {
+    "sig": [
+      "mds",
+      "set_max_mds",
+      {
+        "name": "maxmds",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "set max MDS index",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd055": {
+    "sig": [
+      "mds",
+      "set",
+      {
+        "name": "var",
+        "strings": "max_mds|max_file_size|allow_new_snaps|inline_data",
+        "type": "CephChoices"
+      },
+      {
+        "name": "val",
+        "type": "CephString"
+      },
+      {
+        "name": "confirm",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "set mds parameter <var> to <val>",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd056": {
+    "sig": [
+      "mds",
+      "setmap",
+      {
+        "name": "epoch",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "set mds map; must supply correct epoch number",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd057": {
+    "sig": [
+      "mds",
+      "set_state",
+      {
+        "name": "gid",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "state",
+        "range": "0|20",
+        "type": "CephInt"
+      }
+    ],
+    "help": "set mds state of <gid> to <numeric-state>",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd058": {
+    "sig": [
+      "mds",
+      "fail",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "force mds to status failed",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd059": {
+    "sig": [
+      "mds",
+      "rm",
+      {
+        "name": "gid",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "who",
+        "type": "CephName"
+      }
+    ],
+    "help": "remove nonactive mds",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd060": {
+    "sig": [
+      "mds",
+      "rmfailed",
+      {
+        "name": "who",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "remove failed mds",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd061": {
+    "sig": [
+      "mds",
+      "cluster_down"
+    ],
+    "help": "take MDS cluster down",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd062": {
+    "sig": [
+      "mds",
+      "cluster_up"
+    ],
+    "help": "bring MDS cluster up",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd063": {
+    "sig": [
+      "mds",
+      "compat",
+      "rm_compat",
+      {
+        "name": "feature",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "remove compatible feature",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd064": {
+    "sig": [
+      "mds",
+      "compat",
+      "rm_incompat",
+      {
+        "name": "feature",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "remove incompatible feature",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd065": {
+    "sig": [
+      "mds",
+      "add_data_pool",
+      {
+        "name": "pool",
+        "type": "CephString"
+      }
+    ],
+    "help": "add data pool <pool>",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd066": {
+    "sig": [
+      "mds",
+      "remove_data_pool",
+      {
+        "name": "pool",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove data pool <pool>",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd067": {
+    "sig": [
+      "mds",
+      "newfs",
+      {
+        "name": "metadata",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "data",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "sure",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "make new filesystem using pools <metadata> and <data>",
+    "module": "mds",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd068": {
+    "sig": [
+      "fs",
+      "new",
+      {
+        "name": "fs_name",
+        "type": "CephString"
+      },
+      {
+        "name": "metadata",
+        "type": "CephString"
+      },
+      {
+        "name": "data",
+        "type": "CephString"
+      }
+    ],
+    "help": "make new filesystem using named pools <metadata> and <data>",
+    "module": "fs",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd069": {
+    "sig": [
+      "fs",
+      "rm",
+      {
+        "name": "fs_name",
+        "type": "CephString"
+      },
+      {
+        "name": "sure",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "disable the named filesystem",
+    "module": "fs",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd070": {
+    "sig": [
+      "fs",
+      "reset",
+      {
+        "name": "fs_name",
+        "type": "CephString"
+      },
+      {
+        "name": "sure",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "disaster recovery only: reset to a single-MDS map",
+    "module": "fs",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd071": {
+    "sig": [
+      "fs",
+      "ls"
+    ],
+    "help": "list filesystems",
+    "module": "fs",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd072": {
+    "sig": [
+      "mon",
+      "dump",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "dump formatted monmap (optionally from epoch)",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd073": {
+    "sig": [
+      "mon",
+      "stat"
+    ],
+    "help": "summarize monitor status",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd074": {
+    "sig": [
+      "mon",
+      "getmap",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "get monmap",
+    "module": "mon",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd075": {
+    "sig": [
+      "mon",
+      "add",
+      {
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "name": "addr",
+        "type": "CephIPAddr"
+      }
+    ],
+    "help": "add new monitor named <name> at <addr>",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd076": {
+    "sig": [
+      "mon",
+      "remove",
+      {
+        "name": "name",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove monitor named <name>",
+    "module": "mon",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd077": {
+    "sig": [
+      "osd",
+      "stat"
+    ],
+    "help": "print summary of OSD map",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd078": {
+    "sig": [
+      "osd",
+      "dump",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "print summary of OSD map",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd079": {
+    "sig": [
+      "osd",
+      "tree",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "print OSD tree",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd080": {
+    "sig": [
+      "osd",
+      "ls",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "show all OSD ids",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd081": {
+    "sig": [
+      "osd",
+      "getmap",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "get OSD map",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd082": {
+    "sig": [
+      "osd",
+      "getcrushmap",
+      {
+        "name": "epoch",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "get CRUSH map",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd083": {
+    "sig": [
+      "osd",
+      "perf"
+    ],
+    "help": "print dump of OSD perf summary stats",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd084": {
+    "sig": [
+      "osd",
+      "blocked-by"
+    ],
+    "help": "print histogram of which OSDs are blocking their peers",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd085": {
+    "sig": [
+      "osd",
+      "getmaxosd"
+    ],
+    "help": "show largest OSD id",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd086": {
+    "sig": [
+      "osd",
+      "find",
+      {
+        "name": "id",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "find osd <id> in the CRUSH map and show its location",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd087": {
+    "sig": [
+      "osd",
+      "metadata",
+      {
+        "name": "id",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "fetch metadata for osd <id>",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd088": {
+    "sig": [
+      "osd",
+      "map",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "object",
+        "type": "CephObjectname"
+      }
+    ],
+    "help": "find pg for <object> in <pool>",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd089": {
+    "sig": [
+      "osd",
+      "scrub",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "initiate scrub on osd <who>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd090": {
+    "sig": [
+      "osd",
+      "deep-scrub",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "initiate deep scrub on osd <who>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd091": {
+    "sig": [
+      "osd",
+      "repair",
+      {
+        "name": "who",
+        "type": "CephString"
+      }
+    ],
+    "help": "initiate repair on osd <who>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd092": {
+    "sig": [
+      "osd",
+      "lspools",
+      {
+        "name": "auid",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "list pools",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd093": {
+    "sig": [
+      "osd",
+      "blacklist",
+      "ls"
+    ],
+    "help": "show blacklisted clients",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd094": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "list"
+    ],
+    "help": "list crush rules",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd095": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "ls"
+    ],
+    "help": "list crush rules",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd096": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "dump",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "dump crush rule <name> (default all)",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd097": {
+    "sig": [
+      "osd",
+      "crush",
+      "dump"
+    ],
+    "help": "dump crush map",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd098": {
+    "sig": [
+      "osd",
+      "setcrushmap"
+    ],
+    "help": "set crush map from input file",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd099": {
+    "sig": [
+      "osd",
+      "crush",
+      "set"
+    ],
+    "help": "set crush map from input file",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd100": {
+    "sig": [
+      "osd",
+      "crush",
+      "add-bucket",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "name": "type",
+        "type": "CephString"
+      }
+    ],
+    "help": "add no-parent (probably root) crush bucket <name> of type <type>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd101": {
+    "sig": [
+      "osd",
+      "crush",
+      "rename-bucket",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "srcname",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "dstname",
+        "type": "CephString"
+      }
+    ],
+    "help": "rename bucket <srcname> to <dstname>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd102": {
+    "sig": [
+      "osd",
+      "crush",
+      "set",
+      {
+        "name": "id",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "weight",
+        "range": "0.0",
+        "type": "CephFloat"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "update crushmap position and weight for <name> to <weight> with location <args>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd103": {
+    "sig": [
+      "osd",
+      "crush",
+      "add",
+      {
+        "name": "id",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "weight",
+        "range": "0.0",
+        "type": "CephFloat"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "add or update crushmap position and weight for <name> with <weight> and location <args>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd104": {
+    "sig": [
+      "osd",
+      "crush",
+      "create-or-move",
+      {
+        "name": "id",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "weight",
+        "range": "0.0",
+        "type": "CephFloat"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "create entry or move existing entry for <name> <weight> at\/to location <args>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd105": {
+    "sig": [
+      "osd",
+      "crush",
+      "move",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "move existing entry for <name> to location <args>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd106": {
+    "sig": [
+      "osd",
+      "crush",
+      "link",
+      {
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "n": "N",
+        "name": "args",
+        "type": "CephString"
+      }
+    ],
+    "help": "link existing entry for <name> under location <args>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd107": {
+    "sig": [
+      "osd",
+      "crush",
+      "rm",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "ancestor",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove <name> from crush map (everywhere, or just at <ancestor>)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd108": {
+    "sig": [
+      "osd",
+      "crush",
+      "remove",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "ancestor",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove <name> from crush map (everywhere, or just at <ancestor>)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd109": {
+    "sig": [
+      "osd",
+      "crush",
+      "unlink",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "ancestor",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "unlink <name> from crush map (everywhere, or just at <ancestor>)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd110": {
+    "sig": [
+      "osd",
+      "crush",
+      "reweight-all"
+    ],
+    "help": "recalculate the weights for the tree to ensure they sum correctly",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd111": {
+    "sig": [
+      "osd",
+      "crush",
+      "reweight",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "name": "weight",
+        "range": "0.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "change <name>'s weight to <weight> in crush map",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd112": {
+    "sig": [
+      "osd",
+      "crush",
+      "reweight-subtree",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "name": "weight",
+        "range": "0.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "change all leaf items beneath <name> to <weight> in crush map",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd113": {
+    "sig": [
+      "osd",
+      "crush",
+      "tunables",
+      {
+        "name": "profile",
+        "strings": "legacy|argonaut|bobtail|firefly|hammer|optimal|default",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "set crush tunables values to <profile>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd114": {
+    "sig": [
+      "osd",
+      "crush",
+      "set-tunable",
+      {
+        "name": "tunable",
+        "strings": "straw_calc_version",
+        "type": "CephChoices"
+      },
+      {
+        "name": "value",
+        "type": "CephInt"
+      }
+    ],
+    "help": "set crush tunable <tunable> to <value>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd115": {
+    "sig": [
+      "osd",
+      "crush",
+      "get-tunable",
+      {
+        "name": "tunable",
+        "strings": "straw_calc_version",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "get crush tunable <tunable>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd116": {
+    "sig": [
+      "osd",
+      "crush",
+      "show-tunables"
+    ],
+    "help": "show current crush tunables",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd117": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "create-simple",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "root",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "type",
+        "type": "CephString"
+      },
+      {
+        "name": "mode",
+        "req": "false",
+        "strings": "firstn|indep",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "create crush rule <name> to start from <root>, replicate across buckets of type <type>, using a choose mode of <firstn|indep> (default firstn; indep best for erasure pools)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd118": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "create-erasure",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.=]",
+        "name": "profile",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "create crush rule <name> for erasure coded pool created with <profile> (default default)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd119": {
+    "sig": [
+      "osd",
+      "crush",
+      "rule",
+      "rm",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove crush rule <name>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd120": {
+    "sig": [
+      "osd",
+      "crush",
+      "tree"
+    ],
+    "help": "dump crush buckets and items in a tree view",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd121": {
+    "sig": [
+      "osd",
+      "setmaxosd",
+      {
+        "name": "newmax",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "set new maximum osd value",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd122": {
+    "sig": [
+      "osd",
+      "pause"
+    ],
+    "help": "pause osd",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd123": {
+    "sig": [
+      "osd",
+      "unpause"
+    ],
+    "help": "unpause osd",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd124": {
+    "sig": [
+      "osd",
+      "erasure-code-profile",
+      "set",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      },
+      {
+        "n": "N",
+        "name": "profile",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "create erasure code profile <name> with [<key[=value]> ...] pairs. Add a --force at the end to override an existing profile (VERY DANGEROUS)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd125": {
+    "sig": [
+      "osd",
+      "erasure-code-profile",
+      "get",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      }
+    ],
+    "help": "get erasure code profile <name>",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd126": {
+    "sig": [
+      "osd",
+      "erasure-code-profile",
+      "rm",
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "name",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove erasure code profile <name>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd127": {
+    "sig": [
+      "osd",
+      "erasure-code-profile",
+      "ls"
+    ],
+    "help": "list all erasure code profiles",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd128": {
+    "sig": [
+      "osd",
+      "set",
+      {
+        "name": "key",
+        "strings": "full|pause|noup|nodown|noout|noin|nobackfill|norebalance|norecover|noscrub|nodeep-scrub|notieragent",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "set <key>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd129": {
+    "sig": [
+      "osd",
+      "unset",
+      {
+        "name": "key",
+        "strings": "full|pause|noup|nodown|noout|noin|nobackfill|norebalance|norecover|noscrub|nodeep-scrub|notieragent",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "unset <key>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd130": {
+    "sig": [
+      "osd",
+      "cluster_snap"
+    ],
+    "help": "take cluster snapshot (disabled)",
+    "module": "osd",
+    "perm": "r",
+    "avail": ""
+  },
+  "cmd131": {
+    "sig": [
+      "osd",
+      "down",
+      {
+        "n": "N",
+        "name": "ids",
+        "type": "CephString"
+      }
+    ],
+    "help": "set osd(s) <id> [<id>...] down",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd132": {
+    "sig": [
+      "osd",
+      "out",
+      {
+        "n": "N",
+        "name": "ids",
+        "type": "CephString"
+      }
+    ],
+    "help": "set osd(s) <id> [<id>...] out",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd133": {
+    "sig": [
+      "osd",
+      "in",
+      {
+        "n": "N",
+        "name": "ids",
+        "type": "CephString"
+      }
+    ],
+    "help": "set osd(s) <id> [<id>...] in",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd134": {
+    "sig": [
+      "osd",
+      "rm",
+      {
+        "n": "N",
+        "name": "ids",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove osd(s) <id> [<id>...] in",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd135": {
+    "sig": [
+      "osd",
+      "reweight",
+      {
+        "name": "id",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "weight",
+        "range": "0.0|1.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "reweight osd to 0.0 < <weight> < 1.0",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd136": {
+    "sig": [
+      "osd",
+      "pg-temp",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      },
+      {
+        "n": "N",
+        "name": "id",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "set pg_temp mapping pgid:[<id> [<id>...]] (developers only)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd137": {
+    "sig": [
+      "osd",
+      "primary-temp",
+      {
+        "name": "pgid",
+        "type": "CephPgid"
+      },
+      {
+        "name": "id",
+        "type": "CephString"
+      }
+    ],
+    "help": "set primary_temp mapping pgid:<id>|-1 (developers only)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd138": {
+    "sig": [
+      "osd",
+      "primary-affinity",
+      {
+        "name": "id",
+        "type": "CephOsdName"
+      },
+      {
+        "name": "weight",
+        "range": "0.0|1.0",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "adjust osd primary-affinity from 0.0 <= <weight> <= 1.0",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd139": {
+    "sig": [
+      "osd",
+      "lost",
+      {
+        "name": "id",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "sure",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "mark osd as permanently lost. THIS DESTROYS DATA IF NO MORE REPLICAS EXIST, BE CAREFUL",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd140": {
+    "sig": [
+      "osd",
+      "create",
+      {
+        "name": "uuid",
+        "req": "false",
+        "type": "CephUUID"
+      }
+    ],
+    "help": "create new osd (with optional UUID)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd141": {
+    "sig": [
+      "osd",
+      "blacklist",
+      {
+        "name": "blacklistop",
+        "strings": "add|rm",
+        "type": "CephChoices"
+      },
+      {
+        "name": "addr",
+        "type": "CephEntityAddr"
+      },
+      {
+        "name": "expire",
+        "range": "0.0",
+        "req": "false",
+        "type": "CephFloat"
+      }
+    ],
+    "help": "add (optionally until <expire> seconds from now) or remove <addr> from blacklist",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd142": {
+    "sig": [
+      "osd",
+      "pool",
+      "mksnap",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "snap",
+        "type": "CephString"
+      }
+    ],
+    "help": "make snapshot <snap> in <pool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd143": {
+    "sig": [
+      "osd",
+      "pool",
+      "rmsnap",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "snap",
+        "type": "CephString"
+      }
+    ],
+    "help": "remove snapshot <snap> from <pool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd144": {
+    "sig": [
+      "osd",
+      "pool",
+      "ls",
+      {
+        "name": "detail",
+        "req": "false",
+        "strings": "detail",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "list pools",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd145": {
+    "sig": [
+      "osd",
+      "pool",
+      "create",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "pg_num",
+        "range": "0",
+        "type": "CephInt"
+      },
+      {
+        "name": "pgp_num",
+        "range": "0",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "pool_type",
+        "req": "false",
+        "strings": "replicated|erasure",
+        "type": "CephChoices"
+      },
+      {
+        "goodchars": "[A-Za-z0-9-_.]",
+        "name": "erasure_code_profile",
+        "req": "false",
+        "type": "CephString"
+      },
+      {
+        "name": "ruleset",
+        "req": "false",
+        "type": "CephString"
+      },
+      {
+        "name": "expected_num_objects",
+        "req": "false",
+        "type": "CephInt"
+      }
+    ],
+    "help": "create pool",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd146": {
+    "sig": [
+      "osd",
+      "pool",
+      "delete",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "pool2",
+        "req": "false",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "sure",
+        "req": "false",
+        "strings": "--yes-i-really-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "delete pool",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd147": {
+    "sig": [
+      "osd",
+      "pool",
+      "rename",
+      {
+        "name": "srcpool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "destpool",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "rename <srcpool> to <destpool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd148": {
+    "sig": [
+      "osd",
+      "pool",
+      "get",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "var",
+        "strings": "size|min_size|crash_replay_interval|pg_num|pgp_num|crush_ruleset|hit_set_type|hit_set_period|hit_set_count|hit_set_fpp|auid|target_max_objects|target_max_bytes|cache_target_dirty_ratio|cache_target_full_ratio|cache_min_flush_age|cache_min_evict_age|erasure_code_profile|min_read_recency_for_promote|write_fadvise_dontneed",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "get pool parameter <var>",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd149": {
+    "sig": [
+      "osd",
+      "pool",
+      "set",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "var",
+        "strings": "size|min_size|crash_replay_interval|pg_num|pgp_num|crush_ruleset|hashpspool|nodelete|nopgchange|nosizechange|hit_set_type|hit_set_period|hit_set_count|hit_set_fpp|use_gmt_hitset|debug_fake_ec_pool|target_max_bytes|target_max_objects|cache_target_dirty_ratio|cache_target_full_ratio|cache_min_flush_age|cache_min_evict_age|auid|min_read_recency_for_promote|write_fadvise_dontneed",
+        "type": "CephChoices"
+      },
+      {
+        "name": "val",
+        "type": "CephString"
+      },
+      {
+        "name": "force",
+        "req": "false",
+        "strings": "--yes-i-really-mean-it",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "set pool parameter <var> to <val>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd150": {
+    "sig": [
+      "osd",
+      "pool",
+      "set-quota",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "field",
+        "strings": "max_objects|max_bytes",
+        "type": "CephChoices"
+      },
+      {
+        "name": "val",
+        "type": "CephString"
+      }
+    ],
+    "help": "set object or byte limit on pool",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd151": {
+    "sig": [
+      "osd",
+      "pool",
+      "get-quota",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "obtain object or byte limits for pool",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd152": {
+    "sig": [
+      "osd",
+      "pool",
+      "stats",
+      {
+        "name": "name",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "obtain stats from all pools, or from specified pool",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd153": {
+    "sig": [
+      "osd",
+      "utilization"
+    ],
+    "help": "get basic pg distribution stats",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd154": {
+    "sig": [
+      "osd",
+      "reweight-by-utilization",
+      {
+        "name": "oload",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "max_change",
+        "req": "false",
+        "type": "CephFloat"
+      },
+      {
+        "name": "max_osds",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "no_increasing",
+        "req": "false",
+        "strings": "--no-increasing",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "reweight OSDs by utilization [overload-percentage-for-consideration, default 120]",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd155": {
+    "sig": [
+      "osd",
+      "test-reweight-by-utilization",
+      {
+        "name": "oload",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "max_change",
+        "req": "false",
+        "type": "CephFloat"
+      },
+      {
+        "name": "max_osds",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "no_increasing",
+        "req": "false",
+        "strings": "--no-increasing",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "dry run of reweight OSDs by utilization [overload-percentage-for-consideration, default 120]",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd156": {
+    "sig": [
+      "osd",
+      "reweight-by-pg",
+      {
+        "name": "oload",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "max_change",
+        "req": "false",
+        "type": "CephFloat"
+      },
+      {
+        "name": "max_osds",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "n": "N",
+        "name": "pools",
+        "req": "false",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "reweight OSDs by PG distribution [overload-percentage-for-consideration, default 120]",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd157": {
+    "sig": [
+      "osd",
+      "test-reweight-by-pg",
+      {
+        "name": "oload",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "name": "max_change",
+        "req": "false",
+        "type": "CephFloat"
+      },
+      {
+        "name": "max_osds",
+        "req": "false",
+        "type": "CephInt"
+      },
+      {
+        "n": "N",
+        "name": "pools",
+        "req": "false",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "dry run of reweight OSDs by PG distribution [overload-percentage-for-consideration, default 120]",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd158": {
+    "sig": [
+      "osd",
+      "thrash",
+      {
+        "name": "num_epochs",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "thrash OSDs for <num_epochs>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd159": {
+    "sig": [
+      "osd",
+      "df",
+      {
+        "name": "output_method",
+        "req": "false",
+        "strings": "plain|tree",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "show OSD utilization",
+    "module": "osd",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd160": {
+    "sig": [
+      "osd",
+      "tier",
+      "add",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "tierpool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "force_nonempty",
+        "req": "false",
+        "strings": "--force-nonempty",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "add the tier <tierpool> (the second one) to base pool <pool> (the first one)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd161": {
+    "sig": [
+      "osd",
+      "tier",
+      "remove",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "tierpool",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "remove the tier <tierpool> (the second one) from base pool <pool> (the first one)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd162": {
+    "sig": [
+      "osd",
+      "tier",
+      "cache-mode",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "mode",
+        "strings": "none|writeback|forward|readonly|readforward|readproxy",
+        "type": "CephChoices"
+      }
+    ],
+    "help": "specify the caching mode for cache tier <pool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd163": {
+    "sig": [
+      "osd",
+      "tier",
+      "set-overlay",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "overlaypool",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "set the overlay pool for base pool <pool> to be <overlaypool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd164": {
+    "sig": [
+      "osd",
+      "tier",
+      "remove-overlay",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      }
+    ],
+    "help": "remove the overlay pool for base pool <pool>",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd165": {
+    "sig": [
+      "osd",
+      "tier",
+      "add-cache",
+      {
+        "name": "pool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "tierpool",
+        "type": "CephPoolname"
+      },
+      {
+        "name": "size",
+        "range": "0",
+        "type": "CephInt"
+      }
+    ],
+    "help": "add a cache <tierpool> (the second one) of size <size> to existing pool <pool> (the first one)",
+    "module": "osd",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd166": {
+    "sig": [
+      "config-key",
+      "get",
+      {
+        "name": "key",
+        "type": "CephString"
+      }
+    ],
+    "help": "get <key>",
+    "module": "config-key",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd167": {
+    "sig": [
+      "config-key",
+      "put",
+      {
+        "name": "key",
+        "type": "CephString"
+      },
+      {
+        "name": "val",
+        "req": "false",
+        "type": "CephString"
+      }
+    ],
+    "help": "put <key>, value <val>",
+    "module": "config-key",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd168": {
+    "sig": [
+      "config-key",
+      "del",
+      {
+        "name": "key",
+        "type": "CephString"
+      }
+    ],
+    "help": "delete <key>",
+    "module": "config-key",
+    "perm": "rw",
+    "avail": "cli,rest"
+  },
+  "cmd169": {
+    "sig": [
+      "config-key",
+      "exists",
+      {
+        "name": "key",
+        "type": "CephString"
+      }
+    ],
+    "help": "check for <key>'s existence",
+    "module": "config-key",
+    "perm": "r",
+    "avail": "cli,rest"
+  },
+  "cmd170": {
+    "sig": [
+      "config-key",
+      "list"
+    ],
+    "help": "list keys",
+    "module": "config-key",
+    "perm": "r",
+    "avail": "cli,rest"
+  }
+}

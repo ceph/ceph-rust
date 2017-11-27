@@ -1,0 +1,161 @@
+{
+  "health": {
+    "health": {
+      "health_services": [
+        {
+          "mons": [
+            {
+              "name": "ceph-vm1",
+              "kb_total": 40313620,
+              "kb_used": 3439440,
+              "kb_avail": 36874180,
+              "avail_percent": 91,
+              "last_updated": "2017-02-03 22:28:59.768212",
+              "store_stats": {
+                "bytes_total": 16068874,
+                "bytes_sst": 15436945,
+                "bytes_log": 458752,
+                "bytes_misc": 173177,
+                "last_updated": "0.000000"
+              },
+              "health": "HEALTH_OK"
+            },
+            {
+              "name": "ceph-vm2",
+              "kb_total": 40313620,
+              "kb_used": 2983396,
+              "kb_avail": 37330224,
+              "avail_percent": 92,
+              "last_updated": "2017-02-03 22:28:59.794621",
+              "store_stats": {
+                "bytes_total": 16069158,
+                "bytes_sst": 15436954,
+                "bytes_log": 458752,
+                "bytes_misc": 173452,
+                "last_updated": "0.000000"
+              },
+              "health": "HEALTH_OK"
+            },
+            {
+              "name": "ceph-vm3",
+              "kb_total": 40313620,
+              "kb_used": 2974132,
+              "kb_avail": 37339488,
+              "avail_percent": 92,
+              "last_updated": "2017-02-03 22:29:02.924132",
+              "store_stats": {
+                "bytes_total": 16594271,
+                "bytes_sst": 15437604,
+                "bytes_log": 983040,
+                "bytes_misc": 173627,
+                "last_updated": "0.000000"
+              },
+              "health": "HEALTH_OK"
+            }
+          ]
+        }
+      ]
+    },
+    "timechecks": {
+      "epoch": 14,
+      "round": 202,
+      "round_status": "finished",
+      "mons": [
+        {
+          "name": "ceph-vm1",
+          "skew": 0,
+          "latency": 0,
+          "health": "HEALTH_OK"
+        },
+        {
+          "name": "ceph-vm2",
+          "skew": 0.024771,
+          "latency": 0.001161,
+          "health": "HEALTH_OK"
+        },
+        {
+          "name": "ceph-vm3",
+          "skew": 0,
+          "latency": 0.001089,
+          "health": "HEALTH_OK"
+        }
+      ]
+    },
+    "summary": [
+
+    ],
+    "overall_status": "HEALTH_OK",
+    "detail": [
+
+    ]
+  },
+  "fsid": "094a460e-98bd-4231-9f16-57c9a5782989",
+  "election_epoch": 14,
+  "quorum": [
+    0,
+    1,
+    2
+  ],
+  "quorum_names": [
+    "ceph-vm1",
+    "ceph-vm2",
+    "ceph-vm3"
+  ],
+  "monmap": {
+    "epoch": 2,
+    "fsid": "094a460e-98bd-4231-9f16-57c9a5782989",
+    "modified": "2017-02-02 17:33:27.433593",
+    "created": "0.000000",
+    "mons": [
+      {
+        "rank": 0,
+        "name": "ceph-vm1",
+        "addr": "10.0.100.21:6789\/0"
+      },
+      {
+        "rank": 1,
+        "name": "ceph-vm2",
+        "addr": "10.0.100.22:6789\/0"
+      },
+      {
+        "rank": 2,
+        "name": "ceph-vm3",
+        "addr": "10.0.100.23:6789\/0"
+      }
+    ]
+  },
+  "osdmap": {
+    "osdmap": {
+      "epoch": 268,
+      "num_osds": 12,
+      "num_up_osds": 12,
+      "num_in_osds": 12,
+      "full": false,
+      "nearfull": false,
+      "num_remapped_pgs": 0
+    }
+  },
+  "pgmap": {
+    "pgs_by_state": [
+      {
+        "state_name": "active+clean",
+        "count": 1408
+      }
+    ],
+    "version": 2602,
+    "num_pgs": 1408,
+    "data_bytes": 1964,
+    "bytes_used": 565907456,
+    "bytes_avail": 256993472512,
+    "bytes_total": 257559379968
+  },
+  "mdsmap": {
+    "epoch": 1,
+    "up": 0,
+    "in": 0,
+    "max": 0,
+    "by_rank": [
+
+    ]
+  }
+}

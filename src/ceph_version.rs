@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use errors::*;
+use error::RadosError;
 
 #[cfg(test)]
 mod tests {
@@ -38,12 +38,12 @@ pub enum CephVersion {
 }
 
 impl FromStr for CephVersion {
-    type Err = Error;
+    type Err = RadosError;
 
     /// Expects an input in the form that the `ceph --version` command, or the
     /// rados version commands give them:
     /// `ceph version 10.2.9 (2ee413f77150c0f375ff6f10edd6c8f9c7d060d0)`
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, RadosError> {
 
         use CephVersion::*;
         let mut parts = s.split(" ");
@@ -80,7 +80,7 @@ impl FromStr for CephVersion {
                 }
             }
         }
-        Err(ErrorKind::Parse(s.to_string()).into())
+        Err(RadosError::Parse(s.into()))
     }
 }
 
