@@ -108,7 +108,7 @@ pub struct MonMap {
     pub epoch: u64,
     pub fsid: Uuid,
     pub modified: String,
-    pub created: f64,
+    pub created: String,
     pub mons: Vec<Mon>,
 }
 
