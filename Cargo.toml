@@ -34,7 +34,6 @@ for development etc. See README.md for details.
 
 travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
-
 [dependencies]
 bitflags = "~0.7"
 byteorder = "1" #"~0.5"
