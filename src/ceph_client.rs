@@ -32,6 +32,20 @@ pub struct CephClient {
     version: CephVersion,
 }
 
+macro_rules! min_version {
+    ( $version:ident, $self:ident ) => {
+        {
+            if $self.version < CephVersion::$version {
+                return Err(
+                    ErrorKind::MinVersion(CephVersion::$version, $self.version).into(),
+                );
+            }
+        }
+    };
+}
+
+
+
 impl Drop for CephClient {
     fn drop(&mut self) {
         disconnect_from_ceph(self.rados_t);
@@ -242,83 +256,47 @@ impl CephClient {
     // Luminous + only
 
     pub fn mgr_dump(&self) -> Result<cmd::MgrDump> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_dump(self.rados_t)?)
     }
 
     pub fn mgr_fail(&self, mgr_id: &str) -> Result<()> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_fail(self.rados_t, mgr_id, self.simulate)?)
     }
 
     pub fn mgr_list_modules(&self) -> Result<Vec<String>> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_list_modules(self.rados_t)?)
     }
 
     pub fn mgr_list_services(&self) -> Result<Vec<String>> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_list_services(self.rados_t)?)
     }
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<()> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_enable_module(self.rados_t, module, force, self.simulate)?)
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<()> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_disable_module(self.rados_t, module, self.simulate)?)
     }
 
     pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_metadata(self.rados_t)?)
     }
 
     pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_count_metadata(self.rados_t, property)?)
     }
 
     pub fn mgr_versions(&self) -> Result<HashMap<String, u64>> {
-        if self.version < CephVersion::Luminous {
-            return Err(
-                ErrorKind::MinVersion(CephVersion::Luminous, self.version).into(),
-            );
-        }
+        min_version!(Luminous, self);
         Ok(cmd::mgr_versions(self.rados_t)?)
     }
 
