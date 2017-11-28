@@ -59,10 +59,10 @@ pub enum CephCommandTypes {
 pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
     let mut buf = vec![0u8; 256];
     unsafe {
-        strerror_r(n, buf.as_mut_ptr() as *mut ::libc::c_char, buf.len());
-        let message = String::from_utf8_lossy(&buf).into_owned();
-        Ok(message)
+        strerror_r(n, buf.as_mut_ptr() as *mut c_char, buf.len());
     }
+    buf = buf.iter().take_while(|&x| x != &0u8).cloned().collect();
+    Ok(String::from_utf8_lossy(&buf).into_owned())
 }
 
 named!(parse_header<TmapOperation>,
@@ -326,6 +326,7 @@ pub fn disconnect_from_ceph(cluster: rados_t) {
 }
 
 /// Set the value of a configuration option
+/// NOTE: the rados_t parameter must not be connected to ceph yet when this is called.
 pub fn config_set(cluster: rados_t, name: &str, value: &str) -> RadosResult<()> {
     let name_str = try!(CString::new(name));
     let value_str = try!(CString::new(value));
