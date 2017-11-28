@@ -1,6 +1,6 @@
 [package]
 name = "ceph"
-version = "0.4.1"
+version = "0.4.2"
 authors = [
     "Chris Jones <chris.jones@lambdastack.io>",
     "Chris Holcombe <xfactor973@gmail.com>",
@@ -21,7 +21,7 @@ categories = ["filesystem"]
 
 documentation = "https://docs.rs/ceph"
 repository = "https://github.com/ceph/ceph-rust"
-homepage = "https://github.com/lambdastackio/ceph-rust"
+homepage = "https://github.com/ceph/ceph-rust"
 
 description = """
 Official Ceph-rust. A rust-lang specific interface to Ceph librados and Admin Sockets. You can create a Ceph development environment with the
