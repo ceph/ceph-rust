@@ -3,10 +3,21 @@ extern crate serde;
 extern crate serde_json;
 
 
-use ceph::cmd::{CrushTree, MonStatus};
+use ceph::cmd::{ClusterHealth, CrushTree, MonStatus};
 use std::fs::File;
 use std::io::Read;
 
+#[test]
+fn test_ceph_health_jewel() {
+    let json = {
+        let mut buff = String::new();
+        let mut f = File::open("tests/ceph_health-jewel").unwrap();
+        f.read_to_string(&mut buff).unwrap();
+        buff
+    };
+    let status: ClusterHealth = serde_json::from_str(&json).unwrap();
+    println!("cluster_health: {:#?}", status);
+}
 
 #[test]
 fn test_mon_status_hammer() {
