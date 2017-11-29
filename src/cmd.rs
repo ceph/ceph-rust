@@ -122,11 +122,11 @@ pub struct Mon {
 #[derive(Deserialize, Debug)]
 pub enum HealthStatus {
     #[serde(rename = "HEALTH_ERR")]
-    HealthErr,
+    Err,
     #[serde(rename = "HEALTH_WARN")]
-    HealthWarn,
+    Warn,
     #[serde(rename = "HEALTH_OK")]
-    HealthOk,
+    Ok,
 }
 
 #[derive(Deserialize, Debug)]
@@ -147,7 +147,7 @@ pub struct Health {
 pub struct TimeChecks {
     pub epoch: u64,
     pub round: u64,
-    pub round_status: String,
+    pub round_status: RoundStatus,
     pub mons: Vec<MonTimeChecks>,
 }
 
@@ -175,6 +175,7 @@ pub struct MonHealth {
     pub store_stats: StoreStats,
     pub health: HealthStatus,
 }
+
 #[derive(Deserialize, Debug)]
 pub struct StoreStats {
     pub bytes_total: u64,
@@ -182,6 +183,14 @@ pub struct StoreStats {
     pub bytes_log: u64,
     pub bytes_misc: u64,
     pub last_updated: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum RoundStatus {
+    #[serde(rename = "finished")]
+    Finished,
+    #[serde(rename = "on-going")]
+    OnGoing,
 }
 
 #[derive(Deserialize, Debug)]
@@ -487,9 +496,9 @@ impl AsRef<str> for PoolOption {
 impl fmt::Display for HealthStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            &HealthStatus::HealthErr => write!(f, "HEALTH_ERR"),
-            &HealthStatus::HealthOk => write!(f, "HEALTH_OK"),
-            &HealthStatus::HealthWarn => write!(f, "HEALTH_WARN"),
+            &HealthStatus::Err => write!(f, "HEALTH_ERR"),
+            &HealthStatus::Ok => write!(f, "HEALTH_OK"),
+            &HealthStatus::Warn => write!(f, "HEALTH_WARN"),
         }
     }
 }
@@ -497,9 +506,27 @@ impl fmt::Display for HealthStatus {
 impl AsRef<str> for HealthStatus {
     fn as_ref(&self) -> &str {
         match self {
-            &HealthStatus::HealthErr => "HEALTH_ERR",
-            &HealthStatus::HealthOk => "HEALTH_OK",
-            &HealthStatus::HealthWarn => "HEALTH_WARN",
+            &HealthStatus::Err => "HEALTH_ERR",
+            &HealthStatus::Ok => "HEALTH_OK",
+            &HealthStatus::Warn => "HEALTH_WARN",
+        }
+    }
+}
+
+impl fmt::Display for RoundStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &RoundStatus::Finished => write!(f, "finished"),
+            &RoundStatus::OnGoing => write!(f, "on-going"),
+        }
+    }
+}
+
+impl AsRef<str> for RoundStatus {
+    fn as_ref(&self) -> &str {
+        match self {
+            &RoundStatus::Finished => "finished",
+            &RoundStatus::OnGoing => "on-going",
         }
     }
 }
