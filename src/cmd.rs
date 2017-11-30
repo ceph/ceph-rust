@@ -8,7 +8,7 @@
 extern crate serde_json;
 
 use ceph::ceph_mon_command_without_data;
-use error::RadosError;
+use error::{RadosError, RadosResult};
 use rados::rados_t;
 use std::collections::HashMap;
 use std::fmt;
@@ -117,6 +117,80 @@ pub struct Mon {
     pub rank: u64,
     pub name: String,
     pub addr: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum HealthStatus {
+    #[serde(rename = "HEALTH_ERR")]
+    Err,
+    #[serde(rename = "HEALTH_WARN")]
+    Warn,
+    #[serde(rename = "HEALTH_OK")]
+    Ok,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ClusterHealth {
+    pub health: Health,
+    pub timechecks: TimeChecks,
+    pub summary: Vec<String>,
+    pub overall_status: HealthStatus,
+    pub detail: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Health {
+    pub health_services: Vec<ServiceHealth>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TimeChecks {
+    pub epoch: u64,
+    pub round: u64,
+    pub round_status: RoundStatus,
+    pub mons: Vec<MonTimeChecks>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MonTimeChecks {
+    pub name: String,
+    pub skew: f64,
+    pub latency: f64,
+    pub health: HealthStatus,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ServiceHealth {
+    pub mons: Vec<MonHealth>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MonHealth {
+    pub name: String,
+    pub kb_total: u64,
+    pub kb_used: u64,
+    pub kb_avail: u64,
+    pub avail_percent: u8,
+    pub last_updated: String,
+    pub store_stats: StoreStats,
+    pub health: HealthStatus,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct StoreStats {
+    pub bytes_total: u64,
+    pub bytes_sst: u64,
+    pub bytes_log: u64,
+    pub bytes_misc: u64,
+    pub last_updated: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum RoundStatus {
+    #[serde(rename = "finished")]
+    Finished,
+    #[serde(rename = "on-going")]
+    OnGoing,
 }
 
 #[derive(Deserialize, Debug)]
@@ -419,7 +493,67 @@ impl AsRef<str> for PoolOption {
     }
 }
 
-pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+impl fmt::Display for HealthStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &HealthStatus::Err => write!(f, "HEALTH_ERR"),
+            &HealthStatus::Ok => write!(f, "HEALTH_OK"),
+            &HealthStatus::Warn => write!(f, "HEALTH_WARN"),
+        }
+    }
+}
+
+impl AsRef<str> for HealthStatus {
+    fn as_ref(&self) -> &str {
+        match self {
+            &HealthStatus::Err => "HEALTH_ERR",
+            &HealthStatus::Ok => "HEALTH_OK",
+            &HealthStatus::Warn => "HEALTH_WARN",
+        }
+    }
+}
+
+impl fmt::Display for RoundStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &RoundStatus::Finished => write!(f, "finished"),
+            &RoundStatus::OnGoing => write!(f, "on-going"),
+        }
+    }
+}
+
+impl AsRef<str> for RoundStatus {
+    fn as_ref(&self) -> &str {
+        match self {
+            &RoundStatus::Finished => "finished",
+            &RoundStatus::OnGoing => "on-going",
+        }
+    }
+}
+
+pub fn cluster_health(cluster_handle: rados_t) -> RadosResult<ClusterHealth> {
+    let cmd = json!({
+        "prefix": "health",
+    });
+    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    if let Some(return_data) = result.0 {
+        let mut l = return_data.lines();
+        match l.next() {
+            Some(res) => return Ok(serde_json::from_str(res)?),
+            None => {
+                return Err(RadosError::Error(format!(
+                "Unable to parse health output: {:?}",
+                return_data,
+            )))
+            },
+        }
+    }
+    Err(RadosError::Error(result.1.unwrap_or(
+        "No response from ceph for health".into(),
+    )))
+}
+
+pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd out",
         "ids": [osd_id.to_string()]
@@ -431,7 +565,7 @@ pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(
     Ok(())
 }
 
-pub fn osd_crush_remove(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+pub fn osd_crush_remove(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush remove",
         "name": format!("osd.{}", osd_id),
@@ -443,7 +577,7 @@ pub fn osd_crush_remove(cluster_handle: rados_t, osd_id: u64, simulate: bool) ->
 }
 
 /// Query a ceph pool.
-pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) -> Result<String, RadosError> {
+pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "osd pool get",
         "pool": pool,
@@ -469,7 +603,7 @@ pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) ->
 
 /// Set a pool value
 pub fn osd_pool_set(cluster_handle: rados_t, pool: &str, key: &PoolOption, value: &str, simulate: bool)
-    -> Result<(), RadosError> {
+    -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd pool set",
         "pool": pool,
@@ -482,7 +616,7 @@ pub fn osd_pool_set(cluster_handle: rados_t, pool: &str, key: &PoolOption, value
     Ok(())
 }
 
-pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: bool) -> Result<(), RadosError> {
+pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => {
             json!({
@@ -504,7 +638,7 @@ pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: 
     Ok(())
 }
 
-pub fn osd_unset(cluster_handle: rados_t, key: &OsdOption, simulate: bool) -> Result<(), RadosError> {
+pub fn osd_unset(cluster_handle: rados_t, key: &OsdOption, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd unset",
         "key": key,
@@ -515,7 +649,7 @@ pub fn osd_unset(cluster_handle: rados_t, key: &OsdOption, simulate: bool) -> Re
     Ok(())
 }
 
-pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError> {
+pub fn osd_tree(cluster_handle: rados_t) -> RadosResult<CrushTree> {
     let cmd = json!({
         "prefix": "osd tree",
         "format": "json"
@@ -537,7 +671,7 @@ pub fn osd_tree(cluster_handle: rados_t) -> Result<CrushTree, RadosError> {
 }
 
 // Get cluster status
-pub fn status(cluster_handle: rados_t) -> Result<String, RadosError> {
+pub fn status(cluster_handle: rados_t) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "status",
         "format": "json"
@@ -559,7 +693,7 @@ pub fn status(cluster_handle: rados_t) -> Result<String, RadosError> {
 }
 
 /// List all the monitors in the cluster and their current rank
-pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
+pub fn mon_dump(cluster_handle: rados_t) -> RadosResult<MonDump> {
     let cmd = json!({
         "prefix": "mon dump",
         "format": "json"
@@ -581,7 +715,7 @@ pub fn mon_dump(cluster_handle: rados_t) -> Result<MonDump, RadosError> {
 }
 
 /// Get the mon quorum
-pub fn mon_quorum(cluster_handle: rados_t) -> Result<String, RadosError> {
+pub fn mon_quorum(cluster_handle: rados_t) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "quorum_status",
         "format": "json"
@@ -603,7 +737,7 @@ pub fn mon_quorum(cluster_handle: rados_t) -> Result<String, RadosError> {
 }
 
 /// Get the mon status
-pub fn mon_status(cluster_handle: rados_t) -> Result<MonStatus, RadosError> {
+pub fn mon_status(cluster_handle: rados_t) -> RadosResult<MonStatus> {
     let cmd = json!({
         "prefix": "mon_status",
     });
@@ -624,7 +758,7 @@ pub fn mon_status(cluster_handle: rados_t) -> Result<MonStatus, RadosError> {
 }
 
 /// Show mon daemon version
-pub fn version(cluster_handle: rados_t) -> Result<String, RadosError> {
+pub fn version(cluster_handle: rados_t) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "version",
     });
@@ -645,7 +779,7 @@ pub fn version(cluster_handle: rados_t) -> Result<String, RadosError> {
 }
 
 
-pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> Result<u64, RadosError> {
+pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> RadosResult<u64> {
     let cmd = json!({
         "prefix": "osd pool get-quota",
         "pool": pool
@@ -666,7 +800,7 @@ pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> Result<u64, Ra
     Err(RadosError::Error("No response from ceph for osd pool quota-get".into()))
 }
 
-pub fn auth_del(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+pub fn auth_del(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth del",
         "entity": format!("osd.{}", osd_id)
@@ -678,7 +812,7 @@ pub fn auth_del(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<
     Ok(())
 }
 
-pub fn osd_rm(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+pub fn osd_rm(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd rm",
         "ids": [osd_id.to_string()]
@@ -691,7 +825,7 @@ pub fn osd_rm(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<()
 
 }
 
-pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> Result<u64, RadosError> {
+pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> RadosResult<u64> {
     let cmd = match id {
         Some(osd_id) => {
             json!({
@@ -727,7 +861,7 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
 }
 
 // Add a new mgr to the cluster
-pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Result<(), RadosError> {
+pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("mgr.{}", mgr_id),
@@ -741,7 +875,7 @@ pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Re
 }
 
 // Add a new osd to the cluster
-pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Result<(), RadosError> {
+pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("osd.{}", osd_id),
@@ -756,7 +890,7 @@ pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Res
 
 /// Get a ceph-x key.  The id parameter can be either a number or a string
 /// depending on the type of client so I went with string.
-pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> Result<String, RadosError> {
+pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "auth get-key",
         "entity": format!("{}.{}", client_type, id),
@@ -780,8 +914,7 @@ pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> Res
 
 // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
 /// add or update crushmap position and weight for an osd
-pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &str, simulate: bool)
-    -> Result<(), RadosError> {
+pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush add",
         "id": osd_id,
@@ -798,7 +931,7 @@ pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &s
 // Luminous mgr commands below
 
 /// dump the latest MgrMap
-pub fn mgr_dump(cluster_handle: rados_t) -> Result<MgrDump, RadosError> {
+pub fn mgr_dump(cluster_handle: rados_t) -> RadosResult<MgrDump> {
     let cmd = json!({
         "prefix": "mgr dump",
     });
@@ -820,7 +953,7 @@ pub fn mgr_dump(cluster_handle: rados_t) -> Result<MgrDump, RadosError> {
 }
 
 /// Treat the named manager daemon as failed
-pub fn mgr_fail(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Result<(), RadosError> {
+pub fn mgr_fail(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "mgr fail",
         "name": mgr_id,
@@ -833,7 +966,7 @@ pub fn mgr_fail(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Result
 }
 
 /// List active mgr modules
-pub fn mgr_list_modules(cluster_handle: rados_t) -> Result<Vec<String>, RadosError> {
+pub fn mgr_list_modules(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
     let cmd = json!({
         "prefix": "mgr module ls",
     });
@@ -855,7 +988,7 @@ pub fn mgr_list_modules(cluster_handle: rados_t) -> Result<Vec<String>, RadosErr
 }
 
 /// List service endpoints provided by mgr modules
-pub fn mgr_list_services(cluster_handle: rados_t) -> Result<Vec<String>, RadosError> {
+pub fn mgr_list_services(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
     let cmd = json!({
         "prefix": "mgr services",
     });
@@ -877,7 +1010,7 @@ pub fn mgr_list_services(cluster_handle: rados_t) -> Result<Vec<String>, RadosEr
 }
 
 /// Enable a mgr module
-pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, simulate: bool) -> Result<(), RadosError> {
+pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => {
             json!({
@@ -901,7 +1034,7 @@ pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, sim
 }
 
 /// Disable a mgr module
-pub fn mgr_disable_module(cluster_handle: rados_t, module: &str, simulate: bool) -> Result<(), RadosError> {
+pub fn mgr_disable_module(cluster_handle: rados_t, module: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "mgr module disable",
         "module": module,
@@ -914,7 +1047,7 @@ pub fn mgr_disable_module(cluster_handle: rados_t, module: &str, simulate: bool)
 }
 
 /// dump metadata for all daemons
-pub fn mgr_metadata(cluster_handle: rados_t) -> Result<MgrMetadata, RadosError> {
+pub fn mgr_metadata(cluster_handle: rados_t) -> RadosResult<MgrMetadata> {
     let cmd = json!({
         "prefix": "mgr metadata",
     });
@@ -936,7 +1069,7 @@ pub fn mgr_metadata(cluster_handle: rados_t) -> Result<MgrMetadata, RadosError> 
 }
 
 /// count ceph-mgr daemons by metadata field property
-pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> Result<HashMap<String, u64>, RadosError> {
+pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
         "prefix": "mgr count-metadata",
         "name": property,
@@ -959,7 +1092,7 @@ pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> Result<Has
 }
 
 /// check running versions of ceph-mgr daemons
-pub fn mgr_versions(cluster_handle: rados_t) -> Result<HashMap<String, u64>, RadosError> {
+pub fn mgr_versions(cluster_handle: rados_t) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
         "prefix": "mgr versions",
     });
