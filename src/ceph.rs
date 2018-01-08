@@ -66,66 +66,52 @@ pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
 }
 
 named!(parse_header<TmapOperation>,
-    chain!(
-        char!(CEPH_OSD_TMAP_HDR)~
-        data_len: le_u32~
-        data: take!(data_len),
-        ||{
-            let mut data_vec: Vec<u8> = Vec::new();
-            data_vec.extend_from_slice(data);
-            TmapOperation::Header{
-                data: data_vec
-            }
-        }
+    do_parse!(
+        char!(CEPH_OSD_TMAP_HDR) >>
+        data_len: le_u32 >>
+        data: take!(data_len) >>
+        (TmapOperation::Header{
+            data: data.to_vec(),
+        })
     )
 );
 
 named!(parse_create<TmapOperation>,
-    chain!(
-        char!(CEPH_OSD_TMAP_CREATE)~
-        key_name_len: le_u32~
-        key_name: take_str!(key_name_len)~
-        data_len: le_u32~
-        data: take!(data_len),
-        ||{
-            let mut data_vec: Vec<u8> = Vec::new();
-            data_vec.extend_from_slice(data);
-            TmapOperation::Create{
-                name: key_name.to_string(),
-                data: data_vec
-            }
-        }
+    do_parse!(
+        char!(CEPH_OSD_TMAP_CREATE) >>
+        key_name_len: le_u32 >>
+        key_name: take_str!(key_name_len) >>
+        data_len: le_u32 >>
+        data: take!(data_len) >>
+        (TmapOperation::Create{
+            name: key_name.to_string(),
+            data: data.to_vec(),
+        })
     )
 );
 
 named!(parse_set<TmapOperation>,
-    chain!(
-        char!(CEPH_OSD_TMAP_SET)~
-        key_name_len: le_u32~
-        key_name: take_str!(key_name_len)~
-        data_len: le_u32~
-        data: take!(data_len),
-        ||{
-            let mut data_vec: Vec<u8> = Vec::new();
-            data_vec.extend_from_slice(data);
-            TmapOperation::Set{
-                key: key_name.to_string(),
-                data: data_vec
-            }
-        }
+    do_parse!(
+        char!(CEPH_OSD_TMAP_SET) >>
+        key_name_len: le_u32 >>
+        key_name: take_str!(key_name_len) >>
+        data_len: le_u32 >>
+        data: take!(data_len) >>
+        (TmapOperation::Set{
+            key: key_name.to_string(),
+            data: data.to_vec(),
+        })
     )
 );
 
 named!(parse_remove<TmapOperation>,
-    chain!(
-        char!(CEPH_OSD_TMAP_RM)~
-        key_name_len: le_u32~
-        key_name: take_str!(key_name_len),
-        ||{
-            TmapOperation::Remove{
-                name: key_name.to_string()
-            }
-        }
+    do_parse!(
+        char!(CEPH_OSD_TMAP_RM) >>
+        key_name_len: le_u32 >>
+        key_name: take_str!(key_name_len) >>
+        (TmapOperation::Remove{
+            name: key_name.to_string()
+        })
     )
 );
 
