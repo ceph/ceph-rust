@@ -1,6 +1,6 @@
 [package]
 name = "ceph"
-version = "0.4.2"
+version = "0.4.3"
 authors = [
     "Chris Jones <chris.jones@lambdastack.io>",
     "Chris Holcombe <xfactor973@gmail.com>",
@@ -37,7 +37,7 @@ travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 [dependencies]
 bitflags = "~0.7"
 byteorder = "1" #"~0.5"
-libc = "0.2"
+libc = "~0.2"
 log = "~0.3"
 nom = "~3.0"
 serde_derive = "~1.0"
