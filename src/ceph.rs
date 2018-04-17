@@ -1480,7 +1480,8 @@ pub fn rados_blacklist_client(cluster: rados_t, client: IpAddr, expire_seconds: 
 ///
 /// pool_buffer should be allocated with:
 /// ```
-/// let pool_buffer: Vec<u8> = Vec::with_capacity(<whatever size>);
+/// let capacity = 10;
+/// let pool_buffer: Vec<u8> = Vec::with_capacity(capacity);
 /// ```
 /// buf_size should be the value used with_capacity
 ///
