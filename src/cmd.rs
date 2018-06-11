@@ -560,6 +560,7 @@ impl AsRef<str> for RoundStatus {
 pub fn cluster_health(cluster_handle: rados_t) -> RadosResult<ClusterHealth> {
     let cmd = json!({
         "prefix": "health",
+        "format": "json"
     });
     let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
     if let Some(return_data) = result.0 {
