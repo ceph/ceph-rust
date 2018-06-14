@@ -7,9 +7,8 @@
 //! allow you to test without actually calling Ceph.
 extern crate serde_json;
 
-use ceph::ceph_mon_command_without_data;
+use ceph::Rados;
 use error::{RadosError, RadosResult};
-use rados::rados_t;
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -557,12 +556,12 @@ impl AsRef<str> for RoundStatus {
     }
 }
 
-pub fn cluster_health(cluster_handle: rados_t) -> RadosResult<ClusterHealth> {
+pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
     let cmd = json!({
         "prefix": "health",
         "format": "json"
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -580,37 +579,37 @@ pub fn cluster_health(cluster_handle: rados_t) -> RadosResult<ClusterHealth> {
     ))
 }
 
-pub fn osd_out(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
+pub fn osd_out(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd out",
         "ids": [osd_id.to_string()]
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_crush_remove(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
+pub fn osd_crush_remove(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush remove",
         "name": format!("osd.{}", osd_id),
     });
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 /// Query a ceph pool.
-pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) -> RadosResult<String> {
+pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "osd pool get",
         "pool": pool,
         "var": choice,
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -630,7 +629,7 @@ pub fn osd_pool_get(cluster_handle: rados_t, pool: &str, choice: &PoolOption) ->
 
 /// Set a pool value
 pub fn osd_pool_set(
-    cluster_handle: rados_t,
+    cluster_handle: &Rados,
     pool: &str,
     key: &PoolOption,
     value: &str,
@@ -643,12 +642,12 @@ pub fn osd_pool_set(
         "val": value,
     });
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
+pub fn osd_set(cluster_handle: &Rados, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => json!({
                 "prefix": "osd set",
@@ -661,28 +660,28 @@ pub fn osd_set(cluster_handle: rados_t, key: &OsdOption, force: bool, simulate: 
             }),
     };
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_unset(cluster_handle: rados_t, key: &OsdOption, simulate: bool) -> RadosResult<()> {
+pub fn osd_unset(cluster_handle: &Rados, key: &OsdOption, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd unset",
         "key": key,
     });
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_tree(cluster_handle: rados_t) -> RadosResult<CrushTree> {
+pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
     let cmd = json!({
         "prefix": "osd tree",
         "format": "json"
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -699,12 +698,12 @@ pub fn osd_tree(cluster_handle: rados_t) -> RadosResult<CrushTree> {
 }
 
 // Get cluster status
-pub fn status(cluster_handle: rados_t) -> RadosResult<String> {
+pub fn status(cluster_handle: &Rados) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "status",
         "format": "json"
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -721,12 +720,12 @@ pub fn status(cluster_handle: rados_t) -> RadosResult<String> {
 }
 
 /// List all the monitors in the cluster and their current rank
-pub fn mon_dump(cluster_handle: rados_t) -> RadosResult<MonDump> {
+pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
     let cmd = json!({
         "prefix": "mon dump",
         "format": "json"
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -743,12 +742,12 @@ pub fn mon_dump(cluster_handle: rados_t) -> RadosResult<MonDump> {
 }
 
 /// Get the mon quorum
-pub fn mon_quorum(cluster_handle: rados_t) -> RadosResult<String> {
+pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "quorum_status",
         "format": "json"
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -765,11 +764,11 @@ pub fn mon_quorum(cluster_handle: rados_t) -> RadosResult<String> {
 }
 
 /// Get the mon status
-pub fn mon_status(cluster_handle: rados_t) -> RadosResult<MonStatus> {
+pub fn mon_status(cluster_handle: &Rados) -> RadosResult<MonStatus> {
     let cmd = json!({
         "prefix": "mon_status",
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -786,11 +785,11 @@ pub fn mon_status(cluster_handle: rados_t) -> RadosResult<MonStatus> {
 }
 
 /// Show mon daemon version
-pub fn version(cluster_handle: rados_t) -> RadosResult<String> {
+pub fn version(cluster_handle: &Rados) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "version",
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -806,12 +805,12 @@ pub fn version(cluster_handle: rados_t) -> RadosResult<String> {
     Err(RadosError::Error("No response from ceph for version".into()))
 }
 
-pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> RadosResult<u64> {
+pub fn osd_pool_quota_get(cluster_handle: &Rados, pool: &str) -> RadosResult<u64> {
     let cmd = json!({
         "prefix": "osd pool get-quota",
         "pool": pool
     });
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -827,31 +826,31 @@ pub fn osd_pool_quota_get(cluster_handle: rados_t, pool: &str) -> RadosResult<u6
     Err(RadosError::Error("No response from ceph for osd pool quota-get".into()))
 }
 
-pub fn auth_del(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
+pub fn auth_del(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth del",
         "entity": format!("osd.{}", osd_id)
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_rm(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
+pub fn osd_rm(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd rm",
         "ids": [osd_id.to_string()]
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
-pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> RadosResult<u64> {
+pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> RadosResult<u64> {
     let cmd = match id {
         Some(osd_id) => json!({
                 "prefix": "osd create",
@@ -866,7 +865,7 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
         return Ok(0);
     }
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -886,7 +885,7 @@ pub fn osd_create(cluster_handle: rados_t, id: Option<u64>, simulate: bool) -> R
 }
 
 // Add a new mgr to the cluster
-pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> RadosResult<()> {
+pub fn mgr_auth_add(cluster_handle: &Rados, mgr_id: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("mgr.{}", mgr_id),
@@ -894,13 +893,13 @@ pub fn mgr_auth_add(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> Ra
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 // Add a new osd to the cluster
-pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> RadosResult<()> {
+pub fn osd_auth_add(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "auth add",
         "entity": format!("osd.{}", osd_id),
@@ -908,20 +907,20 @@ pub fn osd_auth_add(cluster_handle: rados_t, osd_id: u64, simulate: bool) -> Rad
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 /// Get a ceph-x key.  The id parameter can be either a number or a string
 /// depending on the type of client so I went with string.
-pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> RadosResult<String> {
+pub fn auth_get_key(cluster_handle: &Rados, client_type: &str, id: &str) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "auth get-key",
         "entity": format!("{}.{}", client_type, id),
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -942,7 +941,7 @@ pub fn auth_get_key(cluster_handle: rados_t, client_type: &str, id: &str) -> Rad
 
 // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
 /// add or update crushmap position and weight for an osd
-pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &str, simulate: bool) -> RadosResult<()> {
+pub fn osd_crush_add(cluster_handle: &Rados, osd_id: u64, weight: f64, host: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush add",
         "id": osd_id,
@@ -951,7 +950,7 @@ pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &s
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
@@ -959,12 +958,12 @@ pub fn osd_crush_add(cluster_handle: rados_t, osd_id: u64, weight: f64, host: &s
 // Luminous mgr commands below
 
 /// dump the latest MgrMap
-pub fn mgr_dump(cluster_handle: rados_t) -> RadosResult<MgrDump> {
+pub fn mgr_dump(cluster_handle: &Rados) -> RadosResult<MgrDump> {
     let cmd = json!({
         "prefix": "mgr dump",
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -984,25 +983,25 @@ pub fn mgr_dump(cluster_handle: rados_t) -> RadosResult<MgrDump> {
 }
 
 /// Treat the named manager daemon as failed
-pub fn mgr_fail(cluster_handle: rados_t, mgr_id: &str, simulate: bool) -> RadosResult<()> {
+pub fn mgr_fail(cluster_handle: &Rados, mgr_id: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "mgr fail",
         "name": mgr_id,
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 /// List active mgr modules
-pub fn mgr_list_modules(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
+pub fn mgr_list_modules(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     let cmd = json!({
         "prefix": "mgr module ls",
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -1022,12 +1021,12 @@ pub fn mgr_list_modules(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
 }
 
 /// List service endpoints provided by mgr modules
-pub fn mgr_list_services(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
+pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     let cmd = json!({
         "prefix": "mgr services",
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -1047,7 +1046,7 @@ pub fn mgr_list_services(cluster_handle: rados_t) -> RadosResult<Vec<String>> {
 }
 
 /// Enable a mgr module
-pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
+pub fn mgr_enable_module(cluster_handle: &Rados, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => json!({
                     "prefix": "mgr module enable",
@@ -1061,31 +1060,31 @@ pub fn mgr_enable_module(cluster_handle: rados_t, module: &str, force: bool, sim
     };
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 /// Disable a mgr module
-pub fn mgr_disable_module(cluster_handle: rados_t, module: &str, simulate: bool) -> RadosResult<()> {
+pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "mgr module disable",
         "module": module,
     });
 
     if !simulate {
-        ceph_mon_command_without_data(cluster_handle, &cmd)?;
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
 }
 
 /// dump metadata for all daemons
-pub fn mgr_metadata(cluster_handle: rados_t) -> RadosResult<MgrMetadata> {
+pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
     let cmd = json!({
         "prefix": "mgr metadata",
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -1105,13 +1104,13 @@ pub fn mgr_metadata(cluster_handle: rados_t) -> RadosResult<MgrMetadata> {
 }
 
 /// count ceph-mgr daemons by metadata field property
-pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> RadosResult<HashMap<String, u64>> {
+pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
         "prefix": "mgr count-metadata",
         "name": property,
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {
@@ -1131,12 +1130,12 @@ pub fn mgr_count_metadata(cluster_handle: rados_t, property: &str) -> RadosResul
 }
 
 /// check running versions of ceph-mgr daemons
-pub fn mgr_versions(cluster_handle: rados_t) -> RadosResult<HashMap<String, u64>> {
+pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
         "prefix": "mgr versions",
     });
 
-    let result = ceph_mon_command_without_data(cluster_handle, &cmd)?;
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
         let mut l = return_data.lines();
         match l.next() {

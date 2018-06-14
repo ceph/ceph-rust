@@ -13,9 +13,11 @@
 // limitations under the License.
 
 // NOTE: This attribute only needs to be set once.
-#![doc(html_logo_url = "https://lambdastackio.github.io/static/images/lambdastack-200x200.png",
-       html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
-       html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph_rust/index.html")]
+#![doc(
+    html_logo_url = "https://lambdastackio.github.io/static/images/lambdastack-200x200.png",
+    html_favicon_url = "https://lambdastackio.github.io/static/images/favicon.ico",
+    html_root_url = "https://lambdastackio.github.io/aws-sdk-rust/ceph-rust/ceph_rust/index.html"
+)]
 
 //! Ceph-rust is a thin layer over the librados C interface. A little higher
 //! abstraction layer will
@@ -63,14 +65,14 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
-pub mod rados;
+pub mod admin_sockets;
 pub mod ceph;
 pub mod cmd;
-pub mod utils;
-pub mod admin_sockets;
-pub mod json;
 pub mod error;
+pub mod json;
+pub mod rados;
 pub mod status;
+pub mod utils;
 
 mod ceph_client;
 mod ceph_version;
@@ -78,8 +80,8 @@ mod mon_command;
 
 pub use ceph_client::CephClient;
 pub use ceph_version::CephVersion;
-pub use mon_command::MonCommand;
 pub use cmd::{OsdOption, PoolOption};
+pub use mon_command::MonCommand;
 
 pub type JsonData = rustc_serialize::json::Json;
 pub type JsonValue = rustc_serialize::json::Json;
