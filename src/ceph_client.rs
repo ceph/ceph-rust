@@ -41,14 +41,6 @@ macro_rules! min_version {
     }};
 }
 
-/*
-impl Drop for CephClient {
-    fn drop(&mut self) {
-        disconnect_from_ceph(self.rados_t);
-    }
-}
-*/
-
 impl CephClient {
     pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
         let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
