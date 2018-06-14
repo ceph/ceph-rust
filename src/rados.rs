@@ -98,13 +98,13 @@ impl OperationFlags {
     }
 }
 
-pub type rados_t = *mut ::libc::c_void;
-pub type rados_config_t = *mut ::libc::c_void;
-pub type rados_ioctx_t = *mut ::libc::c_void;
-pub type rados_list_ctx_t = *mut ::libc::c_void;
+pub type rados_t = *mut ::std::os::raw::c_void;
+pub type rados_config_t = *mut ::std::os::raw::c_void;
+pub type rados_ioctx_t = *mut ::std::os::raw::c_void;
+pub type rados_list_ctx_t = *mut ::std::os::raw::c_void;
 pub type rados_snap_t = uint64_t;
-pub type rados_xattrs_iter_t = *mut ::libc::c_void;
-pub type rados_omap_iter_t = *mut ::libc::c_void;
+pub type rados_xattrs_iter_t = *mut ::std::os::raw::c_void;
+pub type rados_omap_iter_t = *mut ::std::os::raw::c_void;
 
 #[repr(C)]
 #[derive(Copy, Debug)]
@@ -156,34 +156,34 @@ impl ::std::default::Default for Struct_rados_cluster_stat_t {
     }
 }
 
-pub type rados_write_op_t = *mut ::libc::c_void;
+pub type rados_write_op_t = *mut ::std::os::raw::c_void;
 
-pub type rados_read_op_t = *mut ::libc::c_void;
+pub type rados_read_op_t = *mut ::std::os::raw::c_void;
 
-pub type rados_completion_t = *mut ::libc::c_void;
+pub type rados_completion_t = *mut ::std::os::raw::c_void;
 
-pub type rados_callback_t = ::std::option::Option<extern "C" fn(cb: rados_completion_t, arg: *mut ::libc::c_void)
+pub type rados_callback_t = ::std::option::Option<extern "C" fn(cb: rados_completion_t, arg: *mut ::std::os::raw::c_void)
                                                                   -> ()>;
 
 pub type rados_watchcb_t = ::std::option::Option<extern "C" fn(opcode: uint8_t,
                                                                  ver: uint64_t,
-                                                                 arg: *mut ::libc::c_void)
+                                                                 arg: *mut ::std::os::raw::c_void)
                                                                  -> ()>;
 
-pub type rados_watchcb2_t = ::std::option::Option<extern "C" fn(arg: *mut ::libc::c_void,
+pub type rados_watchcb2_t = ::std::option::Option<extern "C" fn(arg: *mut ::std::os::raw::c_void,
                                                                   notify_id: uint64_t,
                                                                   handle: uint64_t,
                                                                   notifier_id: uint64_t,
-                                                                  data: *mut ::libc::c_void,
+                                                                  data: *mut ::std::os::raw::c_void,
                                                                   data_len: size_t)
                                                                   -> ()>;
 
-pub type rados_watcherrcb_t = ::std::option::Option<extern "C" fn(pre: *mut ::libc::c_void,
+pub type rados_watcherrcb_t = ::std::option::Option<extern "C" fn(pre: *mut ::std::os::raw::c_void,
                                                                     cookie: uint64_t,
                                                                     err: ::libc::c_int)
                                                                     -> ()>;
 
-pub type rados_log_callback_t = ::std::option::Option<extern "C" fn(arg: *mut ::libc::c_void,
+pub type rados_log_callback_t = ::std::option::Option<extern "C" fn(arg: *mut ::std::os::raw::c_void,
                                                                       line: *const ::libc::c_char,
                                                                       who: *const ::libc::c_char,
                                                                       sec: uint64_t,
@@ -424,7 +424,7 @@ extern "C" {
                       buf: *mut ::libc::c_char, out_len: size_t)
                       -> ::libc::c_int;
 
-    pub fn rados_aio_create_completion(cb_arg: *mut ::libc::c_void, cb_complete: rados_callback_t,
+    pub fn rados_aio_create_completion(cb_arg: *mut ::std::os::raw::c_void, cb_complete: rados_callback_t,
                                        cb_safe: rados_callback_t, pc: *mut rados_completion_t)
                                        -> ::libc::c_int;
     pub fn rados_aio_wait_for_complete(c: rados_completion_t) -> ::libc::c_int;
@@ -458,10 +458,10 @@ extern "C" {
                           -> ::libc::c_int;
     pub fn rados_aio_cancel(io: rados_ioctx_t, completion: rados_completion_t) -> ::libc::c_int;
     pub fn rados_watch(io: rados_ioctx_t, o: *const ::libc::c_char, ver: uint64_t, cookie: *mut uint64_t,
-                       watchcb: rados_watchcb_t, arg: *mut ::libc::c_void)
+                       watchcb: rados_watchcb_t, arg: *mut ::std::os::raw::c_void)
                        -> ::libc::c_int;
     pub fn rados_watch2(io: rados_ioctx_t, o: *const ::libc::c_char, cookie: *mut uint64_t,
-                        watchcb: rados_watchcb2_t, watcherrcb: rados_watcherrcb_t, arg: *mut ::libc::c_void)
+                        watchcb: rados_watchcb2_t, watcherrcb: rados_watcherrcb_t, arg: *mut ::std::os::raw::c_void)
                         -> ::libc::c_int;
     pub fn rados_watch_check(io: rados_ioctx_t, cookie: uint64_t) -> ::libc::c_int;
     pub fn rados_unwatch(io: rados_ioctx_t, o: *const ::libc::c_char, cookie: uint64_t) -> ::libc::c_int;
@@ -613,6 +613,6 @@ extern "C" {
                             outslen: *mut size_t)
                             -> ::libc::c_int;
     pub fn rados_monitor_log(cluster: rados_t, level: *const ::libc::c_char, cb: rados_log_callback_t,
-                             arg: *mut ::libc::c_void)
+                             arg: *mut ::std::os::raw::c_void)
                              -> ::libc::c_int;
 }

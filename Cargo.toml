@@ -1,6 +1,6 @@
 [package]
 name = "ceph"
-version = "0.4.6"
+version = "0.5.0"
 authors = [
     "Chris Jones <chris.jones@lambdastack.io>",
     "Chris Holcombe <xfactor973@gmail.com>",
@@ -35,15 +35,15 @@ for development etc. See README.md for details.
 travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 [dependencies]
-bitflags = "~0.7"
-byteorder = "1" #"~0.5"
+bitflags = "~0.8"
+byteorder = "~1.2" #"~0.5"
 libc = "~0.2"
-log = "~0.3"
+log = "~0.4"
 nom = "~3.2"
 serde_derive = "~1.0"
 serde = "~1.0"
 serde_json = "~1.0"
-uuid = {version = "~0.5", features = ["use_std", "serde"] }
+uuid = {version = "~0.6", features = ["use_std", "serde"] }
 rustc-serialize = "~0.3"
 
 # Run the example as follows: `cargo run --example ceph`
