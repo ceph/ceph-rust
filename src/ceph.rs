@@ -320,7 +320,6 @@ pub struct IoCtx {
 impl Drop for IoCtx {
     fn drop(&mut self) {
         if !self.ioctx.is_null() {
-            println!("destroy ioctx");
             unsafe {
                 rados_ioctx_destroy(self.ioctx);
             }
@@ -337,7 +336,6 @@ pub struct Rados {
 impl Drop for Rados {
     fn drop(&mut self) {
         if !self.rados.is_null() {
-            println!("destroy rados");
             unsafe {
                 rados_shutdown(self.rados);
             }

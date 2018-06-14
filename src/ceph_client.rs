@@ -50,12 +50,12 @@ impl Drop for CephClient {
 */
 
 impl CephClient {
-    pub fn new<T1: AsRef<str>, T2: AsRef<str>>(&self, user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
+    pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
         let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
             Ok(rados_t) => rados_t,
             Err(e) => return Err(e.into()),
         };
-        let version: CephVersion = match cmd::version(&self.rados_t)?.parse() {
+        let version: CephVersion = match cmd::version(&rados_t)?.parse() {
             Ok(v) => v,
             Err(e) => return Err(e.into()),
         };
