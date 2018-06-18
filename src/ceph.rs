@@ -382,8 +382,8 @@ pub fn connect_to_ceph<'a>(user_id: &str, config_file: &str) -> RadosResult<Rado
 }
 
 impl Rados {
-    pub fn inner(&self) -> rados_t {
-        self.rados
+    pub fn inner(&self) -> &rados_t {
+        &self.rados
     }
 
     /// Disconnect from a Ceph cluster and destroy the connection handle rados_t
@@ -482,8 +482,8 @@ impl Rados {
 }
 
 impl IoCtx {
-    pub fn inner(&self) -> rados_ioctx_t{
-        self.ioctx
+    pub fn inner(&self) -> &rados_ioctx_t{
+        &self.ioctx
     }
 
     /// This just tells librados that you no longer need to use the io context.
