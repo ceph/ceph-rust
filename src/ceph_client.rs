@@ -299,7 +299,7 @@ impl CephClient {
         let ret_code = unsafe {
             // cmd length is 1 because we only allow one command at a time.
             rados::rados_mon_command(
-                self.rados_t.rados,
+                self.rados_t.inner(),
                 &mut cmds.as_ptr(),
                 1,
                 data.as_ptr() as *mut c_char,

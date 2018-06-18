@@ -327,7 +327,7 @@ impl Iterator for XAttr {
 
 /// Owns a ioctx handle
 pub struct IoCtx {
-    pub ioctx: rados_ioctx_t,
+    ioctx: rados_ioctx_t,
 }
 
 impl Drop for IoCtx {
@@ -342,7 +342,7 @@ impl Drop for IoCtx {
 
 /// Owns a rados handle
 pub struct Rados {
-    pub rados: rados_t,
+    rados: rados_t,
     phantom: PhantomData<IoCtx>,
 }
 
@@ -382,6 +382,10 @@ pub fn connect_to_ceph<'a>(user_id: &str, config_file: &str) -> RadosResult<Rado
 }
 
 impl Rados {
+    pub fn inner(&self) -> rados_t {
+        self.rados
+    }
+
     /// Disconnect from a Ceph cluster and destroy the connection handle rados_t
     /// For clean up, this is only necessary after connect_to_ceph() has
     /// succeeded.
@@ -394,6 +398,7 @@ impl Rados {
             rados_shutdown(self.rados);
         }
     }
+
     fn conn_guard(&self) -> RadosResult<()> {
         if self.rados.is_null() {
             return Err(RadosError::new(
@@ -402,10 +407,13 @@ impl Rados {
         }
         Ok(())
     }
+
     /// Set the value of a configuration option
-    /// NOTE: the rados_t parameter must not be connected to ceph yet when this
-    /// is called.
     pub fn config_set(&self, name: &str, value: &str) -> RadosResult<()> {
+        if !self.rados.is_null() {
+            return Err(RadosError::new(
+                "Rados should not be connected when this function is called".into()));
+        }
         let name_str = try!(CString::new(name));
         let value_str = try!(CString::new(value));
         unsafe {
@@ -474,6 +482,10 @@ impl Rados {
 }
 
 impl IoCtx {
+    pub fn inner(&self) -> rados_ioctx_t{
+        self.ioctx
+    }
+
     /// This just tells librados that you no longer need to use the io context.
     /// It may not be freed immediately if there are pending asynchronous
     /// requests on it, but you
@@ -1115,17 +1127,6 @@ impl IoCtx {
         Ok(())
     }
 
-    // pub fn rados_object_tmap_put(ctx: rados_ioctx_t, object_name: &str) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-
     /// Fetch complete tmap (trivial map) object
     pub fn rados_object_tmap_get(&self, object_name: &str) -> RadosResult<Vec<TmapOperation>> {
         self.ioctx_guard()?;
@@ -1204,57 +1205,7 @@ impl IoCtx {
         }
         Ok(())
     }
-    // pub fn rados_object_watch(ctx: rados_ioctx_t, object_name: &str) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-    // pub fn rados_object_watch2(ctx: rados_ioctx_t, object_name: &str) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-    // pub fn rados_object_watch_check(ctx: rados_ioctx_t, cookie: u64) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-    // pub fn rados_object_unwatch(ctx: rados_ioctx_t, object_name: &str) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-    // pub fn rados_object_unwatch2(ctx: rados_ioctx_t, cookie: u64) ->
-    // RadosResult<()> {
-    // if ctx.is_null() {
-    // return Err(RadosError::new("Rados ioctx not created.  Please initialize
-    // first".to_string()));
-    // }
-    //
-    // unsafe {
-    // }
-    // }
-    //
+
     /// Sychronously notify watchers of an object
     /// This blocks until all watchers of the object have received and reacted
     /// to the notify, or a timeout is reached.

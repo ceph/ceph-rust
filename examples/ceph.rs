@@ -114,7 +114,7 @@ fn main() {
     // println!("{}", ceph_helpers::ceph_commands(cluster, None).unwrap().pretty());
     unsafe {
         println!("Getting rados instance id");
-        let instance_id = rados::rados_get_instance_id(cluster.rados);
+        let instance_id = rados::rados_get_instance_id(cluster.inner());
         println!("Instance ID: {}", instance_id);
     }
 
