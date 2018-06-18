@@ -103,7 +103,7 @@ fn main() {
     // This command encapsulates the lower level mon, osd, pg commands and returns JsonData
     // objects based on the key path
     println!("{:?}",
-             ceph_helpers::ceph_command(cluster, "prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+             cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
 
     // Get a list of Ceph librados commands in JSON format.
     // It's very long so it's commented out.
@@ -121,11 +121,11 @@ fn main() {
     println!("Ping monitor: {:?}", ping_monitor);
 
     // Rust specific example...
-    let cluster_stat = ceph_helpers::rados_stat_cluster(cluster);
+    let cluster_stat = cluster.rados_stat_cluster();
     println!("Cluster stat: {:?}", cluster_stat);
 
     // Mon command to check the health. Same as `ceph -s`
-    match ceph_helpers::ceph_mon_command(cluster, "prefix", "status", None) {
+    match cluster.ceph_mon_command("prefix", "status", None) {
         Ok((outbuf, outs)) => {
             match outbuf {
                 Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
@@ -138,9 +138,6 @@ fn main() {
         },
         Err(e) => {println!("{:?}", e);},
     }
-    Err(e) => {
-        println!("{:?}", e);
-    }
 
     // Print CephHealth of cluster
     println!("{}", cluster.ceph_health_string().unwrap_or("".to_string()));
@@ -149,7 +146,7 @@ fn main() {
     println!("{}", cluster.ceph_status(&["health", "overall_status"]).unwrap());
 
     // This command encapsulates the lower level mon, osd, pg commands and returns JsonData objects based on the key path
-    println!("{:?}", ceph_helpers::ceph_command(cluster, "prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+    println!("{:?}", cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
 
     // Get a list of Ceph librados commands in JSON format.
     // It's very long so it's commented out.
