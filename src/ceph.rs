@@ -333,6 +333,8 @@ pub struct Rados {
     phantom: PhantomData<IoCtx>,
 }
 
+unsafe impl Sync for Rados{}
+
 impl Drop for Rados {
     fn drop(&mut self) {
         if !self.rados.is_null() {
