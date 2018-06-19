@@ -19,23 +19,20 @@ use rustc_serialize::json::*;
 use JsonData;
 // use JsonValue;
 
-/// First json call that takes a JSON formatted string and converts it to JsonData object that can
-/// then be traversed using `json_find` via the key path.
+/// First json call that takes a JSON formatted string and converts it to
+/// JsonData object that can then be traversed using `json_find` via the key
+/// path.
 pub fn json_data(json_str: &str) -> Option<JsonData> {
     match Json::from_str(json_str) {
-        Ok(json_data) => {
-            Some(json_data)
-        },
-        Err(_) => {
-            None
-        }
+        Ok(json_data) => Some(json_data),
+        Err(_) => None,
     }
-
 }
 
-/// Looks for the parent object first and then the 'child' object. If the parent object is None
-/// then it only looks for the 'child' object. The parent object is used for situations where there
-/// may be 'child' objects with the same name.
+/// Looks for the parent object first and then the 'child' object. If the
+/// parent object is None then it only looks for the 'child' object. The parent
+/// object is used for situations where there may be 'child' objects with the
+/// same name.
 pub fn json_find(json_data: JsonData, keys: &[&str]) -> Option<JsonData> {
     json_data.find_path(keys).cloned()
 }

@@ -16,14 +16,14 @@
 
 use JsonData;
 
-use JsonValue;
 use admin_sockets::*;
 use byteorder::{LittleEndian, WriteBytesExt};
 use error::*;
 use json::*;
 use libc::*;
-use nom::{IResult, le_u32};
+use nom::{le_u32, IResult};
 use serde_json;
+use JsonValue;
 
 use rados::*;
 use status::*;
@@ -65,53 +65,44 @@ pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
     Ok(String::from_utf8_lossy(&buf).into_owned())
 }
 
-named!(parse_header<TmapOperation>,
+named!(
+    parse_header<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_HDR) >>
-        data_len: le_u32 >>
-        data: take!(data_len) >>
-        (TmapOperation::Header{
+        char!(CEPH_OSD_TMAP_HDR) >> data_len: le_u32 >> data: take!(data_len) >> (TmapOperation::Header {
             data: data.to_vec(),
         })
     )
 );
 
-named!(parse_create<TmapOperation>,
+named!(
+    parse_create<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_CREATE) >>
-        key_name_len: le_u32 >>
-        key_name: take_str!(key_name_len) >>
-        data_len: le_u32 >>
-        data: take!(data_len) >>
-        (TmapOperation::Create{
+        char!(CEPH_OSD_TMAP_CREATE) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
+            >> data: take!(data_len) >> (TmapOperation::Create {
             name: key_name.to_string(),
             data: data.to_vec(),
         })
     )
 );
 
-named!(parse_set<TmapOperation>,
+named!(
+    parse_set<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_SET) >>
-        key_name_len: le_u32 >>
-        key_name: take_str!(key_name_len) >>
-        data_len: le_u32 >>
-        data: take!(data_len) >>
-        (TmapOperation::Set{
+        char!(CEPH_OSD_TMAP_SET) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
+            >> data: take!(data_len) >> (TmapOperation::Set {
             key: key_name.to_string(),
             data: data.to_vec(),
         })
     )
 );
 
-named!(parse_remove<TmapOperation>,
+named!(
+    parse_remove<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_RM) >>
-        key_name_len: le_u32 >>
-        key_name: take_str!(key_name_len) >>
-        (TmapOperation::Remove{
-            name: key_name.to_string()
-        })
+        char!(CEPH_OSD_TMAP_RM) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len)
+            >> (TmapOperation::Remove {
+                name: key_name.to_string(),
+            })
     )
 );
 
@@ -131,38 +122,34 @@ impl TmapOperation {
                 buffer.push(CEPH_OSD_TMAP_HDR as u8);
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Set { ref key, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_SET as u8);
                 try!(buffer.write_u32::<LittleEndian>(key.len() as u32));
                 buffer.extend(key.as_bytes());
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Create { ref name, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_CREATE as u8);
                 try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
                 buffer.extend(name.as_bytes());
                 try!(buffer.write_u32::<LittleEndian>(data.len() as u32));
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Remove { ref name } => {
                 buffer.push(CEPH_OSD_TMAP_RM as u8);
                 try!(buffer.write_u32::<LittleEndian>(name.len() as u32));
                 buffer.extend(name.as_bytes());
-            },
+            }
         }
         Ok(buffer)
     }
 
     fn deserialize(input: &[u8]) -> IResult<&[u8], Vec<TmapOperation>> {
-        many0!(input,
-            alt!(
-                complete!(parse_header)|
-                complete!(parse_create) |
-                complete!(parse_set) |
-                complete!(parse_remove)
-            )
+        many0!(
+            input,
+            alt!(complete!(parse_header) | complete!(parse_create) | complete!(parse_set) | complete!(parse_remove))
         )
     }
 }
@@ -412,7 +399,8 @@ impl Rados {
     pub fn config_set(&self, name: &str, value: &str) -> RadosResult<()> {
         if !self.rados.is_null() {
             return Err(RadosError::new(
-                "Rados should not be connected when this function is called".into()));
+                "Rados should not be connected when this function is called".into(),
+            ));
         }
         let name_str = try!(CString::new(name));
         let value_str = try!(CString::new(value));
@@ -482,7 +470,7 @@ impl Rados {
 }
 
 impl IoCtx {
-    pub fn inner(&self) -> &rados_ioctx_t{
+    pub fn inner(&self) -> &rados_ioctx_t {
         &self.ioctx
     }
 

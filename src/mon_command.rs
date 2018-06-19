@@ -8,12 +8,11 @@ mod tests {
 
     #[test]
     fn it_builds_a_mon_command() {
-        let command = MonCommand::new().
-            with_prefix("osd set").
-            with("key", "osdout");
+        let command = MonCommand::new().with_prefix("osd set").with("key", "osdout");
 
         let actual: HashMap<String, String> = serde_json::from_str(&command.as_json()).unwrap();
-        let expected: HashMap<String, String> = serde_json::from_str(r#"{"prefix":"osd set","format":"json","key":"osdout"}"#).unwrap();
+        let expected: HashMap<String, String> =
+            serde_json::from_str(r#"{"prefix":"osd set","format":"json","key":"osdout"}"#).unwrap();
 
         assert_eq!(expected, actual);
     }
@@ -30,7 +29,7 @@ impl<'a> MonCommand<'a> {
                 let mut map = HashMap::new();
                 map.insert("format", "json");
                 map
-            }
+            },
         }
     }
 

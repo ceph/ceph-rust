@@ -13,16 +13,14 @@
 // limitations under the License.
 extern crate serde_json;
 
-
-
 use ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
-use std::{fmt, str};
 use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
+use std::{fmt, str};
 use uuid::ParseError;
 
 /// Custom error handling for the library
@@ -62,7 +60,6 @@ impl StdError for RadosError {
             RadosError::SerdeError(ref e) => e.description(),
             RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
             RadosError::Parse(ref _input) => "An error occurred during parsing",
-
         }
     }
     fn cause(&self) -> Option<&StdError> {
@@ -100,7 +97,7 @@ impl RadosError {
             RadosError::SerdeError(ref err) => err.description().to_string(),
             RadosError::MinVersion(ref min, ref current_version) => {
                 format!("{:?} minimum, your version is {:?}", min, current_version)
-            },
+            }
             RadosError::Parse(ref input) => format!("Couldn't parse the CephVersion from {}", input),
         }
     }
