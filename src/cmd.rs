@@ -96,7 +96,7 @@ pub struct MonStatus {
     pub state: MonState,
     pub election_epoch: u64,
     pub quorum: Vec<u64>,
-    pub outside_quorum: Vec<u64>,
+    pub outside_quorum: Vec<String>,
     pub extra_probe_peers: Vec<String>,
     pub sync_provider: Vec<u64>,
     pub monmap: MonMap,
