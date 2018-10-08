@@ -563,6 +563,7 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -611,6 +612,7 @@ pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> 
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.into()),
@@ -683,6 +685,7 @@ pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -705,6 +708,7 @@ pub fn status(cluster_handle: &Rados) -> RadosResult<String> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.into()),
@@ -727,6 +731,7 @@ pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -741,6 +746,24 @@ pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
     Err(RadosError::Error("No response from ceph for mon dump".into()))
 }
 
+pub fn mon_getmap(cluster_handle: &Rados, epoch: Option<u64>) -> RadosResult<Vec<u8>> {
+    let mut cmd = json!({
+        "prefix": "mon getmap"
+    });
+    if let Some(epoch) = epoch {
+        cmd["epoch"] = json!(epoch);
+    }
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    if let Some(return_data) = result.0 {
+        return Ok(return_data);
+    }
+    return Err(RadosError::Error(format!(
+        "Unable to parse mon getmap output: {:?}",
+        result.1,
+    )));
+}
+
 /// Get the mon quorum
 pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
     let cmd = json!({
@@ -749,6 +772,7 @@ pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -770,6 +794,7 @@ pub fn mon_status(cluster_handle: &Rados) -> RadosResult<MonStatus> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -791,6 +816,7 @@ pub fn version(cluster_handle: &Rados) -> RadosResult<String> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(res.to_string()),
@@ -812,6 +838,7 @@ pub fn osd_pool_quota_get(cluster_handle: &Rados, pool: &str) -> RadosResult<u64
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(u64::from_str(res)?),
@@ -867,6 +894,7 @@ pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> Ra
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(num) => return Ok(u64::from_str(num)?),
@@ -922,6 +950,7 @@ pub fn auth_get_key(cluster_handle: &Rados, client_type: &str, id: &str) -> Rado
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(key) => return Ok(key.into()),
@@ -965,6 +994,7 @@ pub fn mgr_dump(cluster_handle: &Rados) -> RadosResult<MgrDump> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -1003,6 +1033,7 @@ pub fn mgr_list_modules(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -1028,6 +1059,7 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -1086,6 +1118,7 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -1112,6 +1145,7 @@ pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),
@@ -1137,6 +1171,7 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     if let Some(return_data) = result.0 {
+        let return_data = String::from_utf8_lossy(&return_data);
         let mut l = return_data.lines();
         match l.next() {
             Some(res) => return Ok(serde_json::from_str(res)?),

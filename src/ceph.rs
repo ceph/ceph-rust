@@ -1876,7 +1876,7 @@ impl Rados {
     pub fn ceph_mon_command_without_data(
         &self,
         cmd: &serde_json::Value,
-    ) -> RadosResult<(Option<String>, Option<String>)> {
+    ) -> RadosResult<(Option<Vec<u8>>, Option<String>)> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
@@ -1891,7 +1891,7 @@ impl Rados {
         // Ceph librados allocates these buffers internally and the pointer that comes
         // back must be
         // freed by call `rados_buffer_free`
-        let mut str_outbuf: Option<String> = None;
+        let mut str_outbuf: Option<Vec<u8>> = None;
         let mut str_outs: Option<String> = None;
 
         debug!("Calling rados_mon_command with {:?}", cmd);
@@ -1917,7 +1917,7 @@ impl Rados {
             // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
             if outbuf_len > 0 && !outbuf.is_null() {
                 let slice = ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize);
-                str_outbuf = Some(String::from_utf8_lossy(slice).into_owned());
+                str_outbuf = Some(slice.to_vec());
 
                 rados_buffer_free(outbuf);
             }
