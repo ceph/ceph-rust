@@ -563,14 +563,7 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse health output: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 pub fn osd_out(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
@@ -671,14 +664,7 @@ pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse osd tree output: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 // Get cluster status
@@ -707,14 +693,7 @@ pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mon dump output: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 pub fn mon_getmap(cluster_handle: &Rados, epoch: Option<u64>) -> RadosResult<Vec<u8>> {
@@ -736,14 +715,7 @@ pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse quorum_status output: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Get the mon status
@@ -753,14 +725,7 @@ pub fn mon_status(cluster_handle: &Rados) -> RadosResult<MonStatus> {
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mon_status output: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Show mon daemon version
@@ -922,14 +887,7 @@ pub fn mgr_dump(cluster_handle: &Rados) -> RadosResult<MgrDump> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr dump: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Treat the named manager daemon as failed
@@ -953,14 +911,7 @@ pub fn mgr_list_modules(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr module ls: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// List service endpoints provided by mgr modules
@@ -971,14 +922,7 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr services: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Enable a mgr module
@@ -1022,14 +966,7 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr metadata: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// count ceph-mgr daemons by metadata field property
@@ -1041,14 +978,7 @@ pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr count-metadata: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// check running versions of ceph-mgr daemons
@@ -1059,12 +989,5 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(res) => Ok(serde_json::from_str(res)?),
-        None => Err(RadosError::Error(format!(
-            "Unable to parse mgr versions: {:?}",
-            return_data,
-        ))),
-    }
+    Ok(serde_json::from_str(&return_data)?)
 }
