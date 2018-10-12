@@ -1876,23 +1876,22 @@ impl Rados {
     pub fn ceph_mon_command_without_data(
         &self,
         cmd: &serde_json::Value,
-    ) -> RadosResult<(Option<String>, Option<String>)> {
+    ) -> RadosResult<Vec<u8>> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
         let cmds = CString::new(cmd_string).unwrap();
 
-        let mut outbuf = ptr::null_mut();
-        let mut outs = ptr::null_mut();
         let mut outbuf_len = 0;
+        let mut outs = ptr::null_mut();
         let mut outs_len = 0;
 
         // Ceph librados allocates these buffers internally and the pointer that comes
         // back must be
         // freed by call `rados_buffer_free`
-        let mut str_outbuf: Option<String> = None;
-        let mut str_outs: Option<String> = None;
+        let mut outbuf = ptr::null_mut();
+        let mut out: Vec<u8> = vec![];
 
         debug!("Calling rados_mon_command with {:?}", cmd);
 
@@ -1911,26 +1910,24 @@ impl Rados {
             );
             debug!("return code: {}", ret_code);
             if ret_code < 0 {
-                return Err(RadosError::new(try!(get_error(ret_code))));
+                if outs_len > 0 && !outs.is_null() {
+                    let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
+                    rados_buffer_free(outs);
+                    return Err(RadosError::new(String::from_utf8_lossy(slice).into_owned()));
+                }
+                return Err(RadosError::new(get_error(ret_code)?));
             }
 
-            // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
+            // Copy the data from outbuf and then call rados_buffer_free instead libc::free
             if outbuf_len > 0 && !outbuf.is_null() {
                 let slice = ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize);
-                str_outbuf = Some(String::from_utf8_lossy(slice).into_owned());
+                out = slice.to_vec();
 
                 rados_buffer_free(outbuf);
             }
-
-            if outs_len > 0 && !outs.is_null() {
-                let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
-                str_outs = Some(String::from_utf8_lossy(slice).into_owned());
-
-                rados_buffer_free(outs);
-            }
         }
 
-        Ok((str_outbuf, str_outs))
+        Ok(out)
     }
 
     /// Mon command that does pass in a data payload.

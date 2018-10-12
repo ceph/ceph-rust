@@ -562,21 +562,8 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse health output: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(
-        result.1.unwrap_or("No response from ceph for health".into()),
-    ))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 pub fn osd_out(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
@@ -610,21 +597,15 @@ pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> 
         "var": choice,
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(res.into()),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse osd pool get output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(res) => Ok(res.into()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse osd pool get output: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error(
-        result.1.unwrap_or("No response from ceph for osd pool get".into()),
-    ))
 }
 
 /// Set a pool value
@@ -682,19 +663,8 @@ pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse osd tree output: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error("No response from ceph for osd tree".into()))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 // Get cluster status
@@ -704,19 +674,15 @@ pub fn status(cluster_handle: &Rados) -> RadosResult<String> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(res.into()),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse status output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(res) => Ok(res.into()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse status output: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error("No response from ceph for status".into()))
 }
 
 /// List all the monitors in the cluster and their current rank
@@ -726,19 +692,19 @@ pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mon dump output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
+pub fn mon_getmap(cluster_handle: &Rados, epoch: Option<u64>) -> RadosResult<Vec<u8>> {
+    let mut cmd = json!({
+        "prefix": "mon getmap"
+    });
+    if let Some(epoch) = epoch {
+        cmd["epoch"] = json!(epoch);
     }
-    Err(RadosError::Error("No response from ceph for mon dump".into()))
+
+    Ok(cluster_handle.ceph_mon_command_without_data(&cmd)?)
 }
 
 /// Get the mon quorum
@@ -748,19 +714,8 @@ pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse quorum_status output: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error("No response from ceph for quorum_status".into()))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Get the mon status
@@ -769,19 +724,8 @@ pub fn mon_status(cluster_handle: &Rados) -> RadosResult<MonStatus> {
         "prefix": "mon_status",
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mon_status output: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error("No response from ceph for mon_status".into()))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Show mon daemon version
@@ -790,19 +734,15 @@ pub fn version(cluster_handle: &Rados) -> RadosResult<String> {
         "prefix": "version",
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(res.to_string()),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse version output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(res) => Ok(res.to_string()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse version output: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error("No response from ceph for version".into()))
 }
 
 pub fn osd_pool_quota_get(cluster_handle: &Rados, pool: &str) -> RadosResult<u64> {
@@ -811,19 +751,15 @@ pub fn osd_pool_quota_get(cluster_handle: &Rados, pool: &str) -> RadosResult<u64
         "pool": pool
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(u64::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse osd pool quota-get output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(res) => Ok(u64::from_str(res)?),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse osd pool quota-get output: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error("No response from ceph for osd pool quota-get".into()))
 }
 
 pub fn auth_del(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
@@ -866,22 +802,15 @@ pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> Ra
     }
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(num) => return Ok(u64::from_str(num)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse osd create output: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(num) => Ok(u64::from_str(num)?),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse osd create output: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error(format!(
-        "Unable to parse osd create output: {:?}",
-        result
-    )))
 }
 
 // Add a new mgr to the cluster
@@ -921,22 +850,15 @@ pub fn auth_get_key(cluster_handle: &Rados, client_type: &str, id: &str) -> Rado
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(key) => return Ok(key.into()),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse auth get-key: {:?}",
-                    return_data,
-                )))
-            }
-        }
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(key) => Ok(key.into()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse auth get-key: {:?}",
+            return_data,
+        ))),
     }
-    Err(RadosError::Error(format!(
-        "Unable to parse auth get-key output: {:?}",
-        result
-    )))
 }
 
 // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
@@ -964,22 +886,8 @@ pub fn mgr_dump(cluster_handle: &Rados) -> RadosResult<MgrDump> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr dump: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr dump output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Treat the named manager daemon as failed
@@ -1002,22 +910,8 @@ pub fn mgr_list_modules(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr module ls: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr ls output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// List service endpoints provided by mgr modules
@@ -1027,22 +921,8 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr services: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr services output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// Enable a mgr module
@@ -1085,22 +965,8 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr metadata: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr metadata output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// count ceph-mgr daemons by metadata field property
@@ -1111,22 +977,8 @@ pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr count-metadata: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr count-metadata output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 /// check running versions of ceph-mgr daemons
@@ -1136,20 +988,6 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    if let Some(return_data) = result.0 {
-        let mut l = return_data.lines();
-        match l.next() {
-            Some(res) => return Ok(serde_json::from_str(res)?),
-            None => {
-                return Err(RadosError::Error(format!(
-                    "Unable to parse mgr versions: {:?}",
-                    return_data,
-                )))
-            }
-        }
-    }
-    Err(RadosError::Error(format!(
-        "Unable to parse mgr versions output: {:?}",
-        result
-    )))
+    let return_data = String::from_utf8(result)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
