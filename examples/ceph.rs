@@ -115,7 +115,7 @@ fn main() {
     }
 
     let fsid = cluster.rados_fsid().unwrap();
-    println!("rados_cluster_fsid: {}", fsid.hyphenated().to_string());
+    println!("rados_cluster_fsid: {}", fsid.to_hyphenated().to_string());
 
     let ping_monitor = cluster.ping_monitor("ceph-mon.ceph-vm1"); // Change to support your mon name
     println!("Ping monitor: {:?}", ping_monitor);
