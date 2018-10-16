@@ -21,7 +21,7 @@ use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use std::{fmt, str};
-use uuid::ParseError;
+use uuid::parser::ParseError;
 
 /// Custom error handling for the library
 #[derive(Debug)]
