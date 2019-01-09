@@ -184,7 +184,7 @@ pub struct StoreStats {
     pub last_updated: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Copy, Clone, Deserialize, Debug)]
 pub enum RoundStatus {
     #[serde(rename = "finished")]
     Finished,
@@ -192,7 +192,7 @@ pub enum RoundStatus {
     OnGoing,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Copy, Clone, Deserialize, Debug)]
 pub enum MonState {
     #[serde(rename = "probing")]
     Probing,
@@ -208,7 +208,7 @@ pub enum MonState {
     Shutdown,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Clone, Copy, Deserialize, Debug, Serialize)]
 pub enum OsdOption {
     #[serde(rename = "full")]
     Full,
@@ -246,51 +246,51 @@ pub enum OsdOption {
 
 impl fmt::Display for OsdOption {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &OsdOption::Full => write!(f, "full"),
-            &OsdOption::Pause => write!(f, "pause"),
-            &OsdOption::NoUp => write!(f, "noup"),
-            &OsdOption::NoDown => write!(f, "nodown"),
-            &OsdOption::NoOut => write!(f, "noout"),
-            &OsdOption::NoIn => write!(f, "noin"),
-            &OsdOption::NoBackfill => write!(f, "nobackfill"),
-            &OsdOption::NoRebalance => write!(f, "norebalance"),
-            &OsdOption::NoRecover => write!(f, "norecover"),
-            &OsdOption::NoScrub => write!(f, "noscrub"),
-            &OsdOption::NoDeepScrub => write!(f, "nodeep-scrub"),
-            &OsdOption::NoTierAgent => write!(f, "notieragent"),
-            &OsdOption::SortBitwise => write!(f, "sortbitwise"),
-            &OsdOption::RecoveryDeletes => write!(f, "recovery_deletes"),
-            &OsdOption::RequireJewelOsds => write!(f, "require_jewel_osds"),
-            &OsdOption::RequireKrakenOsds => write!(f, "require_kraken_osds"),
+        match *self {
+            OsdOption::Full => write!(f, "full"),
+            OsdOption::Pause => write!(f, "pause"),
+            OsdOption::NoUp => write!(f, "noup"),
+            OsdOption::NoDown => write!(f, "nodown"),
+            OsdOption::NoOut => write!(f, "noout"),
+            OsdOption::NoIn => write!(f, "noin"),
+            OsdOption::NoBackfill => write!(f, "nobackfill"),
+            OsdOption::NoRebalance => write!(f, "norebalance"),
+            OsdOption::NoRecover => write!(f, "norecover"),
+            OsdOption::NoScrub => write!(f, "noscrub"),
+            OsdOption::NoDeepScrub => write!(f, "nodeep-scrub"),
+            OsdOption::NoTierAgent => write!(f, "notieragent"),
+            OsdOption::SortBitwise => write!(f, "sortbitwise"),
+            OsdOption::RecoveryDeletes => write!(f, "recovery_deletes"),
+            OsdOption::RequireJewelOsds => write!(f, "require_jewel_osds"),
+            OsdOption::RequireKrakenOsds => write!(f, "require_kraken_osds"),
         }
     }
 }
 
 impl AsRef<str> for OsdOption {
     fn as_ref(&self) -> &str {
-        match self {
-            &OsdOption::Full => "full",
-            &OsdOption::Pause => "pause",
-            &OsdOption::NoUp => "noup",
-            &OsdOption::NoDown => "nodown",
-            &OsdOption::NoOut => "noout",
-            &OsdOption::NoIn => "noin",
-            &OsdOption::NoBackfill => "nobackfill",
-            &OsdOption::NoRebalance => "norebalance",
-            &OsdOption::NoRecover => "norecover",
-            &OsdOption::NoScrub => "noscrub",
-            &OsdOption::NoDeepScrub => "nodeep-scrub",
-            &OsdOption::NoTierAgent => "notieragent",
-            &OsdOption::SortBitwise => "sortbitwise",
-            &OsdOption::RecoveryDeletes => "recovery_deletes",
-            &OsdOption::RequireJewelOsds => "require_jewel_osds",
-            &OsdOption::RequireKrakenOsds => "require_kraken_osds",
+        match *self {
+            OsdOption::Full => "full",
+            OsdOption::Pause => "pause",
+            OsdOption::NoUp => "noup",
+            OsdOption::NoDown => "nodown",
+            OsdOption::NoOut => "noout",
+            OsdOption::NoIn => "noin",
+            OsdOption::NoBackfill => "nobackfill",
+            OsdOption::NoRebalance => "norebalance",
+            OsdOption::NoRecover => "norecover",
+            OsdOption::NoScrub => "noscrub",
+            OsdOption::NoDeepScrub => "nodeep-scrub",
+            OsdOption::NoTierAgent => "notieragent",
+            OsdOption::SortBitwise => "sortbitwise",
+            OsdOption::RecoveryDeletes => "recovery_deletes",
+            OsdOption::RequireJewelOsds => "require_jewel_osds",
+            OsdOption::RequireKrakenOsds => "require_kraken_osds",
         }
     }
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Copy, Clone, Deserialize, Debug, Serialize)]
 pub enum PoolOption {
     #[serde(rename = "size")]
     Size,
@@ -388,170 +388,170 @@ pub enum PoolOption {
 
 impl fmt::Display for PoolOption {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &PoolOption::Size => write!(f, "size"),
-            &PoolOption::MinSize => write!(f, "min_size"),
-            &PoolOption::CrashReplayInterval => write!(f, "crash_replay_interval"),
-            &PoolOption::PgNum => write!(f, "pg_num"),
-            &PoolOption::PgpNum => write!(f, "pgp_num"),
-            &PoolOption::CrushRule => write!(f, "crush_rule"),
-            &PoolOption::HashPsPool => write!(f, "hashpspool"),
-            &PoolOption::NoDelete => write!(f, "nodelete"),
-            &PoolOption::NoPgChange => write!(f, "nopgchange"),
-            &PoolOption::NoSizeChange => write!(f, "nosizechange"),
-            &PoolOption::WriteFadviceDontNeed => write!(f, "write_fadvice_dontneed"),
-            &PoolOption::NoScrub => write!(f, "noscrub"),
-            &PoolOption::NoDeepScrub => write!(f, "nodeep-scrub"),
-            &PoolOption::HitSetType => write!(f, "hit_set_type"),
-            &PoolOption::HitSetPeriod => write!(f, "hit_set_period"),
-            &PoolOption::HitSetCount => write!(f, "hit_set_count"),
-            &PoolOption::HitSetFpp => write!(f, "hit_set_fpp"),
-            &PoolOption::UseGmtHitset => write!(f, "use_gmt_hitset"),
-            &PoolOption::TargetMaxBytes => write!(f, "target_max_bytes"),
-            &PoolOption::TargetMaxObjects => write!(f, "target_max_objects"),
-            &PoolOption::CacheTargetDirtyRatio => write!(f, "cache_target_dirty_ratio"),
-            &PoolOption::CacheTargetDirtyHighRatio => write!(f, "cache_target_dirty_high_ratio"),
-            &PoolOption::CacheTargetFullRatio => write!(f, "cache_target_full_ratio"),
-            &PoolOption::CacheMinFlushAge => write!(f, "cache_min_flush_age"),
-            &PoolOption::CacheMinEvictAge => write!(f, "cachem_min_evict_age"),
-            &PoolOption::Auid => write!(f, "auid"),
-            &PoolOption::MinReadRecencyForPromote => write!(f, "min_read_recency_for_promote"),
-            &PoolOption::MinWriteRecencyForPromte => write!(f, "min_write_recency_for_promote"),
-            &PoolOption::FastRead => write!(f, "fast_read"),
-            &PoolOption::HitSetGradeDecayRate => write!(f, "hit_set_decay_rate"),
-            &PoolOption::HitSetSearchLastN => write!(f, "hit_set_search_last_n"),
-            &PoolOption::ScrubMinInterval => write!(f, "scrub_min_interval"),
-            &PoolOption::ScrubMaxInterval => write!(f, "scrub_max_interval"),
-            &PoolOption::DeepScrubInterval => write!(f, "deep_scrub_interval"),
-            &PoolOption::RecoveryPriority => write!(f, "recovery_priority"),
-            &PoolOption::RecoveryOpPriority => write!(f, "recovery_op_priority"),
-            &PoolOption::ScrubPriority => write!(f, "scrub_priority"),
-            &PoolOption::CompressionMode => write!(f, "compression_mode"),
-            &PoolOption::CompressionAlgorithm => write!(f, "compression_algorithm"),
-            &PoolOption::CompressionRequiredRatio => write!(f, "compression_required_ratio"),
-            &PoolOption::CompressionMaxBlobSize => write!(f, "compression_max_blob_size"),
-            &PoolOption::CompressionMinBlobSize => write!(f, "compression_min_blob_size"),
-            &PoolOption::CsumType => write!(f, "csum_type"),
-            &PoolOption::CsumMinBlock => write!(f, "csum_min_block"),
-            &PoolOption::CsumMaxBlock => write!(f, "csum_max_block"),
-            &PoolOption::AllocEcOverwrites => write!(f, "allow_ec_overwrites"),
+        match *self {
+            PoolOption::Size => write!(f, "size"),
+            PoolOption::MinSize => write!(f, "min_size"),
+            PoolOption::CrashReplayInterval => write!(f, "crash_replay_interval"),
+            PoolOption::PgNum => write!(f, "pg_num"),
+            PoolOption::PgpNum => write!(f, "pgp_num"),
+            PoolOption::CrushRule => write!(f, "crush_rule"),
+            PoolOption::HashPsPool => write!(f, "hashpspool"),
+            PoolOption::NoDelete => write!(f, "nodelete"),
+            PoolOption::NoPgChange => write!(f, "nopgchange"),
+            PoolOption::NoSizeChange => write!(f, "nosizechange"),
+            PoolOption::WriteFadviceDontNeed => write!(f, "write_fadvice_dontneed"),
+            PoolOption::NoScrub => write!(f, "noscrub"),
+            PoolOption::NoDeepScrub => write!(f, "nodeep-scrub"),
+            PoolOption::HitSetType => write!(f, "hit_set_type"),
+            PoolOption::HitSetPeriod => write!(f, "hit_set_period"),
+            PoolOption::HitSetCount => write!(f, "hit_set_count"),
+            PoolOption::HitSetFpp => write!(f, "hit_set_fpp"),
+            PoolOption::UseGmtHitset => write!(f, "use_gmt_hitset"),
+            PoolOption::TargetMaxBytes => write!(f, "target_max_bytes"),
+            PoolOption::TargetMaxObjects => write!(f, "target_max_objects"),
+            PoolOption::CacheTargetDirtyRatio => write!(f, "cache_target_dirty_ratio"),
+            PoolOption::CacheTargetDirtyHighRatio => write!(f, "cache_target_dirty_high_ratio"),
+            PoolOption::CacheTargetFullRatio => write!(f, "cache_target_full_ratio"),
+            PoolOption::CacheMinFlushAge => write!(f, "cache_min_flush_age"),
+            PoolOption::CacheMinEvictAge => write!(f, "cachem_min_evict_age"),
+            PoolOption::Auid => write!(f, "auid"),
+            PoolOption::MinReadRecencyForPromote => write!(f, "min_read_recency_for_promote"),
+            PoolOption::MinWriteRecencyForPromte => write!(f, "min_write_recency_for_promote"),
+            PoolOption::FastRead => write!(f, "fast_read"),
+            PoolOption::HitSetGradeDecayRate => write!(f, "hit_set_decay_rate"),
+            PoolOption::HitSetSearchLastN => write!(f, "hit_set_search_last_n"),
+            PoolOption::ScrubMinInterval => write!(f, "scrub_min_interval"),
+            PoolOption::ScrubMaxInterval => write!(f, "scrub_max_interval"),
+            PoolOption::DeepScrubInterval => write!(f, "deep_scrub_interval"),
+            PoolOption::RecoveryPriority => write!(f, "recovery_priority"),
+            PoolOption::RecoveryOpPriority => write!(f, "recovery_op_priority"),
+            PoolOption::ScrubPriority => write!(f, "scrub_priority"),
+            PoolOption::CompressionMode => write!(f, "compression_mode"),
+            PoolOption::CompressionAlgorithm => write!(f, "compression_algorithm"),
+            PoolOption::CompressionRequiredRatio => write!(f, "compression_required_ratio"),
+            PoolOption::CompressionMaxBlobSize => write!(f, "compression_max_blob_size"),
+            PoolOption::CompressionMinBlobSize => write!(f, "compression_min_blob_size"),
+            PoolOption::CsumType => write!(f, "csum_type"),
+            PoolOption::CsumMinBlock => write!(f, "csum_min_block"),
+            PoolOption::CsumMaxBlock => write!(f, "csum_max_block"),
+            PoolOption::AllocEcOverwrites => write!(f, "allow_ec_overwrites"),
         }
     }
 }
 
 impl AsRef<str> for PoolOption {
     fn as_ref(&self) -> &str {
-        match self {
-            &PoolOption::Size => "size",
-            &PoolOption::MinSize => "min_size",
-            &PoolOption::CrashReplayInterval => "crash_replay_interval",
-            &PoolOption::PgNum => "pg_num",
-            &PoolOption::PgpNum => "pgp_num",
-            &PoolOption::CrushRule => "crush_rule",
-            &PoolOption::HashPsPool => "hashpspool",
-            &PoolOption::NoDelete => "nodelete",
-            &PoolOption::NoPgChange => "nopgchange",
-            &PoolOption::NoSizeChange => "nosizechange",
-            &PoolOption::WriteFadviceDontNeed => "write_fadvice_dontneed",
-            &PoolOption::NoScrub => "noscrub",
-            &PoolOption::NoDeepScrub => "nodeep-scrub",
-            &PoolOption::HitSetType => "hit_set_type",
-            &PoolOption::HitSetPeriod => "hit_set_period",
-            &PoolOption::HitSetCount => "hit_set_count",
-            &PoolOption::HitSetFpp => "hit_set_fpp",
-            &PoolOption::UseGmtHitset => "use_gmt_hitset",
-            &PoolOption::TargetMaxBytes => "target_max_bytes",
-            &PoolOption::TargetMaxObjects => "target_max_objects",
-            &PoolOption::CacheTargetDirtyRatio => "cache_target_dirty_ratio",
-            &PoolOption::CacheTargetDirtyHighRatio => "cache_target_dirty_high_ratio",
-            &PoolOption::CacheTargetFullRatio => "cache_target_full_ratio",
-            &PoolOption::CacheMinFlushAge => "cache_min_flush_age",
-            &PoolOption::CacheMinEvictAge => "cachem_min_evict_age",
-            &PoolOption::Auid => "auid",
-            &PoolOption::MinReadRecencyForPromote => "min_read_recency_for_promote",
-            &PoolOption::MinWriteRecencyForPromte => "min_write_recency_for_promote",
-            &PoolOption::FastRead => "fast_read",
-            &PoolOption::HitSetGradeDecayRate => "hit_set_decay_rate",
-            &PoolOption::HitSetSearchLastN => "hit_set_search_last_n",
-            &PoolOption::ScrubMinInterval => "scrub_min_interval",
-            &PoolOption::ScrubMaxInterval => "scrub_max_interval",
-            &PoolOption::DeepScrubInterval => "deep_scrub_interval",
-            &PoolOption::RecoveryPriority => "recovery_priority",
-            &PoolOption::RecoveryOpPriority => "recovery_op_priority",
-            &PoolOption::ScrubPriority => "scrub_priority",
-            &PoolOption::CompressionMode => "compression_mode",
-            &PoolOption::CompressionAlgorithm => "compression_algorithm",
-            &PoolOption::CompressionRequiredRatio => "compression_required_ratio",
-            &PoolOption::CompressionMaxBlobSize => "compression_max_blob_size",
-            &PoolOption::CompressionMinBlobSize => "compression_min_blob_size",
-            &PoolOption::CsumType => "csum_type",
-            &PoolOption::CsumMinBlock => "csum_min_block",
-            &PoolOption::CsumMaxBlock => "csum_max_block",
-            &PoolOption::AllocEcOverwrites => "allow_ec_overwrites",
+        match *self {
+            PoolOption::Size => "size",
+            PoolOption::MinSize => "min_size",
+            PoolOption::CrashReplayInterval => "crash_replay_interval",
+            PoolOption::PgNum => "pg_num",
+            PoolOption::PgpNum => "pgp_num",
+            PoolOption::CrushRule => "crush_rule",
+            PoolOption::HashPsPool => "hashpspool",
+            PoolOption::NoDelete => "nodelete",
+            PoolOption::NoPgChange => "nopgchange",
+            PoolOption::NoSizeChange => "nosizechange",
+            PoolOption::WriteFadviceDontNeed => "write_fadvice_dontneed",
+            PoolOption::NoScrub => "noscrub",
+            PoolOption::NoDeepScrub => "nodeep-scrub",
+            PoolOption::HitSetType => "hit_set_type",
+            PoolOption::HitSetPeriod => "hit_set_period",
+            PoolOption::HitSetCount => "hit_set_count",
+            PoolOption::HitSetFpp => "hit_set_fpp",
+            PoolOption::UseGmtHitset => "use_gmt_hitset",
+            PoolOption::TargetMaxBytes => "target_max_bytes",
+            PoolOption::TargetMaxObjects => "target_max_objects",
+            PoolOption::CacheTargetDirtyRatio => "cache_target_dirty_ratio",
+            PoolOption::CacheTargetDirtyHighRatio => "cache_target_dirty_high_ratio",
+            PoolOption::CacheTargetFullRatio => "cache_target_full_ratio",
+            PoolOption::CacheMinFlushAge => "cache_min_flush_age",
+            PoolOption::CacheMinEvictAge => "cachem_min_evict_age",
+            PoolOption::Auid => "auid",
+            PoolOption::MinReadRecencyForPromote => "min_read_recency_for_promote",
+            PoolOption::MinWriteRecencyForPromte => "min_write_recency_for_promote",
+            PoolOption::FastRead => "fast_read",
+            PoolOption::HitSetGradeDecayRate => "hit_set_decay_rate",
+            PoolOption::HitSetSearchLastN => "hit_set_search_last_n",
+            PoolOption::ScrubMinInterval => "scrub_min_interval",
+            PoolOption::ScrubMaxInterval => "scrub_max_interval",
+            PoolOption::DeepScrubInterval => "deep_scrub_interval",
+            PoolOption::RecoveryPriority => "recovery_priority",
+            PoolOption::RecoveryOpPriority => "recovery_op_priority",
+            PoolOption::ScrubPriority => "scrub_priority",
+            PoolOption::CompressionMode => "compression_mode",
+            PoolOption::CompressionAlgorithm => "compression_algorithm",
+            PoolOption::CompressionRequiredRatio => "compression_required_ratio",
+            PoolOption::CompressionMaxBlobSize => "compression_max_blob_size",
+            PoolOption::CompressionMinBlobSize => "compression_min_blob_size",
+            PoolOption::CsumType => "csum_type",
+            PoolOption::CsumMinBlock => "csum_min_block",
+            PoolOption::CsumMaxBlock => "csum_max_block",
+            PoolOption::AllocEcOverwrites => "allow_ec_overwrites",
         }
     }
 }
 
 impl fmt::Display for HealthStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &HealthStatus::Err => write!(f, "HEALTH_ERR"),
-            &HealthStatus::Ok => write!(f, "HEALTH_OK"),
-            &HealthStatus::Warn => write!(f, "HEALTH_WARN"),
+        match *self {
+            HealthStatus::Err => write!(f, "HEALTH_ERR"),
+            HealthStatus::Ok => write!(f, "HEALTH_OK"),
+            HealthStatus::Warn => write!(f, "HEALTH_WARN"),
         }
     }
 }
 
 impl AsRef<str> for HealthStatus {
     fn as_ref(&self) -> &str {
-        match self {
-            &HealthStatus::Err => "HEALTH_ERR",
-            &HealthStatus::Ok => "HEALTH_OK",
-            &HealthStatus::Warn => "HEALTH_WARN",
+        match *self {
+            HealthStatus::Err => "HEALTH_ERR",
+            HealthStatus::Ok => "HEALTH_OK",
+            HealthStatus::Warn => "HEALTH_WARN",
         }
     }
 }
 
 impl fmt::Display for MonState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &MonState::Probing => write!(f, "probing"),
-            &MonState::Synchronizing => write!(f, "synchronizing"),
-            &MonState::Electing => write!(f, "electing"),
-            &MonState::Leader => write!(f, "leader"),
-            &MonState::Peon => write!(f, "peon"),
-            &MonState::Shutdown => write!(f, "shutdown"),
+        match *self {
+            MonState::Probing => write!(f, "probing"),
+            MonState::Synchronizing => write!(f, "synchronizing"),
+            MonState::Electing => write!(f, "electing"),
+            MonState::Leader => write!(f, "leader"),
+            MonState::Peon => write!(f, "peon"),
+            MonState::Shutdown => write!(f, "shutdown"),
         }
     }
 }
 
 impl AsRef<str> for MonState {
     fn as_ref(&self) -> &str {
-        match self {
-            &MonState::Probing => "probing",
-            &MonState::Synchronizing => "synchronizing",
-            &MonState::Electing => "electing",
-            &MonState::Leader => "leader",
-            &MonState::Peon => "peon",
-            &MonState::Shutdown => "shutdown",
+        match *self {
+            MonState::Probing => "probing",
+            MonState::Synchronizing => "synchronizing",
+            MonState::Electing => "electing",
+            MonState::Leader => "leader",
+            MonState::Peon => "peon",
+            MonState::Shutdown => "shutdown",
         }
     }
 }
 
 impl fmt::Display for RoundStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &RoundStatus::Finished => write!(f, "finished"),
-            &RoundStatus::OnGoing => write!(f, "on-going"),
+        match *self {
+            RoundStatus::Finished => write!(f, "finished"),
+            RoundStatus::OnGoing => write!(f, "on-going"),
         }
     }
 }
 
 impl AsRef<str> for RoundStatus {
     fn as_ref(&self) -> &str {
-        match self {
-            &RoundStatus::Finished => "finished",
-            &RoundStatus::OnGoing => "on-going",
+        match *self {
+            RoundStatus::Finished => "finished",
+            RoundStatus::OnGoing => "on-going",
         }
     }
 }
@@ -564,6 +564,75 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result)?;
     Ok(serde_json::from_str(&return_data)?)
+}
+
+/// Check with the monitor whether a given key exists
+pub fn get_config_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool> {
+    let cmd = json!({
+        "prefix": "config-key exists",
+        "key": key,
+        "format": "json"
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(val) => Ok(bool::from_str(val)?),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse config-key exists output: {:?}",
+            return_data,
+        ))),
+    }
+}
+
+/// Ask the monitor for the value of the configuration key
+pub fn get_config_key(cluster_handle: &Rados, key: &str) -> RadosResult<String> {
+    let cmd = json!({
+        "prefix": "config-key",
+        "key": key,
+        "format": "json"
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(val) => Ok(val.to_string()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse config-key get output: {:?}",
+            return_data,
+        ))),
+    }
+}
+
+/// Remove a given configuration key from the monitor cluster
+pub fn get_config_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "config-key rm",
+        "key": key,
+        "format": "json"
+    });
+
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
+}
+
+/// Set a given configuration key in the monitor cluster
+pub fn get_config_set(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "config-key set",
+        "key": key,
+        "val": value,
+        "format": "json"
+    });
+
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
 }
 
 pub fn osd_out(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
@@ -590,7 +659,7 @@ pub fn osd_crush_remove(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> 
 }
 
 /// Query a ceph pool.
-pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> RadosResult<String> {
+pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: PoolOption) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "osd pool get",
         "pool": pool,
@@ -612,7 +681,7 @@ pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> 
 pub fn osd_pool_set(
     cluster_handle: &Rados,
     pool: &str,
-    key: &PoolOption,
+    key: PoolOption,
     value: &str,
     simulate: bool,
 ) -> RadosResult<()> {
@@ -628,17 +697,18 @@ pub fn osd_pool_set(
     Ok(())
 }
 
-pub fn osd_set(cluster_handle: &Rados, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
-    let cmd = match force {
-        true => json!({
-                "prefix": "osd set",
-                "key": key,
-                "sure": "--yes-i-really-mean-it",
-            }),
-        false => json!({
-                "prefix": "osd set",
-                "key": key,
-            }),
+pub fn osd_set(cluster_handle: &Rados, key: OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
+    let cmd = if force {
+        json!({
+            "prefix": "osd set",
+            "key": key,
+            "sure": "--yes-i-really-mean-it",
+        })
+    } else {
+        json!({
+            "prefix": "osd set",
+            "key": key,
+        })
     };
     if !simulate {
         cluster_handle.ceph_mon_command_without_data(&cmd)?;
@@ -646,7 +716,7 @@ pub fn osd_set(cluster_handle: &Rados, key: &OsdOption, force: bool, simulate: b
     Ok(())
 }
 
-pub fn osd_unset(cluster_handle: &Rados, key: &OsdOption, simulate: bool) -> RadosResult<()> {
+pub fn osd_unset(cluster_handle: &Rados, key: OsdOption, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd unset",
         "key": key,
@@ -789,12 +859,12 @@ pub fn osd_rm(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResul
 pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> RadosResult<u64> {
     let cmd = match id {
         Some(osd_id) => json!({
-                "prefix": "osd create",
-                "id": format!("osd.{}", osd_id),
-            }),
+            "prefix": "osd create",
+            "id": format!("osd.{}", osd_id),
+        }),
         None => json!({
-                "prefix": "osd create"
-            }),
+            "prefix": "osd create"
+        }),
     };
 
     if simulate {
@@ -927,16 +997,17 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 
 /// Enable a mgr module
 pub fn mgr_enable_module(cluster_handle: &Rados, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
-    let cmd = match force {
-        true => json!({
-                    "prefix": "mgr module enable",
-                    "module": module,
-                    "force": "--force",
-                }),
-        false => json!({
-                    "prefix": "mgr module enable",
-                    "module": module,
-                }),
+    let cmd = if force {
+        json!({
+            "prefix": "mgr module enable",
+            "module": module,
+            "force": "--force",
+        })
+    } else {
+        json!({
+            "prefix": "mgr module enable",
+            "module": module,
+        })
     };
 
     if !simulate {

@@ -17,13 +17,13 @@
 extern crate ceph;
 extern crate libc;
 
-use ceph::JsonData;
 #[cfg(target_os = "linux")]
 use ceph::admin_sockets::*;
 #[cfg(target_os = "linux")]
 use ceph::ceph as ceph_helpers;
 #[cfg(target_os = "linux")]
 use ceph::rados;
+use ceph::JsonData;
 
 #[cfg(not(target_os = "linux"))]
 fn main() {}
@@ -42,10 +42,10 @@ fn main() {
     match admin_socket_command("help", "/var/run/ceph/ceph-mon.ip-172-31-31-247.asok") {
         Ok(json) => {
             println!("{}", json);
-        },
+        }
         Err(e) => {
             println!("{}", e);
-        },
+        }
     }
 
     let rados_version = ceph_helpers::rados_libversion();
@@ -88,22 +88,24 @@ fn main() {
         Ok((outbuf, outs)) => {
             match outbuf {
                 Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
-                None => {},
+                None => {}
             }
             match outs {
                 Some(output) => println!("Ceph mon command (outs):\n{}", output),
-                None => {},
+                None => {}
             }
-        },
+        }
         Err(e) => {
             println!("{:?}", e);
-        },
+        }
     }
 
     // This command encapsulates the lower level mon, osd, pg commands and returns JsonData
     // objects based on the key path
-    println!("{:?}",
-             cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+    println!(
+        "{:?}",
+        cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"])
+    );
 
     // Get a list of Ceph librados commands in JSON format.
     // It's very long so it's commented out.
@@ -129,14 +131,16 @@ fn main() {
         Ok((outbuf, outs)) => {
             match outbuf {
                 Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
-                None => {},
+                None => {}
             }
             match outs {
                 Some(output) => println!("Ceph mon command (outs):\n{}", output),
-                None => {},
+                None => {}
             }
-        },
-        Err(e) => {println!("{:?}", e);},
+        }
+        Err(e) => {
+            println!("{:?}", e);
+        }
     }
 
     // Print CephHealth of cluster
@@ -146,7 +150,10 @@ fn main() {
     println!("{}", cluster.ceph_status(&["health", "overall_status"]).unwrap());
 
     // This command encapsulates the lower level mon, osd, pg commands and returns JsonData objects based on the key path
-    println!("{:?}", cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"]));
+    println!(
+        "{:?}",
+        cluster.ceph_command("prefix", "status", ceph_helpers::CephCommandTypes::Mon, &["health"])
+    );
 
     // Get a list of Ceph librados commands in JSON format.
     // It's very long so it's commented out.

@@ -40,11 +40,11 @@ pub fn admin_socket_raw_command(cmd: &str, socket: &str) -> RadosResult<String> 
     let mut buffer = vec![0; 4]; // Should return 4 bytes with size or indicator.
     let cmd = &format!("{}\0", cmd); // Terminator so don't add one to commands.
 
-    let mut stream = try!(UnixStream::connect(socket));
-    let wb = try!(stream.write(cmd.as_bytes()));
-    let ret_val = try!(stream.read(&mut buffer));
+    let mut stream = UnixStream::connect(socket)?;
+    let wb = stream.write(cmd.as_bytes())?;
+    let ret_val = stream.read(&mut buffer)?;
     if ret_val < 4 {
-        try!(stream.shutdown(Shutdown::Both));
+        stream.shutdown(Shutdown::Both)?;
         return Err(RadosError::new(
             "Admin socket: Invalid command or socket did not return any data".to_string(),
         ));

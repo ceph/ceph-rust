@@ -16,3 +16,4 @@ wrap_comments = true
 
 report_todo = "Always"
 report_fixme = "Always"
+use_try_shorthand = true
