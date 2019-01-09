@@ -567,7 +567,7 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
 }
 
 /// Check with the monitor whether a given key exists
-pub fn get_config_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool> {
+pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool> {
     let cmd = json!({
         "prefix": "config-key exists",
         "key": key,
@@ -607,7 +607,7 @@ pub fn get_config_key(cluster_handle: &Rados, key: &str) -> RadosResult<String> 
 }
 
 /// Remove a given configuration key from the monitor cluster
-pub fn get_config_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
+pub fn remove_config(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "config-key rm",
         "key": key,
@@ -621,7 +621,7 @@ pub fn get_config_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> R
 }
 
 /// Set a given configuration key in the monitor cluster
-pub fn get_config_set(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
+pub fn set_config(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "config-key set",
         "key": key,
