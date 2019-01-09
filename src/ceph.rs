@@ -292,17 +292,11 @@ impl Iterator for XAttr {
 
     fn next(&mut self) -> Option<Self::Item> {
         // max xattr name is 255 bytes from what I can find
-        let mut name_buffer: Vec<u8> = Vec::with_capacity(255);
-        // max xattr is 64Kb from what I can find
-        let mut value_buffer: Vec<u8> = Vec::with_capacity(64 * 1024);
+        let mut name: *const c_char = ptr::null();
+        let mut value: *const c_char = ptr::null();
         let mut val_length: usize = 0;
         unsafe {
-            let ret_code = rados_getxattrs_next(
-                self.iter,
-                name_buffer.as_mut_ptr() as *mut *const c_char,
-                value_buffer.as_mut_ptr() as *mut *const c_char,
-                &mut val_length,
-            );
+            let ret_code = rados_getxattrs_next(self.iter, &mut name, &mut value, &mut val_length);
 
             if ret_code < 0 {
                 // Something failed, however Iterator doesn't return Result so we return None
@@ -313,9 +307,11 @@ impl Iterator for XAttr {
                 rados_getxattrs_end(self.iter);
                 None
             } else {
+                let name = CStr::from_ptr(name);
+                let value = CStr::from_ptr(value);
                 Some(XAttr {
-                    name: String::from_utf8_lossy(&name_buffer).into_owned(),
-                    value: String::from_utf8_lossy(&value_buffer).into_owned(),
+                    name: name.to_string_lossy().into_owned(),
+                    value: value.to_string_lossy().into_owned(),
                     iter: self.iter,
                 })
             }
@@ -1705,19 +1701,19 @@ impl Rados {
         let mon_id_str = try!(CString::new(mon_id));
         let out_buffer: Vec<u8> = Vec::with_capacity(500);
         let out_buff_size = out_buffer.capacity();
-        let out_str = try!(CString::new(out_buffer));
+        let mut out_str: *mut c_char = ptr::null_mut();
         unsafe {
             let ret_code = rados_ping_monitor(
                 self.rados,
                 mon_id_str.as_ptr(),
-                out_str.as_ptr() as *mut *mut c_char,
+                &mut out_str,
                 out_buff_size as *mut usize,
             );
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
+            Ok(CStr::from_ptr(out_str).to_string_lossy().into_owned())
         }
-        Ok(out_str.to_string_lossy().into_owned())
     }
 }
 
