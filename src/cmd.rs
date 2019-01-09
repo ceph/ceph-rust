@@ -566,6 +566,75 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
     Ok(serde_json::from_str(&return_data)?)
 }
 
+/// Check with the monitor whether a given key exists
+pub fn get_config_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool> {
+    let cmd = json!({
+        "prefix": "config-key exists",
+        "key": key,
+        "format": "json"
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(val) => Ok(bool::from_str(val)?),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse config-key exists output: {:?}",
+            return_data,
+        ))),
+    }
+}
+
+/// Ask the monitor for the value of the configuration key
+pub fn get_config_key(cluster_handle: &Rados, key: &str) -> RadosResult<String> {
+    let cmd = json!({
+        "prefix": "config-key",
+        "key": key,
+        "format": "json"
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result)?;
+    let mut l = return_data.lines();
+    match l.next() {
+        Some(val) => Ok(val.to_string()),
+        None => Err(RadosError::Error(format!(
+            "Unable to parse config-key get output: {:?}",
+            return_data,
+        ))),
+    }
+}
+
+/// Remove a given configuration key from the monitor cluster
+pub fn get_config_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "config-key rm",
+        "key": key,
+        "format": "json"
+    });
+
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
+}
+
+/// Set a given configuration key in the monitor cluster
+pub fn get_config_set(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "config-key set",
+        "key": key,
+        "val": value,
+        "format": "json"
+    });
+
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
+}
+
 pub fn osd_out(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd out",
@@ -631,14 +700,14 @@ pub fn osd_pool_set(
 pub fn osd_set(cluster_handle: &Rados, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => json!({
-                "prefix": "osd set",
-                "key": key,
-                "sure": "--yes-i-really-mean-it",
-            }),
+            "prefix": "osd set",
+            "key": key,
+            "sure": "--yes-i-really-mean-it",
+        }),
         false => json!({
-                "prefix": "osd set",
-                "key": key,
-            }),
+            "prefix": "osd set",
+            "key": key,
+        }),
     };
     if !simulate {
         cluster_handle.ceph_mon_command_without_data(&cmd)?;
@@ -789,12 +858,12 @@ pub fn osd_rm(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> RadosResul
 pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> RadosResult<u64> {
     let cmd = match id {
         Some(osd_id) => json!({
-                "prefix": "osd create",
-                "id": format!("osd.{}", osd_id),
-            }),
+            "prefix": "osd create",
+            "id": format!("osd.{}", osd_id),
+        }),
         None => json!({
-                "prefix": "osd create"
-            }),
+            "prefix": "osd create"
+        }),
     };
 
     if simulate {
@@ -929,14 +998,14 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 pub fn mgr_enable_module(cluster_handle: &Rados, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
     let cmd = match force {
         true => json!({
-                    "prefix": "mgr module enable",
-                    "module": module,
-                    "force": "--force",
-                }),
+            "prefix": "mgr module enable",
+            "module": module,
+            "force": "--force",
+        }),
         false => json!({
-                    "prefix": "mgr module enable",
-                    "module": module,
-                }),
+            "prefix": "mgr module enable",
+            "module": module,
+        }),
     };
 
     if !simulate {
