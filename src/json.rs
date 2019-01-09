@@ -33,7 +33,7 @@ pub fn json_data(json_str: &str) -> Option<JsonData> {
 /// parent object is None then it only looks for the 'child' object. The parent
 /// object is used for situations where there may be 'child' objects with the
 /// same name.
-pub fn json_find(json_data: JsonData, keys: &[&str]) -> Option<JsonData> {
+pub fn json_find(json_data: &JsonData, keys: &[&str]) -> Option<JsonData> {
     json_data.find_path(keys).cloned()
 }
 

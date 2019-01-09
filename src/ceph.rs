@@ -50,7 +50,7 @@ pub enum CephHealth {
     Error,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum CephCommandTypes {
     Mon,
     Osd,
@@ -68,38 +68,49 @@ pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
 named!(
     parse_header<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_HDR) >> data_len: le_u32 >> data: take!(data_len) >> (TmapOperation::Header {
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_HDR)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Header { data: data.to_vec() })
     )
 );
 
 named!(
     parse_create<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_CREATE) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Create {
-            name: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_CREATE)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Create {
+                name: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_set<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_SET) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Set {
-            key: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_SET)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Set {
+                key: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_remove<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_RM) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len)
+        char!(CEPH_OSD_TMAP_RM)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
             >> (TmapOperation::Remove {
                 name: key_name.to_string(),
             })
@@ -194,11 +205,11 @@ impl Iterator for Pool {
                     namespace.push_str(&CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy());
                 }
 
-                return Some(CephObject {
+                Some(CephObject {
                     name: object_name.to_string_lossy().into_owned(),
                     entry_locator: object_locator,
-                    namespace: namespace,
-                });
+                    namespace,
+                })
             }
         }
     }
@@ -271,7 +282,7 @@ impl XAttr {
         XAttr {
             name: String::new(),
             value: String::new(),
-            iter: iter,
+            iter,
         }
     }
 }
@@ -333,7 +344,7 @@ pub struct Rados {
     phantom: PhantomData<IoCtx>,
 }
 
-unsafe impl Sync for Rados{}
+unsafe impl Sync for Rados {}
 
 impl Drop for Rados {
     fn drop(&mut self) {
@@ -346,7 +357,7 @@ impl Drop for Rados {
 }
 
 /// Connect to a Ceph cluster and return a connection handle rados_t
-pub fn connect_to_ceph<'a>(user_id: &str, config_file: &str) -> RadosResult<Rados> {
+pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
     let connect_id = try!(CString::new(user_id));
     let conf_file = try!(CString::new(config_file));
     unsafe {
@@ -451,7 +462,7 @@ impl Rados {
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
-            Ok(IoCtx { ioctx: ioctx })
+            Ok(IoCtx { ioctx })
         }
     }
 
@@ -466,7 +477,7 @@ impl Rados {
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
-            Ok(IoCtx { ioctx: ioctx })
+            Ok(IoCtx { ioctx })
         }
     }
 }
@@ -520,7 +531,7 @@ impl IoCtx {
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
-            return Ok(());
+            Ok(())
         }
     }
 
@@ -532,7 +543,7 @@ impl IoCtx {
             if ret_code < 0 {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
-            return Ok(auid);
+            Ok(auid)
         }
     }
 
@@ -545,9 +556,9 @@ impl IoCtx {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
             if ret_code == 0 {
-                return Ok(false);
+                Ok(false)
             } else {
-                return Ok(true);
+                Ok(true)
             }
         }
     }
@@ -557,7 +568,7 @@ impl IoCtx {
         self.ioctx_guard()?;
         unsafe {
             let ret_code = rados_ioctx_pool_required_alignment(self.ioctx);
-            return Ok(ret_code);
+            Ok(ret_code)
         }
     }
 
@@ -594,12 +605,12 @@ impl IoCtx {
                 if ret_code < 0 {
                     return Err(RadosError::new(try!(get_error(ret_code as i32))));
                 }
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             } else if ret_code < 0 {
-                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+                Err(RadosError::new(try!(get_error(ret_code as i32))))
             } else {
                 buffer.set_len(ret_code as usize);
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             }
         }
     }
@@ -1099,7 +1110,7 @@ impl IoCtx {
     }
 
     /// Update tmap (trivial map)
-    pub fn rados_object_tmap_update(&self, object_name: &str, update: TmapOperation) -> RadosResult<()> {
+    pub fn rados_object_tmap_update(&self, object_name: &str, update: &TmapOperation) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = try!(CString::new(object_name));
         let buffer = try!(update.serialize());
@@ -1292,7 +1303,7 @@ impl IoCtx {
     }
 
     // Perform a compound read operation synchronously
-    pub fn rados_perform_read_operations(&self, read_op: ReadOperation) -> RadosResult<()> {
+    pub fn rados_perform_read_operations(&self, read_op: &ReadOperation) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = try!(CString::new(read_op.object_name.clone()));
 
@@ -1538,11 +1549,9 @@ impl Rados {
         loop {
             let mut string_buf: Vec<u8> = Vec::new();
             let read = try!(cursor.read_until(0x00, &mut string_buf));
-            if read == 0 {
-                // End of the pool_buffer;
-                break;
-            } else if read == 1 {
-                // Read a double \0.  Time to break
+            if read == 0 || read == 1 {
+                // 0 == End of the pool_buffer;
+                // 1 == Read a double \0.  Time to break
                 break;
             } else {
                 // Read a String
@@ -1565,7 +1574,7 @@ impl Rados {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
         }
-        return Ok(());
+        Ok(())
     }
     /// Delete a pool and all data inside it
     /// The pool is removed from the cluster immediately, but the actual data is
@@ -1580,7 +1589,7 @@ impl Rados {
                 return Err(RadosError::new(try!(get_error(ret_code))));
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     /// Lookup a Ceph pool id.  If the pool doesn't exist it will return
@@ -1591,11 +1600,11 @@ impl Rados {
         unsafe {
             let ret_code: i64 = rados_pool_lookup(self.rados, pool_name_str.as_ptr());
             if ret_code >= 0 {
-                return Ok(Some(ret_code));
+                Ok(Some(ret_code))
             } else if ret_code as i32 == -ENOENT {
-                return Ok(None);
+                Ok(None)
             } else {
-                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+                Err(RadosError::new(try!(get_error(ret_code as i32))))
             }
         }
     }
@@ -1624,11 +1633,11 @@ impl Rados {
                 if ret_code < 0 {
                     return Err(RadosError::new(try!(get_error(ret_code as i32))));
                 }
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             } else if ret_code < 0 {
-                return Err(RadosError::new(try!(get_error(ret_code as i32))));
+                Err(RadosError::new(try!(get_error(ret_code as i32))))
             } else {
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             }
         }
     }
@@ -1642,11 +1651,7 @@ pub fn rados_libversion() -> RadosVersion {
     unsafe {
         rados_version(&mut major, &mut minor, &mut extra);
     }
-    return RadosVersion {
-        major: major,
-        minor: minor,
-        extra: extra,
-    };
+    RadosVersion { major, minor, extra }
 }
 
 impl Rados {
@@ -1666,7 +1671,7 @@ impl Rados {
             }
         }
 
-        return Ok(cluster_stat);
+        Ok(cluster_stat)
     }
 
     pub fn rados_fsid(&self) -> RadosResult<Uuid> {
@@ -1725,7 +1730,7 @@ pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
     admin_socket_command(&cmd, socket).ok().and_then(|json| {
-        json_data(&json).and_then(|jsondata| json_find(jsondata, &[cmd]).and_then(|data| Some(json_as_string(&data))))
+        json_data(&json).and_then(|jsondata| json_find(&jsondata, &[cmd]).and_then(|data| Some(json_as_string(&data))))
     })
 }
 
@@ -1754,7 +1759,7 @@ impl Rados {
             Ok((json, _)) => match json {
                 Some(json) => match json_data(&json) {
                     Some(jsondata) => {
-                        let data = json_find(jsondata, keys);
+                        let data = json_find(&jsondata, keys);
                         if data.is_some() {
                             Ok(json_as_string(&data.unwrap()))
                         } else {
@@ -1816,7 +1821,7 @@ impl Rados {
                 Ok((json, _)) => match json {
                     Some(json) => match json_data(&json) {
                         Some(jsondata) => {
-                            let data = json_find(jsondata, keys);
+                            let data = json_find(&jsondata, keys);
                             if data.is_some() {
                                 Ok(data.unwrap())
                             } else {
@@ -1842,7 +1847,7 @@ impl Rados {
                 Some(json) => match json_data(&json) {
                     Some(jsondata) => {
                         if keys.is_some() {
-                            let data = json_find(jsondata, keys.unwrap());
+                            let data = json_find(&jsondata, keys.unwrap());
                             if data.is_some() {
                                 Ok(data.unwrap())
                             } else {
@@ -1870,13 +1875,10 @@ impl Rados {
         format: Option<&str>,
     ) -> RadosResult<(Option<String>, Option<String>)> {
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
-        self.ceph_mon_command_with_data(name, value, format, data)
+        self.ceph_mon_command_with_data(name, value, format, &data)
     }
 
-    pub fn ceph_mon_command_without_data(
-        &self,
-        cmd: &serde_json::Value,
-    ) -> RadosResult<Vec<u8>> {
+    pub fn ceph_mon_command_without_data(&self, cmd: &serde_json::Value) -> RadosResult<Vec<u8>> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
@@ -1937,7 +1939,7 @@ impl Rados {
         name: &str,
         value: &str,
         format: Option<&str>,
-        data: Vec<*mut c_char>,
+        data: &[*mut c_char],
     ) -> RadosResult<(Option<String>, Option<String>)> {
         self.conn_guard()?;
 
@@ -2015,7 +2017,7 @@ impl Rados {
         format: Option<&str>,
     ) -> RadosResult<(Option<String>, Option<String>)> {
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
-        self.ceph_osd_command_with_data(id, name, value, format, data)
+        self.ceph_osd_command_with_data(id, name, value, format, &data)
     }
 
     /// OSD command that does pass in a data payload.
@@ -2025,7 +2027,7 @@ impl Rados {
         name: &str,
         value: &str,
         format: Option<&str>,
-        data: Vec<*mut c_char>,
+        data: &[*mut c_char],
     ) -> RadosResult<(Option<String>, Option<String>)> {
         self.conn_guard()?;
 
@@ -2102,7 +2104,7 @@ impl Rados {
         format: Option<&str>,
     ) -> RadosResult<(Option<String>, Option<String>)> {
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
-        self.ceph_pgs_command_with_data(pg, name, value, format, data)
+        self.ceph_pgs_command_with_data(pg, name, value, format, &data)
     }
 
     /// PG command that does pass in a data payload.
@@ -2112,7 +2114,7 @@ impl Rados {
         name: &str,
         value: &str,
         format: Option<&str>,
-        data: Vec<*mut c_char>,
+        data: &[*mut c_char],
     ) -> RadosResult<(Option<String>, Option<String>)> {
         self.conn_guard()?;
 

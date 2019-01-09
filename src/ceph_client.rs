@@ -45,17 +45,17 @@ impl CephClient {
     pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
         let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
             Ok(rados_t) => rados_t,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         };
         let version: CephVersion = match cmd::version(&rados_t)?.parse() {
             Ok(v) => v,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         };
 
         Ok(CephClient {
-            rados_t: rados_t,
+            rados_t,
             simulate: false,
-            version: version,
+            version,
         })
     }
 
@@ -69,7 +69,7 @@ impl CephClient {
         let cmd = MonCommand::new().with_prefix("osd out").with("ids", &osd_id);
 
         if !self.simulate {
-            self.run_command(cmd)?;
+            self.run_command(&cmd)?;
         }
         Ok(())
     }
@@ -78,18 +78,18 @@ impl CephClient {
         let osd_id = format!("osd.{}", osd_id);
         let cmd = MonCommand::new().with_prefix("osd crush remove").with_name(&osd_id);
         if !self.simulate {
-            self.run_command(cmd)?;
+            self.run_command(&cmd)?;
         }
         Ok(())
     }
 
     /// Query a ceph pool.
-    pub fn osd_pool_get(&self, pool: &str, choice: &PoolOption) -> Result<String, RadosError> {
+    pub fn osd_pool_get(&self, pool: &str, choice: PoolOption) -> Result<String, RadosError> {
         let cmd = MonCommand::new()
             .with_prefix("osd pool get")
             .with("pool", pool)
             .with("var", choice.as_ref());
-        if let Ok(result) = self.run_command(cmd) {
+        if let Ok(result) = self.run_command(&cmd) {
             let mut l = result.lines();
             match l.next() {
                 Some(res) => return Ok(res.into()),
@@ -112,7 +112,7 @@ impl CephClient {
             .with("var", key)
             .with("value", value);
         if !self.simulate {
-            self.run_command(cmd)?;
+            self.run_command(&cmd)?;
         }
         Ok(())
     }
@@ -141,7 +141,7 @@ impl CephClient {
             c
         };
         if !self.simulate {
-            self.run_command(cmd)?;
+            self.run_command(&cmd)?;
         }
         Ok(())
     }
@@ -161,20 +161,20 @@ impl CephClient {
     /// # }
     /// ```
     pub fn osd_unset(&self, key: OsdOption) -> Result<(), RadosError> {
-        cmd::osd_unset(&self.rados_t, &key, self.simulate).map_err(|a| a.into())
+        cmd::osd_unset(&self.rados_t, key, self.simulate).map_err(|a| a)
     }
 
     pub fn osd_tree(&self) -> Result<cmd::CrushTree, RadosError> {
-        cmd::osd_tree(&self.rados_t).map_err(|a| a.into())
+        cmd::osd_tree(&self.rados_t).map_err(|a| a)
     }
 
     /// Get cluster status
     pub fn status(&self) -> Result<String, RadosError> {
         let cmd = MonCommand::new().with_prefix("status").with_format("json");
-        let return_data = self.run_command(cmd)?;
+        let return_data = self.run_command(&cmd)?;
         let mut l = return_data.lines();
         match l.next() {
-            Some(res) => return Ok(res.into()),
+            Some(res) => Ok(res.into()),
             None => Err(RadosError::Error("No response from ceph for status".into())),
         }
     }
@@ -199,11 +199,13 @@ impl CephClient {
     }
 
     pub fn auth_del(&self, osd_id: u64) -> Result<(), RadosError> {
-        Ok(cmd::auth_del(&self.rados_t, osd_id, self.simulate)?)
+        cmd::auth_del(&self.rados_t, osd_id, self.simulate)?;
+        Ok(())
     }
 
     pub fn osd_rm(&self, osd_id: u64) -> Result<(), RadosError> {
-        Ok(cmd::osd_rm(&self.rados_t, osd_id, self.simulate)?)
+        cmd::osd_rm(&self.rados_t, osd_id, self.simulate)?;
+        Ok(())
     }
 
     pub fn osd_create(&self, id: Option<u64>) -> Result<u64, RadosError> {
@@ -212,12 +214,14 @@ impl CephClient {
 
     // Add a new mgr to the cluster
     pub fn mgr_auth_add(&self, mgr_id: &str) -> Result<(), RadosError> {
-        Ok(cmd::mgr_auth_add(&self.rados_t, mgr_id, self.simulate)?)
+        cmd::mgr_auth_add(&self.rados_t, mgr_id, self.simulate)?;
+        Ok(())
     }
 
     // Add a new osd to the cluster
     pub fn osd_auth_add(&self, osd_id: u64) -> Result<(), RadosError> {
-        Ok(cmd::osd_auth_add(&self.rados_t, osd_id, self.simulate)?)
+        cmd::osd_auth_add(&self.rados_t, osd_id, self.simulate)?;
+        Ok(())
     }
 
     /// Get a ceph-x key.  The id parameter can be either a number or a string
@@ -229,7 +233,8 @@ impl CephClient {
     // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
     /// add or update crushmap position and weight for an osd
     pub fn osd_crush_add(&self, osd_id: u64, weight: f64, host: &str) -> Result<(), RadosError> {
-        Ok(cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)?)
+        cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)?;
+        Ok(())
     }
 
     // Luminous + only
@@ -241,7 +246,8 @@ impl CephClient {
 
     pub fn mgr_fail(&self, mgr_id: &str) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        Ok(cmd::mgr_fail(&self.rados_t, mgr_id, self.simulate)?)
+        cmd::mgr_fail(&self.rados_t, mgr_id, self.simulate)?;
+        Ok(())
     }
 
     pub fn mgr_list_modules(&self) -> Result<Vec<String>, RadosError> {
@@ -256,12 +262,14 @@ impl CephClient {
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        Ok(cmd::mgr_enable_module(&self.rados_t, module, force, self.simulate)?)
+        cmd::mgr_enable_module(&self.rados_t, module, force, self.simulate)?;
+        Ok(())
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        Ok(cmd::mgr_disable_module(&self.rados_t, module, self.simulate)?)
+        cmd::mgr_disable_module(&self.rados_t, module, self.simulate)?;
+        Ok(())
     }
 
     pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata, RadosError> {
@@ -279,7 +287,7 @@ impl CephClient {
         Ok(cmd::mgr_versions(&self.rados_t)?)
     }
 
-    pub fn run_command(&self, command: MonCommand) -> Result<String, RadosError> {
+    pub fn run_command(&self, command: &MonCommand) -> Result<String, RadosError> {
         let cmd = command.as_json();
         let data: Vec<*mut c_char> = Vec::with_capacity(1);
 
