@@ -562,7 +562,7 @@ pub fn cluster_health(cluster_handle: &Rados) -> RadosResult<ClusterHealth> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -571,31 +571,54 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
     let cmd = json!({
         "prefix": "config-key exists",
         "key": key,
-        "format": "json"
     });
 
-    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
-    let mut l = return_data.lines();
-    match l.next() {
-        Some(val) => Ok(bool::from_str(val)?),
+    let result = match cluster_handle.ceph_mon_command_without_data(&cmd) {
+        Ok(data) => data,
+        Err(e) => {
+            match e {
+                RadosError::Error(e) => {
+                    // Ceph returns ENOENT here but RadosError masks that
+                    // by turning it into a string first
+                    if e.contains("doesn't exist") {
+                        return Ok(false);
+                    } else {
+                        return Err(RadosError::Error(e));
+                    }
+                }
+                _ => return Err(e),
+            }
+        }
+    };
+    // I don't know why but config-key exists uses the status message
+    // and not the regular output buffer
+    match result.1 {
+        Some(status) => {
+            if status.contains("exists") {
+                Ok(true)
+            } else {
+                Err(RadosError::Error(format!(
+                    "Unable to parse config-key exists output: {}",
+                    status,
+                )))
+            }
+        }
         None => Err(RadosError::Error(format!(
             "Unable to parse config-key exists output: {:?}",
-            return_data,
+            result.1,
         ))),
     }
 }
 
 /// Ask the monitor for the value of the configuration key
-pub fn get_config_key(cluster_handle: &Rados, key: &str) -> RadosResult<String> {
+pub fn config_key_get(cluster_handle: &Rados, key: &str) -> RadosResult<String> {
     let cmd = json!({
-        "prefix": "config-key",
+        "prefix": "config-key get",
         "key": key,
-        "format": "json"
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(val) => Ok(val.to_string()),
@@ -607,7 +630,7 @@ pub fn get_config_key(cluster_handle: &Rados, key: &str) -> RadosResult<String> 
 }
 
 /// Remove a given configuration key from the monitor cluster
-pub fn remove_config(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
+pub fn config_key_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "config-key rm",
         "key": key,
@@ -621,7 +644,7 @@ pub fn remove_config(cluster_handle: &Rados, key: &str, simulate: bool) -> Rados
 }
 
 /// Set a given configuration key in the monitor cluster
-pub fn set_config(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
+pub fn config_key_set(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "config-key set",
         "key": key,
@@ -666,7 +689,7 @@ pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> 
         "var": choice,
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(res) => Ok(res.into()),
@@ -732,7 +755,7 @@ pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -743,7 +766,7 @@ pub fn status(cluster_handle: &Rados) -> RadosResult<String> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(res) => Ok(res.into()),
@@ -761,7 +784,7 @@ pub fn mon_dump(cluster_handle: &Rados) -> RadosResult<MonDump> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -773,7 +796,7 @@ pub fn mon_getmap(cluster_handle: &Rados, epoch: Option<u64>) -> RadosResult<Vec
         cmd["epoch"] = json!(epoch);
     }
 
-    Ok(cluster_handle.ceph_mon_command_without_data(&cmd)?)
+    Ok(cluster_handle.ceph_mon_command_without_data(&cmd)?.0)
 }
 
 /// Get the mon quorum
@@ -783,7 +806,7 @@ pub fn mon_quorum(cluster_handle: &Rados) -> RadosResult<String> {
         "format": "json"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -793,7 +816,7 @@ pub fn mon_status(cluster_handle: &Rados) -> RadosResult<MonStatus> {
         "prefix": "mon_status",
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -803,7 +826,7 @@ pub fn version(cluster_handle: &Rados) -> RadosResult<String> {
         "prefix": "version",
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(res) => Ok(res.to_string()),
@@ -820,7 +843,7 @@ pub fn osd_pool_quota_get(cluster_handle: &Rados, pool: &str) -> RadosResult<u64
         "pool": pool
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(res) => Ok(u64::from_str(res)?),
@@ -871,7 +894,7 @@ pub fn osd_create(cluster_handle: &Rados, id: Option<u64>, simulate: bool) -> Ra
     }
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(num) => Ok(u64::from_str(num)?),
@@ -919,7 +942,7 @@ pub fn auth_get_key(cluster_handle: &Rados, client_type: &str, id: &str) -> Rado
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     let mut l = return_data.lines();
     match l.next() {
         Some(key) => Ok(key.into()),
@@ -955,7 +978,7 @@ pub fn mgr_dump(cluster_handle: &Rados) -> RadosResult<MgrDump> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -979,7 +1002,7 @@ pub fn mgr_list_modules(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -990,7 +1013,7 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -1034,7 +1057,7 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -1046,7 +1069,7 @@ pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
 
@@ -1057,6 +1080,6 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
-    let return_data = String::from_utf8(result)?;
+    let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
 }
