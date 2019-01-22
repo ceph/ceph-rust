@@ -68,38 +68,49 @@ pub(crate) fn get_error(n: c_int) -> RadosResult<String> {
 named!(
     parse_header<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_HDR) >> data_len: le_u32 >> data: take!(data_len) >> (TmapOperation::Header {
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_HDR)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Header { data: data.to_vec() })
     )
 );
 
 named!(
     parse_create<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_CREATE) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Create {
-            name: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_CREATE)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Create {
+                name: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_set<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_SET) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Set {
-            key: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_SET)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Set {
+                key: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_remove<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_RM) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len)
+        char!(CEPH_OSD_TMAP_RM)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
             >> (TmapOperation::Remove {
                 name: key_name.to_string(),
             })
@@ -333,7 +344,7 @@ pub struct Rados {
     phantom: PhantomData<IoCtx>,
 }
 
-unsafe impl Sync for Rados{}
+unsafe impl Sync for Rados {}
 
 impl Drop for Rados {
     fn drop(&mut self) {
@@ -469,6 +480,29 @@ impl Rados {
             Ok(IoCtx { ioctx: ioctx })
         }
     }
+}
+
+impl ReadOperation {
+    /// Create a new ReadOperation. This will store all actions to be
+    /// performed atomically.
+    pub fn new(object_name: &str, flags: u32) -> RadosResult<ReadOperation> {
+        unsafe {
+            let ret = rados_create_read_op();
+            if !ret.is_null() {
+                Ok(ReadOperation {
+                    object_name: object_name.to_string(),
+                    flags,
+                    read_op_handle: ret,
+                })
+            } else {
+                // Memory allocation error
+                Err(RadosError::Error(
+                    "Can't allocate memory for rados_create_read_operation".into(),
+                ))
+            }
+        }
+    }
+    // TODO: Add all the other rados_read_op_xxx functions
 }
 
 impl IoCtx {
@@ -1873,10 +1907,7 @@ impl Rados {
         self.ceph_mon_command_with_data(name, value, format, data)
     }
 
-    pub fn ceph_mon_command_without_data(
-        &self,
-        cmd: &serde_json::Value,
-    ) -> RadosResult<(Vec<u8>, Option<String>)> {
+    pub fn ceph_mon_command_without_data(&self, cmd: &serde_json::Value) -> RadosResult<(Vec<u8>, Option<String>)> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
