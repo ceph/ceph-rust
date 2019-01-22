@@ -20,7 +20,7 @@ use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
-use std::{fmt, str};
+use std::{fmt, str::ParseBoolError};
 use uuid::parser::ParseError;
 
 /// Custom error handling for the library
@@ -32,6 +32,7 @@ pub enum RadosError {
     IoError(Error),
     IntoStringError(IntoStringError),
     ParseIntError(ParseIntError),
+    ParseBoolError(ParseBoolError),
     ParseError(ParseError),
     SerdeError(SerdeJsonError),
     /// This should be the minimum version and the current version
@@ -43,37 +44,18 @@ pub type RadosResult<T> = Result<T, RadosError>;
 
 impl fmt::Display for RadosError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for RadosError {
-    fn description(&self) -> &str {
         match *self {
-            RadosError::FromUtf8Error(ref e) => e.description(),
-            RadosError::NulError(ref e) => e.description(),
-            RadosError::Error(ref e) => &e,
-            RadosError::IoError(ref e) => e.description(),
-            RadosError::IntoStringError(ref e) => e.description(),
-            RadosError::ParseError(ref e) => e.description(),
-            RadosError::ParseIntError(ref e) => e.description(),
-            RadosError::SerdeError(ref e) => e.description(),
-            RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
-            RadosError::Parse(ref _input) => "An error occurred during parsing",
-        }
-    }
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.cause(),
-            RadosError::NulError(ref e) => e.cause(),
-            RadosError::Error(_) => None,
-            RadosError::IoError(ref e) => e.cause(),
-            RadosError::IntoStringError(ref e) => e.cause(),
-            RadosError::ParseError(ref e) => e.cause(),
-            RadosError::ParseIntError(ref e) => e.cause(),
-            RadosError::SerdeError(ref e) => e.cause(),
-            RadosError::MinVersion(ref _min, ref _current_version) => None,
-            RadosError::Parse(ref _input) => None,
+            RadosError::FromUtf8Error(ref e) => f.write_str(e.description()),
+            RadosError::NulError(ref e) => f.write_str(e.description()),
+            RadosError::Error(ref e) => f.write_str(&e),
+            RadosError::IoError(ref e) => f.write_str(e.description()),
+            RadosError::IntoStringError(ref e) => f.write_str(e.description()),
+            RadosError::ParseError(ref e) => f.write_str(e.description()),
+            RadosError::ParseBoolError(ref e) => f.write_str(e.description()),
+            RadosError::ParseIntError(ref e) => f.write_str(e.description()),
+            RadosError::SerdeError(ref e) => f.write_str(e.description()),
+            RadosError::MinVersion(ref _min, ref _current_version) => f.write_str("Ceph version is too low"),
+            RadosError::Parse(ref _input) => f.write_str("An error occurred during parsing"),
         }
     }
 }
@@ -83,29 +65,17 @@ impl RadosError {
     pub fn new(err: String) -> RadosError {
         RadosError::Error(err)
     }
-
-    /// Convert a RadosError into a String representation.
-    pub fn to_string(&self) -> String {
-        match *self {
-            RadosError::FromUtf8Error(ref err) => err.utf8_error().to_string(),
-            RadosError::NulError(ref err) => err.description().to_string(),
-            RadosError::Error(ref err) => err.to_string(),
-            RadosError::IoError(ref err) => err.description().to_string(),
-            RadosError::IntoStringError(ref err) => err.description().to_string(),
-            RadosError::ParseError(_) => "Uuid parse error".to_string(),
-            RadosError::ParseIntError(ref err) => err.description().to_string(),
-            RadosError::SerdeError(ref err) => err.description().to_string(),
-            RadosError::MinVersion(ref min, ref current_version) => {
-                format!("{:?} minimum, your version is {:?}", min, current_version)
-            }
-            RadosError::Parse(ref input) => format!("Couldn't parse the CephVersion from {}", input),
-        }
-    }
 }
 
 impl From<ParseError> for RadosError {
     fn from(err: ParseError) -> RadosError {
         RadosError::ParseError(err)
+    }
+}
+
+impl From<ParseBoolError> for RadosError {
+    fn from(err: ParseBoolError) -> RadosError {
+        RadosError::ParseBoolError(err)
     }
 }
 

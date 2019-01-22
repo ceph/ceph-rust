@@ -1876,7 +1876,7 @@ impl Rados {
     pub fn ceph_mon_command_without_data(
         &self,
         cmd: &serde_json::Value,
-    ) -> RadosResult<Vec<u8>> {
+    ) -> RadosResult<(Vec<u8>, Option<String>)> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
@@ -1892,6 +1892,7 @@ impl Rados {
         // freed by call `rados_buffer_free`
         let mut outbuf = ptr::null_mut();
         let mut out: Vec<u8> = vec![];
+        let mut status_string: Option<String> = None;
 
         debug!("Calling rados_mon_command with {:?}", cmd);
 
@@ -1925,9 +1926,14 @@ impl Rados {
 
                 rados_buffer_free(outbuf);
             }
+            if outs_len > 0 && !outs.is_null() {
+                let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
+                status_string = Some(String::from_utf8(slice.to_vec())?);
+                rados_buffer_free(outs);
+            }
         }
 
-        Ok(out)
+        Ok((out, status_string))
     }
 
     /// Mon command that does pass in a data payload.
