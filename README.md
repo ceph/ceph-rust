@@ -8,6 +8,23 @@ Official Ceph Rust-lang interface. Contributions welcomed!
 
 This library is the core librados Rust interface for Ceph. It also supports Admin Socket commands.
 
+### Build requirements
+
+Librados must be installed.
+
+On CentOS/RHEL - Ceph Hammer librados is located in /usr/lib64. So, to get rust to see it you need to create a new symlink:
+sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
+
+On Ubuntu - Ceph Hammer librados is located in /usr/lib. So, to get rust to see it you need to create a new symlink:
+sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
+
+There may be another way to change the link name in rust without having to create a symlink.
+
+On MacOS, you can install librados via homebrew:
+
+brew tap zeichenanonym/ceph-client
+brew install ceph-client
+
 ### Ceph
 Create a Ceph development environment or use an existing Ceph environment.
 
@@ -34,15 +51,6 @@ Once complete you can then login to the first node:
 vagrant ssh ceph-vm1
 
 Run ceph -s to make sure you see Ceph running. Now you can install the development environment and Rust.
-
-#### Important
-NOTE: CentOS/RHEL - Ceph Hammer librados is located in /usr/lib64. So, to get rust to see it you need to create a new symlink:
-sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
-
-NOTE: Ubuntu - Ceph Hammer librados is located in /usr/lib. So, to get rust to see it you need to create a new symlink:
-sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
-
-There may be another way to change the link name in rust without having to create a symlink.
 
 ### Rust
 (In ceph-vm1 node)
