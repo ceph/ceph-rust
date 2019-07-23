@@ -18,19 +18,19 @@ extern crate ceph;
 extern crate libc;
 
 use ceph::JsonData;
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 use ceph::admin_sockets::*;
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 use ceph::ceph as ceph_helpers;
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 use ceph::rados;
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(unix))]
 fn main() {}
 
 // NB: The examples below show a mix of raw native access and rust specific calls.
 
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 fn main() {
     let pool_name = "lsio";
     // NB: These examples (except for a few) are low level examples that require the unsafe block.
