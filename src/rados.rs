@@ -195,7 +195,7 @@ pub type rados_log_callback_t = ::std::option::Option<
     ) -> (),
 >;
 
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 #[link(name = "rados", kind = "dylib")]
 extern "C" {
     pub fn rados_version(major: *mut ::libc::c_int, minor: *mut ::libc::c_int, extra: *mut ::libc::c_int) -> ();
