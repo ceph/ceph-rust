@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ceph::{self, connect_to_ceph, Rados};
+use ceph::{connect_to_ceph, Rados};
 use cmd;
 use rados;
 
@@ -322,7 +322,7 @@ impl CephClient {
             }
             return Err(RadosError::new(format!(
                 "{:?} : {}",
-                ceph::get_error(ret_code)?,
+                RadosError::from(ret_code),
                 str_outs
             )));
         }
