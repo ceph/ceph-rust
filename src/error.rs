@@ -23,6 +23,8 @@ use std::string::FromUtf8Error;
 use std::{fmt, str::ParseBoolError};
 use uuid::parser::ParseError;
 
+extern crate nix;
+
 /// Custom error handling for the library
 #[derive(Debug)]
 pub enum RadosError {
@@ -30,6 +32,7 @@ pub enum RadosError {
     NulError(NulError),
     Error(String),
     IoError(Error),
+    ApiError(nix::errno::Errno),
     IntoStringError(IntoStringError),
     ParseIntError(ParseIntError),
     ParseBoolError(ParseBoolError),
@@ -49,6 +52,7 @@ impl fmt::Display for RadosError {
             RadosError::NulError(ref e) => f.write_str(e.description()),
             RadosError::Error(ref e) => f.write_str(&e),
             RadosError::IoError(ref e) => f.write_str(e.description()),
+            RadosError::ApiError(ref e) => e.fmt(f),
             RadosError::IntoStringError(ref e) => f.write_str(e.description()),
             RadosError::ParseError(ref e) => f.write_str(e.description()),
             RadosError::ParseBoolError(ref e) => f.write_str(e.description()),
@@ -110,5 +114,10 @@ impl From<IntoStringError> for RadosError {
 impl From<Error> for RadosError {
     fn from(err: Error) -> RadosError {
         RadosError::IoError(err)
+    }
+}
+impl From<i32> for RadosError {
+    fn from(err: i32) -> RadosError {
+        RadosError::ApiError(nix::errno::Errno::from_i32(-err))
     }
 }
