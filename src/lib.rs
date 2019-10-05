@@ -71,6 +71,7 @@ pub mod cmd;
 pub mod error;
 pub mod json;
 pub mod rados;
+#[cfg(feature = "rados_striper")] pub mod rados_striper;
 pub mod status;
 pub mod utils;
 
