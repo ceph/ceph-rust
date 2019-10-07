@@ -47,6 +47,10 @@ uuid = {version = "~0.7", features = ["serde"] }
 rustc-serialize = "~0.3"
 nix = "0.14"
 
+[features]
+default = []
+rados_striper = []
+
 # Run the example as follows: `cargo run --example ceph`
 
 # [[bin]]

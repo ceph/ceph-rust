@@ -26,6 +26,7 @@ use serde_json;
 use JsonValue;
 
 use rados::*;
+#[cfg(feature = "rados_striper")] use rados_striper::*;
 use status::*;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
@@ -314,6 +315,23 @@ impl Drop for IoCtx {
         if !self.ioctx.is_null() {
             unsafe {
                 rados_ioctx_destroy(self.ioctx);
+            }
+        }
+    }
+}
+
+/// Owns a rados_striper handle
+#[cfg(feature = "rados_striper")]
+pub struct RadosStriper {
+    rados_striper: rados_ioctx_t,
+}
+
+#[cfg(feature = "rados_striper")]
+impl Drop for RadosStriper {
+    fn drop(&mut self) {
+        if !self.rados_striper.is_null() {
+            unsafe {
+                rados_striper_destroy(self.rados_striper);
             }
         }
     }
@@ -1471,6 +1489,21 @@ impl IoCtx {
         }
         Ok(())
     }
+
+    /// Create a rados striper.
+    /// For more details see rados_striper_t.
+    #[cfg(feature = "rados_striper")]
+    pub fn get_rados_striper(self) -> RadosResult<RadosStriper> {
+        self.ioctx_guard()?;
+        unsafe {
+            let mut rados_striper: rados_striper_t = ptr::null_mut();
+            let ret_code = rados_striper_create(self.ioctx, &mut rados_striper);
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+            Ok(RadosStriper { rados_striper: rados_striper })
+        }
+    }
 }
 
 impl Rados {
@@ -2177,5 +2210,258 @@ impl Rados {
         }
 
         Ok((str_outbuf, str_outs))
+    }
+}
+
+#[cfg(feature = "rados_striper")]
+impl RadosStriper {
+    pub fn inner(&self) -> &rados_striper_t {
+        &self.rados_striper
+    }
+
+    /// This just tells librados that you no longer need to use the striper.
+    pub fn destroy_rados_striper(&self) {
+        if self.rados_striper.is_null() {
+            // No need to do anything
+            return;
+        }
+        unsafe {
+            rados_striper_destroy(self.rados_striper);
+        }
+    }
+
+    fn rados_striper_guard(&self) -> RadosResult<()> {
+        if self.rados_striper.is_null() {
+            return Err(RadosError::new(
+                "Rados striper not created. Please initialize first".to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    /// Write len bytes from buf into the oid object, starting at offset off.
+    /// The value of len must be <= UINT_MAX/2.
+    pub fn rados_object_write(&self, object_name: &str, buffer: &[u8], offset: u64) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let obj_name_str = try!(CString::new(object_name));
+
+        unsafe {
+            let ret_code = rados_striper_write(
+                self.rados_striper,
+                obj_name_str.as_ptr(),
+                buffer.as_ptr() as *const c_char,
+                buffer.len(),
+                offset,
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// The object is filled with the provided data. If the object exists, it is
+    /// atomically
+    /// truncated and then written.
+    pub fn rados_object_write_full(&self, object_name: &str, buffer: &[u8]) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let obj_name_str = try!(CString::new(object_name));
+
+        unsafe {
+            let ret_code = rados_striper_write_full(
+                self.rados_striper,
+                obj_name_str.as_ptr(),
+                buffer.as_ptr() as *const ::libc::c_char,
+                buffer.len(),
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Append len bytes from buf into the oid object.
+    pub fn rados_object_append(&self, object_name: &str, buffer: &[u8]) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let obj_name_str = try!(CString::new(object_name));
+
+        unsafe {
+            let ret_code = rados_striper_append(
+                self.rados_striper,
+                obj_name_str.as_ptr(),
+                buffer.as_ptr() as *const c_char,
+                buffer.len(),
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Read data from an object.  This fills the slice given and returns the
+    /// amount of bytes read
+    /// The io context determines the snapshot to read from, if any was set by
+    /// rados_ioctx_snap_set_read().
+    /// Default read size is 64K unless you call Vec::with_capacity(1024*128)
+    /// with a larger size.
+    pub fn rados_object_read(
+        &self,
+        object_name: &str,
+        fill_buffer: &mut Vec<u8>,
+        read_offset: u64,
+    ) -> RadosResult<i32> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let mut len = fill_buffer.capacity();
+        if len == 0 {
+            fill_buffer.reserve_exact(1024 * 64);
+            len = fill_buffer.capacity();
+        }
+
+        unsafe {
+            let ret_code = rados_striper_read(
+                self.rados_striper,
+                object_name_str.as_ptr(),
+                fill_buffer.as_mut_ptr() as *mut c_char,
+                len,
+                read_offset,
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+            fill_buffer.set_len(ret_code as usize);
+            Ok(ret_code)
+        }
+    }
+
+    /// Delete an object
+    /// Note: This does not delete any snapshots of the object.
+    pub fn rados_object_remove(&self, object_name: &str) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+
+        unsafe {
+            let ret_code = rados_striper_remove(self.rados_striper, object_name_str.as_ptr() as *const c_char);
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Resize an object
+    /// If this enlarges the object, the new area is logically filled with
+    /// zeroes. If this shrinks the object, the excess data is removed.
+    pub fn rados_object_trunc(&self, object_name: &str, new_size: u64) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+
+        unsafe {
+            let ret_code = rados_striper_trunc(self.rados_striper, object_name_str.as_ptr(), new_size);
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Get the value of an extended attribute on an object.
+    pub fn rados_object_getxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+        fill_buffer: &mut [u8],
+    ) -> RadosResult<i32> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let attr_name_str = try!(CString::new(attr_name));
+
+        unsafe {
+            let ret_code = rados_striper_getxattr(
+                self.rados_striper,
+                object_name_str.as_ptr() as *const c_char,
+                attr_name_str.as_ptr() as *const c_char,
+                fill_buffer.as_mut_ptr() as *mut c_char,
+                fill_buffer.len(),
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+            Ok(ret_code)
+        }
+    }
+
+    /// Set an extended attribute on an object.
+    pub fn rados_object_setxattr(&self, object_name: &str, attr_name: &str, attr_value: &mut [u8]) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let attr_name_str = try!(CString::new(attr_name));
+
+        unsafe {
+            let ret_code = rados_striper_setxattr(
+                self.rados_striper,
+                object_name_str.as_ptr() as *const c_char,
+                attr_name_str.as_ptr() as *const c_char,
+                attr_value.as_mut_ptr() as *mut c_char,
+                attr_value.len(),
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Delete an extended attribute from an object.
+    pub fn rados_object_rmxattr(&self, object_name: &str, attr_name: &str) -> RadosResult<()> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let attr_name_str = try!(CString::new(attr_name));
+
+        unsafe {
+            let ret_code = rados_striper_rmxattr(
+                self.rados_striper,
+                object_name_str.as_ptr() as *const c_char,
+                attr_name_str.as_ptr() as *const c_char,
+            );
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Get the rados_xattrs_iter_t reference to iterate over xattrs on an
+    /// object Used in conjuction with XAttr::new() to iterate.
+    pub fn rados_get_xattr_iterator(&self, object_name: &str) -> RadosResult<rados_xattrs_iter_t> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let mut xattr_iterator_handle: rados_xattrs_iter_t = ptr::null_mut();
+
+        unsafe {
+            let ret_code = rados_striper_getxattrs(self.rados_striper, object_name_str.as_ptr(), &mut xattr_iterator_handle);
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok(xattr_iterator_handle)
+    }
+
+    /// Get object stats (size,SystemTime)
+    pub fn rados_object_stat(&self, object_name: &str) -> RadosResult<(u64, SystemTime)> {
+        self.rados_striper_guard()?;
+        let object_name_str = try!(CString::new(object_name));
+        let mut psize: u64 = 0;
+        let mut time: ::libc::time_t = 0;
+
+        unsafe {
+            let ret_code = rados_striper_stat(self.rados_striper, object_name_str.as_ptr(), &mut psize, &mut time);
+            if ret_code < 0 {
+                return Err(ret_code.into());
+            }
+        }
+        Ok((psize, (UNIX_EPOCH + Duration::from_secs(time as u64))))
     }
 }
