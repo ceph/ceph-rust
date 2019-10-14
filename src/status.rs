@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatus {
     health: CephStatusHealth,
     fsid: String,
@@ -25,7 +25,7 @@ pub struct CephStatus {
     mdsmap: CephStatusMDSMap,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealth {
     health: CephStatusHealth2,
     timechecks: CephStatusHealthTimeChecks,
@@ -34,17 +34,17 @@ pub struct CephStatusHealth {
     detail: Vec<CephStatusHealthDetail>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealth2 {
     health: Vec<CephStatusHealthServices>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthServices {
     mons: Vec<CephStatusHealthServicesMon>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthServicesMon {
     name: String,
     kb_total: u32,
@@ -56,7 +56,7 @@ pub struct CephStatusHealthServicesMon {
     health: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthServicesMonStats {
     bytes_total: u64,
     bytes_sst: u64,
@@ -65,7 +65,7 @@ pub struct CephStatusHealthServicesMonStats {
     last_updated: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthTimeChecks {
     epoch: u32,
     round: u32,
@@ -73,7 +73,7 @@ pub struct CephStatusHealthTimeChecks {
     mons: Vec<CephStatusHealthMons>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthMons {
     name: String,
     skew: f32,
@@ -81,18 +81,18 @@ pub struct CephStatusHealthMons {
     health: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthSummary {
     severity: String,
     summary: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusHealthDetail {
     dummy: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusMonMap {
     epoch: u32,
     fsid: String,
@@ -101,19 +101,19 @@ pub struct CephStatusMonMap {
     mons: Vec<CephStatusMonRank>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusMonRank {
     rank: u16,
     name: String,
     addr: String,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusOSDMapH {
     osdmap: CephStatusOSDMapL,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusOSDMapL {
     epoch: u32,
     num_osds: u32,
@@ -124,7 +124,7 @@ pub struct CephStatusOSDMapL {
     num_remapped_pgs: u32,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusPGMap {
     pgs_by_state: Vec<CephStatusPGState>,
     version: u32,
@@ -135,13 +135,13 @@ pub struct CephStatusPGMap {
     bytes_total: u64,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusPGState {
     state_name: String,
     count: u32,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusMDSMap {
     epoch: u32,
     up: u32,
@@ -150,7 +150,7 @@ pub struct CephStatusMDSMap {
     by_rank: Vec<CephStatusMDSRank>,
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Deserialize, Serialize)]
 pub struct CephStatusMDSRank {
     rank: u16,
     name: String,

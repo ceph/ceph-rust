@@ -57,7 +57,6 @@ extern crate libc;
 extern crate log;
 #[macro_use]
 extern crate nom;
-extern crate rustc_serialize;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -71,7 +70,8 @@ pub mod cmd;
 pub mod error;
 pub mod json;
 pub mod rados;
-#[cfg(feature = "rados_striper")] pub mod rados_striper;
+#[cfg(feature = "rados_striper")]
+pub mod rados_striper;
 pub mod status;
 pub mod utils;
 
@@ -84,5 +84,5 @@ pub use ceph_version::CephVersion;
 pub use cmd::{OsdOption, PoolOption};
 pub use mon_command::MonCommand;
 
-pub type JsonData = rustc_serialize::json::Json;
-pub type JsonValue = rustc_serialize::json::Json;
+pub type JsonData = serde_json::Value;
+pub type JsonValue = serde_json::Value;
