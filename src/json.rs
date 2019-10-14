@@ -14,7 +14,7 @@
 
 use std::str;
 
-use rustc_serialize::json::*;
+use serde_json;
 
 use JsonData;
 // use JsonValue;
@@ -23,7 +23,7 @@ use JsonData;
 /// JsonData object that can then be traversed using `json_find` via the key
 /// path.
 pub fn json_data(json_str: &str) -> Option<JsonData> {
-    match Json::from_str(json_str) {
+    match serde_json::from_str(json_str) {
         Ok(json_data) => Some(json_data),
         Err(_) => None,
     }
@@ -34,10 +34,18 @@ pub fn json_data(json_str: &str) -> Option<JsonData> {
 /// object is used for situations where there may be 'child' objects with the
 /// same name.
 pub fn json_find(json_data: JsonData, keys: &[&str]) -> Option<JsonData> {
-    json_data.find_path(keys).cloned()
+    let mut value = json_data;
+    for key in keys {
+        match value.get(key) {
+            Some(v) => value = v.clone(),
+            None => return None,
+        }
+    }
+
+    Some(value)
 }
 
 /// More specific String cast of an individual JsonData object.
 pub fn json_as_string(json_data: &JsonData) -> String {
-    json_data.as_string().unwrap_or("").to_string()
+    json_data.to_string()
 }
