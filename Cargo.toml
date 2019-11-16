@@ -36,7 +36,7 @@ edition = "2018"
 travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 [dependencies]
-bitflags = "~0.8"
+bitflags = "1.2.1"
 byteorder = "1"
 libc = "~0.2"
 log = "~0.4"
