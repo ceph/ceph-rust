@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use error::RadosError;
+use crate::error::RadosError;
 
 #[cfg(test)]
 mod tests {
@@ -45,7 +45,7 @@ impl FromStr for CephVersion {
     /// rados version commands give them:
     /// `ceph version 10.2.9 (2ee413f77150c0f375ff6f10edd6c8f9c7d060d0)`
     fn from_str(s: &str) -> Result<Self, RadosError> {
-        use CephVersion::*;
+        use crate::CephVersion::*;
         let mut parts = s.split(" ");
         if let (Some(_ceph), Some(_version), Some(version_str)) = (parts.next(), parts.next(), parts.next()) {
             let mut version_parts = version_str.split(".");

@@ -7,8 +7,8 @@
 //! allow you to test without actually calling Ceph.
 extern crate serde_json;
 
-use ceph::Rados;
-use error::{RadosError, RadosResult};
+use crate::ceph::Rados;
+use crate::error::{RadosError, RadosResult};
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
