@@ -29,6 +29,7 @@ Chef automation tools: https://github.com/bloomberg/chef-bcs or with ceph-ansibl
 created and manage at github.com/ceph/ceph-chef. It will build out a full Ceph environment which you can then use
 for development etc. See README.md for details.
 """
+edition = "2018"
 
 [badges]
 

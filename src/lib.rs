@@ -79,10 +79,10 @@ mod ceph_client;
 mod ceph_version;
 mod mon_command;
 
-pub use ceph_client::CephClient;
-pub use ceph_version::CephVersion;
-pub use cmd::{OsdOption, PoolOption};
-pub use mon_command::MonCommand;
+pub use crate::ceph_client::CephClient;
+pub use crate::ceph_version::CephVersion;
+pub use crate::cmd::{OsdOption, PoolOption};
+pub use crate::mon_command::MonCommand;
 
 pub type JsonData = serde_json::Value;
 pub type JsonValue = serde_json::Value;

@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use ceph::{connect_to_ceph, Rados};
-use cmd;
-use rados;
+use crate::ceph::{connect_to_ceph, Rados};
+use crate::cmd;
+use crate::rados;
 
 use libc::c_char;
 use std::ffi::CString;
 use std::{ptr, str};
 
-use error::RadosError;
-use {CephVersion, MonCommand, OsdOption, PoolOption};
+use crate::error::RadosError;
+use crate::{CephVersion, MonCommand, OsdOption, PoolOption};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
