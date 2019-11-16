@@ -67,9 +67,9 @@ impl FromStr for CephVersion {
                         "61" => return Ok(Cuttlefish),
                         "56" => return Ok(Bobtail),
                         "48" => return Ok(Argonaut),
-                        _ => {}
+                        _ => {},
                     },
-                    _ => {}
+                    _ => {},
                 }
             }
         }
