@@ -21,7 +21,8 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use crate::error::*;
 use crate::json::*;
 use libc::*;
-use nom::{le_u32, IResult};
+use nom::IResult;
+use nom::number::complete::le_u32;
 use serde_json;
 use crate::JsonValue;
 
@@ -1157,13 +1158,14 @@ impl IoCtx {
             }
         }
         match TmapOperation::deserialize(&buffer) {
-            IResult::Done(_, tmap) => Ok(tmap),
-            IResult::Incomplete(needed) => Err(RadosError::new(format!(
+            Ok((_, tmap)) => Ok(tmap),
+            Err(nom::Err::Incomplete(needed)) => Err(RadosError::new(format!(
                 "deserialize of ceph tmap failed.
             Input from Ceph was too small.  Needed: {:?} more bytes",
                 needed
             ))),
-            IResult::Error(e) => Err(RadosError::new(e.to_string())),
+            Err(nom::Err::Error((e, _))) => Err(RadosError::new(String::from_utf8_lossy(e).to_string())),
+            Err(nom::Err::Failure((e, _))) => Err(RadosError::new(String::from_utf8_lossy(e).to_string())),
         }
     }
 
