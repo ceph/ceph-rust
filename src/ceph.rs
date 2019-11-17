@@ -188,11 +188,11 @@ impl Iterator for Pool {
                     namespace.push_str(&CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy());
                 }
 
-                return Some(CephObject {
+                Some(CephObject {
                     name: object_name.to_string_lossy().into_owned(),
                     entry_locator: object_locator,
-                    namespace: namespace,
-                });
+                    namespace,
+                })
             }
         }
     }
@@ -265,7 +265,7 @@ impl XAttr {
         XAttr {
             name: String::new(),
             value: String::new(),
-            iter: iter,
+            iter,
         }
     }
 }
@@ -275,15 +275,15 @@ impl Iterator for XAttr {
 
     fn next(&mut self) -> Option<Self::Item> {
         // max xattr name is 255 bytes from what I can find
-        let mut name_buffer: Vec<u8> = Vec::with_capacity(255);
+        let mut name: *const c_char = ptr::null();
         // max xattr is 64Kb from what I can find
-        let mut value_buffer: Vec<u8> = Vec::with_capacity(64 * 1024);
+        let mut value: *const c_char = ptr::null();
         let mut val_length: usize = 0;
         unsafe {
             let ret_code = rados_getxattrs_next(
                 self.iter,
-                name_buffer.as_mut_ptr() as *mut *const c_char,
-                value_buffer.as_mut_ptr() as *mut *const c_char,
+                &mut name,
+                &mut value,
                 &mut val_length,
             );
 
@@ -292,13 +292,18 @@ impl Iterator for XAttr {
                 None
             }
             // end of iterator reached
-            else if val_length == 0 {
+            else if value.is_null() && val_length == 0 {
                 rados_getxattrs_end(self.iter);
                 None
             } else {
+                let name = CStr::from_ptr(name);
+                // value string
+                let s_bytes = std::slice::from_raw_parts(value, val_length);
+                // Convert from i8 -> u8
+                let bytes: Vec<u8> = s_bytes.iter().map(|c| *c as u8).collect();
                 Some(XAttr {
-                    name: String::from_utf8_lossy(&name_buffer).into_owned(),
-                    value: String::from_utf8_lossy(&value_buffer).into_owned(),
+                    name: name.to_string_lossy().into_owned(),
+                    value: String::from_utf8_lossy(&bytes).into_owned(),
                     iter: self.iter,
                 })
             }
@@ -344,7 +349,7 @@ pub struct Rados {
     phantom: PhantomData<IoCtx>,
 }
 
-unsafe impl Sync for Rados{}
+unsafe impl Sync for Rados {}
 
 impl Drop for Rados {
     fn drop(&mut self) {
@@ -357,7 +362,7 @@ impl Drop for Rados {
 }
 
 /// Connect to a Ceph cluster and return a connection handle rados_t
-pub fn connect_to_ceph<'a>(user_id: &str, config_file: &str) -> RadosResult<Rados> {
+pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
     let connect_id = CString::new(user_id)?;
     let conf_file = CString::new(config_file)?;
     unsafe {
@@ -462,7 +467,7 @@ impl Rados {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            Ok(IoCtx { ioctx: ioctx })
+            Ok(IoCtx { ioctx })
         }
     }
 
@@ -477,7 +482,7 @@ impl Rados {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            Ok(IoCtx { ioctx: ioctx })
+            Ok(IoCtx { ioctx })
         }
     }
 }
@@ -531,7 +536,7 @@ impl IoCtx {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            return Ok(());
+            Ok(())
         }
     }
 
@@ -543,7 +548,7 @@ impl IoCtx {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            return Ok(auid);
+            Ok(auid)
         }
     }
 
@@ -556,9 +561,9 @@ impl IoCtx {
                 return Err(ret_code.into());
             }
             if ret_code == 0 {
-                return Ok(false);
+                Ok(false)
             } else {
-                return Ok(true);
+                Ok(true)
             }
         }
     }
@@ -568,7 +573,7 @@ impl IoCtx {
         self.ioctx_guard()?;
         unsafe {
             let ret_code = rados_ioctx_pool_required_alignment(self.ioctx);
-            return Ok(ret_code);
+            Ok(ret_code)
         }
     }
 
@@ -605,12 +610,12 @@ impl IoCtx {
                 if ret_code < 0 {
                     return Err(ret_code.into());
                 }
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             } else if ret_code < 0 {
-                return Err(ret_code.into());
+                Err(ret_code.into())
             } else {
                 buffer.set_len(ret_code as usize);
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             }
         }
     }
@@ -1503,7 +1508,7 @@ impl IoCtx {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            Ok(RadosStriper { rados_striper: rados_striper })
+            Ok(RadosStriper { rados_striper })
         }
     }
 }
@@ -1565,11 +1570,9 @@ impl Rados {
         loop {
             let mut string_buf: Vec<u8> = Vec::new();
             let read = cursor.read_until(0x00, &mut string_buf)?;
-            if read == 0 {
-                // End of the pool_buffer;
-                break;
-            } else if read == 1 {
-                // Read a double \0.  Time to break
+            // 0 End of the pool_buffer;
+            // 1 Read a double \0.  Time to break
+            if read == 0 || read == 1 {
                 break;
             } else {
                 // Read a String
@@ -1592,7 +1595,7 @@ impl Rados {
                 return Err(ret_code.into());
             }
         }
-        return Ok(());
+        Ok(())
     }
     /// Delete a pool and all data inside it
     /// The pool is removed from the cluster immediately, but the actual data is
@@ -1607,7 +1610,7 @@ impl Rados {
                 return Err(ret_code.into());
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     /// Lookup a Ceph pool id.  If the pool doesn't exist it will return
@@ -1618,11 +1621,11 @@ impl Rados {
         unsafe {
             let ret_code: i64 = rados_pool_lookup(self.rados, pool_name_str.as_ptr());
             if ret_code >= 0 {
-                return Ok(Some(ret_code));
+                Ok(Some(ret_code))
             } else if ret_code as i32 == -ENOENT {
-                return Ok(None);
+                Ok(None)
             } else {
-                return Err((ret_code as i32).into());
+                Err((ret_code as i32).into())
             }
         }
     }
@@ -1651,11 +1654,11 @@ impl Rados {
                 if ret_code < 0 {
                     return Err(ret_code.into());
                 }
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             } else if ret_code < 0 {
-                return Err(ret_code.into());
+                Err(ret_code.into())
             } else {
-                return Ok(String::from_utf8_lossy(&buffer).into_owned());
+                Ok(String::from_utf8_lossy(&buffer).into_owned())
             }
         }
     }
@@ -1669,11 +1672,11 @@ pub fn rados_libversion() -> RadosVersion {
     unsafe {
         rados_version(&mut major, &mut minor, &mut extra);
     }
-    return RadosVersion {
-        major: major,
-        minor: minor,
-        extra: extra,
-    };
+    RadosVersion {
+        major,
+        minor,
+        extra,
+    }
 }
 
 impl Rados {
@@ -1693,7 +1696,7 @@ impl Rados {
             }
         }
 
-        return Ok(cluster_stat);
+        Ok(cluster_stat)
     }
 
     pub fn rados_fsid(&self) -> RadosResult<Uuid> {
@@ -1725,21 +1728,30 @@ impl Rados {
         self.conn_guard()?;
 
         let mon_id_str = CString::new(mon_id)?;
-        let out_buffer: Vec<u8> = Vec::with_capacity(500);
-        let out_buff_size = out_buffer.capacity();
-        let out_str = CString::new(out_buffer)?;
+        let mut out_str: *mut c_char = ptr::null_mut();
+        let mut str_length: usize = 0;
         unsafe {
             let ret_code = rados_ping_monitor(
                 self.rados,
                 mon_id_str.as_ptr(),
-                out_str.as_ptr() as *mut *mut c_char,
-                out_buff_size as *mut usize,
+                &mut out_str,
+                &mut str_length,
             );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
+            if !out_str.is_null() {
+                // valid string
+                let s_bytes = std::slice::from_raw_parts(out_str, str_length);
+                // Convert from i8 -> u8
+                let bytes: Vec<u8> = s_bytes.iter().map(|c| *c as u8).collect();
+                // Tell rados we're done with this buffer
+                rados_buffer_free(out_str);
+                Ok(String::from_utf8_lossy(&bytes).into_owned())
+            } else {
+                Ok("".into())
+            }
         }
-        Ok(out_str.to_string_lossy().into_owned())
     }
 }
 
@@ -1752,7 +1764,7 @@ pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
     admin_socket_command(&cmd, socket).ok().and_then(|json| {
-        json_data(&json).and_then(|jsondata| json_find(jsondata, &[cmd]).and_then(|data| Some(json_as_string(&data))))
+        json_data(&json).and_then(|jsondata| json_find(jsondata, &[cmd]).map(|data| json_as_string(&data)))
     })
 }
 
@@ -1781,9 +1793,8 @@ impl Rados {
             Ok((json, _)) => match json {
                 Some(json) => match json_data(&json) {
                     Some(jsondata) => {
-                        let data = json_find(jsondata, keys);
-                        if data.is_some() {
-                            Ok(json_as_string(&data.unwrap()))
+                        if let Some(data) = json_find(jsondata, keys) {
+                            Ok(json_as_string(&data))
                         } else {
                             Err(RadosError::new(
                                 "The attributes were not found in the output.".to_string(),
@@ -1843,9 +1854,8 @@ impl Rados {
                 Ok((json, _)) => match json {
                     Some(json) => match json_data(&json) {
                         Some(jsondata) => {
-                            let data = json_find(jsondata, keys);
-                            if data.is_some() {
-                                Ok(data.unwrap())
+                            if let Some(data) = json_find(jsondata, keys) {
+                                Ok(data)
                             } else {
                                 Err(RadosError::new(
                                     "The attributes were not found in the output.".to_string(),
@@ -1868,10 +1878,9 @@ impl Rados {
             Ok((json, _)) => match json {
                 Some(json) => match json_data(&json) {
                     Some(jsondata) => {
-                        if keys.is_some() {
-                            let data = json_find(jsondata, keys.unwrap());
-                            if data.is_some() {
-                                Ok(data.unwrap())
+                        if let Some(k) = keys {
+                            if let Some(data) = json_find(jsondata, k) {
+                                Ok(data)
                             } else {
                                 Err(RadosError::new(
                                     "The attributes were not found in the output.".to_string(),
