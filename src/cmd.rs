@@ -9,10 +9,7 @@ extern crate serde_json;
 
 use crate::ceph::Rados;
 use crate::error::{RadosError, RadosResult};
-<<<<<<< HEAD
 use crate::CephVersion;
-=======
->>>>>>> update to rust 2018 edition
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
