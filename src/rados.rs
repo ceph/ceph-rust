@@ -43,14 +43,14 @@ extern crate libc;
 use self::libc::{size_t, ssize_t, time_t, timeval};
 
 bitflags! {
-    pub flags AllocFlags: u32 {
-        const LIBRADOS_OP_FLAG_EXCL = 1,
-        const LIBRADOS_OP_FLAG_FAILOK = 2,
-        const LIBRADOS_OP_FLAG_FADVISE_RANDOM = 4,
-        const LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL = 8,
-        const LIBRADOS_OP_FLAG_FADVISE_WILLNEED = 16,
-        const LIBRADOS_OP_FLAG_FADVISE_DONTNEED = 32,
-        const LIBRADOS_OP_FLAG_FADVISE_NOCACHE = 64,
+    pub struct AllocFlags: u32 {
+        const LIBRADOS_OP_FLAG_EXCL = 1;
+        const LIBRADOS_OP_FLAG_FAILOK = 2;
+        const LIBRADOS_OP_FLAG_FADVISE_RANDOM = 4;
+        const LIBRADOS_OP_FLAG_FADVISE_SEQUENTIAL = 8;
+        const LIBRADOS_OP_FLAG_FADVISE_WILLNEED = 16;
+        const LIBRADOS_OP_FLAG_FADVISE_DONTNEED = 32;
+        const LIBRADOS_OP_FLAG_FADVISE_NOCACHE = 64;
     }
 }
 impl AllocFlags {
@@ -61,13 +61,13 @@ impl AllocFlags {
 }
 
 bitflags! {
-    pub flags XattrFlags: u32 {
-        const LIBRADOS_CMPXATTR_OP_EQ = 1,
-        const LIBRADOS_CMPXATTR_OP_NE = 2,
-        const LIBRADOS_CMPXATTR_OP_GT = 3,
-        const LIBRADOS_CMPXATTR_OP_GTE = 4,
-        const LIBRADOS_CMPXATTR_OP_LT = 5,
-        const LIBRADOS_CMPXATTR_OP_LTE = 6,
+    pub struct XattrFlags: u32 {
+        const LIBRADOS_CMPXATTR_OP_EQ = 1;
+        const LIBRADOS_CMPXATTR_OP_NE = 2;
+        const LIBRADOS_CMPXATTR_OP_GT = 3;
+        const LIBRADOS_CMPXATTR_OP_GTE = 4;
+        const LIBRADOS_CMPXATTR_OP_LT = 5;
+        const LIBRADOS_CMPXATTR_OP_LTE = 6;
     }
 }
 impl XattrFlags {
@@ -80,14 +80,14 @@ impl XattrFlags {
 // Flags for rados_read_op_operate(), rados_write_op_operate(),
 // rados_aio_read_op_operate(), and rados_aio_write_op_operate()
 bitflags! {
-    pub flags OperationFlags: u32 {
-        const LIBRADOS_OPERATION_NOFLAG= 0,
-        const LIBRADOS_OPERATION_BALANCE_READS= 1,
-        const LIBRADOS_OPERATION_LOCALIZE_READS= 2,
-        const LIBRADOS_OPERATION_ORDER_READS_WRITES= 4,
-        const LIBRADOS_OPERATION_IGNORE_CACHE= 8,
-        const LIBRADOS_OPERATION_SKIPRWLOCKS= 16,
-        const LIBRADOS_OPERATION_IGNORE_OVERLAY= 32,
+    pub struct OperationFlags: u32 {
+        const LIBRADOS_OPERATION_NOFLAG= 0;
+        const LIBRADOS_OPERATION_BALANCE_READS= 1;
+        const LIBRADOS_OPERATION_LOCALIZE_READS= 2;
+        const LIBRADOS_OPERATION_ORDER_READS_WRITES= 4;
+        const LIBRADOS_OPERATION_IGNORE_CACHE= 8;
+        const LIBRADOS_OPERATION_SKIPRWLOCKS= 16;
+        const LIBRADOS_OPERATION_IGNORE_OVERLAY= 32;
     }
 }
 

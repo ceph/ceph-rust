@@ -22,8 +22,8 @@ pub struct MonCommand<'a> {
     map: HashMap<&'a str, &'a str>,
 }
 
-impl<'a> MonCommand<'a> {
-    pub fn new() -> MonCommand<'a> {
+impl<'a> Default for MonCommand<'a> {
+    fn default() -> Self {
         MonCommand {
             map: {
                 let mut map = HashMap::new();
@@ -31,6 +31,12 @@ impl<'a> MonCommand<'a> {
                 map
             },
         }
+    }
+}
+
+impl<'a> MonCommand<'a> {
+    pub fn new() -> MonCommand<'a> {
+        MonCommand::default()
     }
 
     pub fn with_format(self, format: &'a str) -> MonCommand<'a> {

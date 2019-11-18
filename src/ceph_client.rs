@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use ceph::{connect_to_ceph, Rados};
-use cmd;
-use rados;
+use crate::ceph::{connect_to_ceph, Rados};
+use crate::cmd;
+use crate::rados;
 
 use libc::c_char;
 use std::ffi::CString;
 use std::{ptr, str};
 
-use error::RadosError;
-use {CephVersion, MonCommand, OsdOption, PoolOption};
+use crate::error::RadosError;
+use crate::{CephVersion, MonCommand, OsdOption, PoolOption};
 
 /// A CephClient is a struct that handles communicating with Ceph
 /// in a nicer, Rustier way
@@ -45,17 +45,17 @@ impl CephClient {
     pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
         let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
             Ok(rados_t) => rados_t,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         };
         let version: CephVersion = match cmd::version(&rados_t)?.parse() {
             Ok(v) => v,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         };
 
         Ok(CephClient {
-            rados_t: rados_t,
+            rados_t,
             simulate: false,
-            version: version,
+            version,
         })
     }
 
@@ -161,11 +161,11 @@ impl CephClient {
     /// # }
     /// ```
     pub fn osd_unset(&self, key: OsdOption) -> Result<(), RadosError> {
-        cmd::osd_unset(&self.rados_t, &key, self.simulate).map_err(|a| a.into())
+        cmd::osd_unset(&self.rados_t, &key, self.simulate).map_err(|a| a)
     }
 
     pub fn osd_tree(&self) -> Result<cmd::CrushTree, RadosError> {
-        cmd::osd_tree(&self.rados_t).map_err(|a| a.into())
+        cmd::osd_tree(&self.rados_t).map_err(|a| a)
     }
 
     /// Get cluster status
@@ -174,7 +174,7 @@ impl CephClient {
         let return_data = self.run_command(cmd)?;
         let mut l = return_data.lines();
         match l.next() {
-            Some(res) => return Ok(res.into()),
+            Some(res) => Ok(res.into()),
             None => Err(RadosError::Error("No response from ceph for status".into())),
         }
     }

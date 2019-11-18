@@ -1,6 +1,6 @@
 [package]
 name = "ceph"
-version = "3.0.2"
+version = "3.1.0"
 authors = [
     "Chris Jones <chris.jones@lambdastack.io>",
     "Chris Holcombe <xfactor973@gmail.com>",
@@ -29,22 +29,23 @@ Chef automation tools: https://github.com/bloomberg/chef-bcs or with ceph-ansibl
 created and manage at github.com/ceph/ceph-chef. It will build out a full Ceph environment which you can then use
 for development etc. See README.md for details.
 """
+edition = "2018"
 
 [badges]
 
 travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 [dependencies]
-bitflags = "~0.8"
+bitflags = "1.2.1"
 byteorder = "1"
 libc = "~0.2"
 log = "~0.4"
-nom = "3"
+nom = "5"
 serde_derive = "1"
 serde = "1"
 serde_json = "1"
-uuid = {version = "~0.7", features = ["serde"] }
-nix = "0.14"
+uuid = {version = "~0.8", features = ["serde"] }
+nix = "0.15"
 
 [features]
 default = []

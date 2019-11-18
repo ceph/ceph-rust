@@ -13,7 +13,7 @@
 // limitations under the License.
 extern crate serde_json;
 
-use ceph_version::CephVersion;
+use crate::ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
 use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
@@ -21,7 +21,7 @@ use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use std::{fmt, str::ParseBoolError};
-use uuid::parser::ParseError;
+use uuid::Error as UuidError;
 
 extern crate nix;
 
@@ -36,7 +36,7 @@ pub enum RadosError {
     IntoStringError(IntoStringError),
     ParseIntError(ParseIntError),
     ParseBoolError(ParseBoolError),
-    ParseError(ParseError),
+    UuidError(UuidError),
     SerdeError(SerdeJsonError),
     /// This should be the minimum version and the current version
     MinVersion(CephVersion, CephVersion),
@@ -54,7 +54,7 @@ impl fmt::Display for RadosError {
             RadosError::IoError(ref e) => f.write_str(e.description()),
             RadosError::ApiError(ref e) => e.fmt(f),
             RadosError::IntoStringError(ref e) => f.write_str(e.description()),
-            RadosError::ParseError(ref e) => f.write_str(e.description()),
+            RadosError::UuidError(ref e) => f.write_str(e.description()),
             RadosError::ParseBoolError(ref e) => f.write_str(e.description()),
             RadosError::ParseIntError(ref e) => f.write_str(e.description()),
             RadosError::SerdeError(ref e) => f.write_str(e.description()),
@@ -71,9 +71,9 @@ impl RadosError {
     }
 }
 
-impl From<ParseError> for RadosError {
-    fn from(err: ParseError) -> RadosError {
-        RadosError::ParseError(err)
+impl From<UuidError> for RadosError {
+    fn from(err: UuidError) -> RadosError {
+        RadosError::UuidError(err)
     }
 }
 
