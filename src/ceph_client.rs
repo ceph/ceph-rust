@@ -234,7 +234,7 @@ impl CephClient {
 
     // ceph osd crush reweight {id} {weight}
     /// reweight an osd in the CRUSH map
-    pub fn osd_crush_reweight(&self, osd_id: u64, weight: u64) -> Result<(), RadosError> {
+    pub fn osd_crush_reweight(&self, osd_id: u64, weight: f64) -> Result<(), RadosError> {
         Ok(cmd::osd_crush_reweight(&self.rados_t, osd_id, weight, self.simulate)?)
     }
 

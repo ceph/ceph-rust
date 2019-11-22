@@ -1176,7 +1176,7 @@ pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
 }
 
 /// reweight an osd in the CRUSH map
-pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: u64, simulate: bool) -> RadosResult<()> {
+pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: f64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush reweight",
         "name":  format!("osd.{}", osd_id),
