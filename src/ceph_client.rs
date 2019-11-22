@@ -98,7 +98,7 @@ impl CephClient {
                         "Unable to parse osd pool get output: {:?}",
                         result,
                     )))
-                }
+                },
             }
         }
 
@@ -264,9 +264,14 @@ impl CephClient {
         Ok(cmd::mgr_disable_module(&self.rados_t, module, self.simulate)?)
     }
 
-    pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata, RadosError> {
+    pub fn mgr_metadata(&self) -> Result<Vec<cmd::MgrMetadata>, RadosError> {
         min_version!(Luminous, self);
         Ok(cmd::mgr_metadata(&self.rados_t)?)
+    }
+
+    pub fn osd_metadata(&self) -> Result<Vec<cmd::OsdMetadata>, RadosError> {
+        min_version!(Luminous, self);
+        Ok(cmd::osd_metadata(&self.rados_t)?)
     }
 
     pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>, RadosError> {

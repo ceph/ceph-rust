@@ -43,6 +43,13 @@ pub struct CrushTree {
     pub stray: Vec<String>,
 }
 
+#[serde(untagged)]
+#[derive(Deserialize, Debug, Clone)]
+pub enum Mem {
+    MemNum { mem_swap_kb: u64, mem_total_kb: u64 },
+    MemStr { mem_swap_kb: String, mem_total_kb: String },
+}
+
 #[derive(Deserialize, Debug)]
 pub struct MgrMetadata {
     pub id: String,
@@ -55,9 +62,103 @@ pub struct MgrMetadata {
     pub hostname: String,
     pub kernel_description: String,
     pub kernel_version: String,
-    pub mem_swap_kb: u64,
-    pub mem_total_kb: u64,
+    #[serde(flatten)]
+    pub mem: Mem,
     pub os: String,
+}
+
+#[serde(rename_all = "lowercase")]
+#[derive(Deserialize, Debug, Clone)]
+pub enum ObjectStoreType {
+    Bluestore,
+    Filestore,
+}
+
+#[serde(untagged, rename_all = "lowercase")]
+#[derive(Deserialize, Debug, Clone)]
+pub enum ObjectStoreMeta {
+    Bluestore {
+        bluefs: String,
+        bluefs_db_access_mode: String,
+        bluefs_db_block_size: String,
+        bluefs_db_dev: String,
+        bluefs_db_dev_node: String,
+        bluefs_db_driver: String,
+        bluefs_db_model: String,
+        bluefs_db_partition_path: String,
+        bluefs_db_rotational: String,
+        bluefs_db_serial: String,
+        bluefs_db_size: String,
+        bluefs_db_type: String,
+        bluefs_single_shared_device: String,
+        bluefs_slow_access_mode: String,
+        bluefs_slow_block_size: String,
+        bluefs_slow_dev: String,
+        bluefs_slow_dev_node: String,
+        bluefs_slow_driver: String,
+        bluefs_slow_model: String,
+        bluefs_slow_partition_path: String,
+        bluefs_slow_rotational: String,
+        bluefs_slow_size: String,
+        bluefs_slow_type: String,
+        bluefs_wal_access_mode: String,
+        bluefs_wal_block_size: String,
+        bluefs_wal_dev: String,
+        bluefs_wal_dev_node: String,
+        bluefs_wal_driver: String,
+        bluefs_wal_model: String,
+        bluefs_wal_partition_path: String,
+        bluefs_wal_rotational: String,
+        bluefs_wal_serial: String,
+        bluefs_wal_size: String,
+        bluefs_wal_type: String,
+        bluestore_bdev_access_mode: String,
+        bluestore_bdev_block_size: String,
+        bluestore_bdev_dev: String,
+        bluestore_bdev_dev_node: String,
+        bluestore_bdev_driver: String,
+        bluestore_bdev_model: String,
+        bluestore_bdev_partition_path: String,
+        bluestore_bdev_rotational: String,
+        bluestore_bdev_size: String,
+        bluestore_bdev_type: String,
+    },
+    Filestore {
+        backend_filestore_dev_node: String,
+        backend_filestore_partition_path: String,
+        filestore_backend: String,
+        filestore_f_type: String,
+    },
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct OsdMetadata {
+    pub id: u64,
+    pub arch: String,
+    pub back_addr: String,
+    pub back_iface: String,
+    pub ceph_version: String,
+    pub cpu: String,
+    pub default_device_class: String,
+    pub distro: String,
+    pub distro_description: String,
+    pub distro_version: String,
+    pub front_addr: String,
+    pub front_iface: String,
+    pub hb_back_addr: String,
+    pub hb_front_addr: String,
+    pub hostname: String,
+    pub journal_rotational: String,
+    pub kernel_description: String,
+    pub kernel_version: String,
+    pub mem_swap_kb: String,
+    pub mem_total_kb: String,
+    pub os: String,
+    pub osd_data: String,
+    pub osd_objectstore: ObjectStoreType,
+    pub rotational: String,
+    #[serde(flatten)]
+    pub objectstore_meta: ObjectStoreMeta,
 }
 
 #[derive(Deserialize, Debug)]
@@ -585,10 +686,10 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     } else {
                         return Err(RadosError::Error(e));
                     }
-                }
+                },
                 _ => return Err(e),
             }
-        }
+        },
     };
     // I don't know why but config-key exists uses the status message
     // and not the regular output buffer
@@ -602,7 +703,7 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     status,
                 )))
             }
-        }
+        },
         None => Err(RadosError::Error(format!(
             "Unable to parse config-key exists output: {:?}",
             result.1,
@@ -1053,9 +1154,20 @@ pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) 
 }
 
 /// dump metadata for all daemons
-pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
+pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
     let cmd = json!({
         "prefix": "mgr metadata",
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
+/// dump metadata for all osds
+pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
+    let cmd = json!({
+        "prefix": "osd metadata",
     });
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
