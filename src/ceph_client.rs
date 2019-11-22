@@ -232,6 +232,17 @@ impl CephClient {
         Ok(cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)?)
     }
 
+    // ceph osd crush reweight {id} {weight}
+    /// reweight an osd in the CRUSH map
+    pub fn osd_crush_reweight(&self, osd_id: u64, weight: u64) -> Result<(), RadosError> {
+        Ok(cmd::osd_crush_reweight(&self.rados_t, osd_id, weight, self.simulate)?)
+    }
+
+    /// check if a single osd is safe to destroy/remove
+    pub fn osd_safe_to_destroy(&self, osd_id: u64) -> bool {
+        cmd::osd_safe_to_destroy(&self.rados_t, osd_id)
+    }
+
     // Luminous + only
 
     pub fn mgr_dump(&self) -> Result<cmd::MgrDump, RadosError> {
