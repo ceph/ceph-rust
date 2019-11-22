@@ -1175,6 +1175,31 @@ pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
     Ok(serde_json::from_str(&return_data)?)
 }
 
+/// reweight an osd in the CRUSH map
+pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: u64, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "osd crush reweight",
+        "name":  format!("osd.{}", osd_id),
+        "weight": weight,
+    });
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
+}
+
+/// check if a single osd is safe to destroy/remove
+pub fn osd_safe_to_destroy(cluster_handle: &Rados, osd_id: u64) -> bool {
+    let cmd = json!({
+        "prefix": "osd safe-to-destroy",
+        "ids": [osd_id.to_string()]
+    });
+    match cluster_handle.ceph_mon_command_without_data(&cmd) {
+        Err(_) => false,
+        Ok(_) => true,
+    }
+}
+
 /// count ceph-mgr daemons by metadata field property
 pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
