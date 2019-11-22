@@ -37,7 +37,7 @@ travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 
 [dependencies]
 bitflags = "~1"
-byteorder = "1"
+byteorder = "1.2.1"
 libc = "~0.2"
 log = "~0.4"
 nom = "5"
