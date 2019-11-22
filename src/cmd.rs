@@ -43,6 +43,13 @@ pub struct CrushTree {
     pub stray: Vec<String>,
 }
 
+#[serde(untagged)]
+#[derive(Deserialize, Debug, Clone)]
+pub enum Mem {
+    MemNum { mem_swap_kb: u64, mem_total_kb: u64 },
+    MemStr { mem_swap_kb: String, mem_total_kb: String },
+}
+
 #[derive(Deserialize, Debug)]
 pub struct MgrMetadata {
     pub id: String,
@@ -55,8 +62,8 @@ pub struct MgrMetadata {
     pub hostname: String,
     pub kernel_description: String,
     pub kernel_version: String,
-    pub mem_swap_kb: String,
-    pub mem_total_kb: String,
+    #[serde(flatten)]
+    pub mem: Mem,
     pub os: String,
 }
 
