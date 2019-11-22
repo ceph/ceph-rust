@@ -55,8 +55,8 @@ pub struct MgrMetadata {
     pub hostname: String,
     pub kernel_description: String,
     pub kernel_version: String,
-    pub mem_swap_kb: u64,
-    pub mem_total_kb: u64,
+    pub mem_swap_kb: String,
+    pub mem_total_kb: String,
     pub os: String,
 }
 
@@ -1148,7 +1148,7 @@ pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) 
 }
 
 /// dump metadata for all daemons
-pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
+pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
     let cmd = json!({
         "prefix": "mgr metadata",
     });
