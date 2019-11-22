@@ -139,16 +139,15 @@ pub struct OsdMetadata {
     pub front_addr: String,
     pub front_iface: String,
     pub hb_back_addr: String,
-    pub hp_front_addr: String,
+    pub hb_front_addr: String,
     pub hostname: String,
-    pub journal_rotation: String,
+    pub journal_rotational: String,
     pub kernel_description: String,
     pub kernel_version: String,
     pub mem_swap_kb: String,
     pub mem_total_kb: String,
     pub os: String,
     pub osd_data: String,
-    #[serde(flatten)]
     pub osd_objectstore: ObjectStoreType,
     pub rotational: String,
     #[serde(flatten)]
@@ -1159,7 +1158,7 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
 }
 
 /// dump metadata for all osds
-pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<OsdMetadata> {
+pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
     let cmd = json!({
         "prefix": "osd metadata",
     });
