@@ -51,10 +51,16 @@ pub enum Mem {
 }
 
 #[derive(Deserialize, Debug)]
+/// Manager Metadata
 pub struct MgrMetadata {
+    #[serde(alias = "name")]
     pub id: String,
+    pub addr: Option<String>, //nautilous
+    pub addrs: Option<String>,
     pub arch: String,
+    pub ceph_release: Option<String>,
     pub ceph_version: String,
+    pub ceph_version_short: Option<String>,
     pub cpu: String,
     pub distro: String,
     pub distro_description: String,
@@ -81,46 +87,48 @@ pub enum ObjectStoreMeta {
         bluefs: String,
         bluefs_db_access_mode: String,
         bluefs_db_block_size: String,
-        bluefs_db_dev: String,
+        bluefs_db_dev: Option<String>, //Not in Nautilous
         bluefs_db_dev_node: String,
         bluefs_db_driver: String,
-        bluefs_db_model: String,
+        bluefs_db_model: Option<String>, //Not in Nautilous
         bluefs_db_partition_path: String,
         bluefs_db_rotational: String,
-        bluefs_db_serial: String,
+        bluefs_db_serial: Option<String>, //Not in Nautilous
         bluefs_db_size: String,
+        bluefs_db_support_discard: Option<String>, //Nautilous
         bluefs_db_type: String,
         bluefs_single_shared_device: String,
-        bluefs_slow_access_mode: String,
-        bluefs_slow_block_size: String,
-        bluefs_slow_dev: String,
-        bluefs_slow_dev_node: String,
-        bluefs_slow_driver: String,
-        bluefs_slow_model: String,
-        bluefs_slow_partition_path: String,
-        bluefs_slow_rotational: String,
-        bluefs_slow_size: String,
-        bluefs_slow_type: String,
-        bluefs_wal_access_mode: String,
-        bluefs_wal_block_size: String,
-        bluefs_wal_dev: String,
-        bluefs_wal_dev_node: String,
-        bluefs_wal_driver: String,
-        bluefs_wal_model: String,
-        bluefs_wal_partition_path: String,
-        bluefs_wal_rotational: String,
-        bluefs_wal_serial: String,
-        bluefs_wal_size: String,
-        bluefs_wal_type: String,
+        bluefs_slow_access_mode: Option<String>,    //Not in Nautilous
+        bluefs_slow_block_size: Option<String>,     //Not in Nautilous
+        bluefs_slow_dev: Option<String>,            //Not in Nautilous
+        bluefs_slow_dev_node: Option<String>,       //Not in Nautilous
+        bluefs_slow_driver: Option<String>,         //Not in Nautilous
+        bluefs_slow_model: Option<String>,          //Not in Nautilous
+        bluefs_slow_partition_path: Option<String>, //Not in Nautilous
+        bluefs_slow_rotational: Option<String>,     //Not in Nautilous
+        bluefs_slow_size: Option<String>,           //Not in Nautilous
+        bluefs_slow_type: Option<String>,           //Not in Nautilous
+        bluefs_wal_access_mode: Option<String>,     //Not in Nautilous
+        bluefs_wal_block_size: Option<String>,      //Not in Nautilous
+        bluefs_wal_dev: Option<String>,             //Not in Nautilous
+        bluefs_wal_dev_node: Option<String>,        //Not in Nautilous
+        bluefs_wal_driver: Option<String>,          //Not in Nautilous
+        bluefs_wal_model: Option<String>,           //Not in Nautilous
+        bluefs_wal_partition_path: Option<String>,  //Not in Nautilous
+        bluefs_wal_rotational: Option<String>,      //Not in Nautilous
+        bluefs_wal_serial: Option<String>,          //Not in Nautilous
+        bluefs_wal_size: Option<String>,            //Not in Nautilous
+        bluefs_wal_type: Option<String>,            //Not in Nautilous
         bluestore_bdev_access_mode: String,
         bluestore_bdev_block_size: String,
-        bluestore_bdev_dev: String,
+        bluestore_bdev_dev: Option<String>, //Not in Nautilous
         bluestore_bdev_dev_node: String,
         bluestore_bdev_driver: String,
-        bluestore_bdev_model: String,
+        bluestore_bdev_model: Option<String>, //Not in Nautilous
         bluestore_bdev_partition_path: String,
         bluestore_bdev_rotational: String,
         bluestore_bdev_size: String,
+        bluestore_bdev_support_discard: Option<String>, //Nautilous
         bluestore_bdev_type: String,
     },
     Filestore {
@@ -136,27 +144,32 @@ pub struct OsdMetadata {
     pub id: u64,
     pub arch: String,
     pub back_addr: String,
-    pub back_iface: String,
+    pub back_iface: Option<String>,   //not in Jewel
+    pub ceph_release: Option<String>, //Nautilous
     pub ceph_version: String,
+    pub ceph_version_short: Option<String>, //Nautilous
     pub cpu: String,
-    pub default_device_class: String,
+    pub default_device_class: Option<String>, //not in Jewel
+    pub device_ids: Option<String>,           //Nautilous
+    pub devices: Option<String>,              //Nautilous
     pub distro: String,
     pub distro_description: String,
     pub distro_version: String,
     pub front_addr: String,
-    pub front_iface: String,
+    pub front_iface: Option<String>, //not in Jewel
     pub hb_back_addr: String,
     pub hb_front_addr: String,
     pub hostname: String,
-    pub journal_rotational: String,
+    pub journal_rotational: Option<String>, //not in Jewel
     pub kernel_description: String,
     pub kernel_version: String,
     pub mem_swap_kb: String,
     pub mem_total_kb: String,
     pub os: String,
     pub osd_data: String,
+    pub osd_journal: Option<String>, //not usually in bluestore
     pub osd_objectstore: ObjectStoreType,
-    pub rotational: String,
+    pub rotational: Option<String>, //Not in Jewel
     #[serde(flatten)]
     pub objectstore_meta: ObjectStoreMeta,
 }
@@ -1153,7 +1166,7 @@ pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) 
     Ok(())
 }
 
-/// dump metadata for all daemons
+/// dump metadata for all daemons.  Note this only works for Luminous+
 pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
     let cmd = json!({
         "prefix": "mgr metadata",
