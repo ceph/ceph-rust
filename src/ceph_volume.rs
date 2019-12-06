@@ -99,6 +99,9 @@ pub fn ceph_volume_list(cluster_handle: &Rados) -> RadosResult<HashMap<String, V
     Ok(lvms)
 }
 
+/// Scan and capture important details on deployed OSDs
+/// Input path, if given, must be the path to the ceph data partition,
+/// so /var/lib/ceph/osd/ceph-{osd_id}
 pub fn ceph_volume_scan(cluster_handle: &Rados, osd_path: Option<PathBuf>) -> RadosResult<JsonData> {
     check_version(cluster_handle)?;
     let output;
@@ -117,7 +120,7 @@ pub fn ceph_volume_scan(cluster_handle: &Rados, osd_path: Option<PathBuf>) -> Ra
         Some(i) => i,
         None => 0,
     };
-    // Skip stderr.  The last output is Json
+    // Skip stderr's.  The last output is Json
     let json = json.split_at(index);
     match json_data(&json.1) {
         Some(jsondata) => Ok(jsondata),
