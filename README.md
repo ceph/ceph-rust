@@ -13,17 +13,19 @@ This library is the core librados Rust interface for Ceph. It also supports Admi
 Librados must be installed.
 
 On CentOS/RHEL - Ceph Hammer librados is located in /usr/lib64. So, to get rust to see it you need to create a new symlink:
-sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so
+`sudo ln -s /usr/lib64/librados.so.2.0.0 /usr/lib64/librados.so`
 
 On Ubuntu - Ceph Hammer librados is located in /usr/lib. So, to get rust to see it you need to create a new symlink:
-sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so
+`sudo ln -s /usr/lib/librados.so.2.0.0 /usr/lib/librados.so`
 
 There may be another way to change the link name in rust without having to create a symlink.
 
 On MacOS, you can install librados via homebrew:
 
-brew tap zeichenanonym/ceph-client
-brew install ceph-client
+```shell
+$ brewbrew tap zeichenanonym/ceph-client
+$ brew install ceph-client
+```
 
 ### Ceph
 Create a Ceph development environment or use an existing Ceph environment.
@@ -39,18 +41,21 @@ Requirements for Mac OSX:
 3. Locate an area where you would like to install the Ceph build environment
 4. git clone https://github.com/bloomberg/chef-bcs.git
 
-cd chef-bcs
-cd /bootstrap/vms/vagrant
-./CEPH_UP
+```shell
+$ cd chef-bcs
+$ cd /bootstrap/vms/vagrant
+$ ./CEPH_UP
+```
 
 **NOTE: If using the latest version of chef-bcs, you can enable an automatic development environment to be built with all of the development tools. See the project for details. It does it by default for Vagrant build.**
 
 This will take about 30 minutes to build out. It installs CentOS 7.3, downloads all of the parts required to get Ceph up and running with good options.
 
 Once complete you can then login to the first node:
-vagrant ssh ceph-vm1
 
-Run ceph -s to make sure you see Ceph running. Now you can install the development environment and Rust.
+`$ vagrant ssh ceph-vm1`
+
+Run `ceph -s` to make sure you see Ceph running. Now you can install the development environment and Rust.
 
 ### Rust
 (In ceph-vm1 node)
