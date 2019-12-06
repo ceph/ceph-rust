@@ -281,7 +281,6 @@ impl CephClient {
     }
 
     pub fn osd_metadata(&self) -> Result<Vec<cmd::OsdMetadata>, RadosError> {
-        min_version!(Luminous, self);
         Ok(cmd::osd_metadata(&self.rados_t)?)
     }
 
