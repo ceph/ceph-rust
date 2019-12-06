@@ -9,6 +9,7 @@ extern crate serde_json;
 
 use crate::ceph::Rados;
 use crate::error::{RadosError, RadosResult};
+use crate::CephVersion;
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -1168,6 +1169,10 @@ pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) 
 
 /// dump metadata for all daemons.  Note this only works for Luminous+
 pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
+    let vrsn: CephVersion = version(cluster_handle)?.parse()?;
+    if vrsn < CephVersion::Luminous {
+        return Err(RadosError::MinVersion(CephVersion::Luminous, vrsn));
+    }
     let cmd = json!({
         "prefix": "mgr metadata",
     });
