@@ -175,6 +175,55 @@ pub struct OsdMetadata {
     pub objectstore_meta: ObjectStoreMeta,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct PgState {
+    pub name: String,
+    pub num: u64,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct PgSummary {
+    pub num_pg_by_state: Vec<PgState>,
+    pub num_pgs: u64,
+    pub num_bytes: u64,
+    pub total_bytes: Option<u64>,          //Nautilous
+    pub total_avail_bytes: Option<u64>,    //Nautilous
+    pub total_used_bytes: Option<u64>,     //Nautilous
+    pub total_used_raw_bytes: Option<u64>, //Nautilous
+    pub raw_bytes_used: Option<u64>,
+    pub raw_bytes_avail: Option<u64>,
+    pub raw_bytes: Option<u64>,
+    pub read_bytes_sec: Option<u64>,
+    pub write_bytes_sec: Option<u64>,
+    pub io_sec: Option<u64>,
+    pub version: Option<u64>, //Jewel
+    pub degraded_objects: Option<u64>,
+    pub degraded_total: Option<u64>,
+    pub degraded_ratio: Option<f64>,
+    pub misplaced_objects: Option<u64>,
+    pub misplaced_total: Option<u64>,
+    pub misplaced_ratio: Option<f64>,
+    pub recovering_objects_per_sec: Option<u64>,
+    pub recovering_bytes_per_sec: Option<u64>,
+    pub recovering_keys_per_sec: Option<u64>,
+    pub num_objects_recovered: Option<u64>,
+    pub num_bytes_recovered: Option<u64>,
+    pub num_keys_revocered: Option<u64>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum PgStat {
+    Wrapped {
+        pg_ready: bool,
+        pg_summary: PgSummary,
+    },
+    UnWrapped {
+        #[serde(flatten)]
+        pg_summary: PgSummary,
+    },
+}
+
 #[derive(Deserialize, Debug)]
 pub struct MgrStandby {
     pub gid: u64,
@@ -1236,6 +1285,13 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
         "prefix": "mgr versions",
     });
 
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
+pub fn pg_stat(cluster_handle: &Rados) -> RadosResult<PgStat> {
+    let cmd = json!({ "prefix": "pg stat", "format": "json"});
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
