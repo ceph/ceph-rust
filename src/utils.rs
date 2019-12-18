@@ -29,7 +29,7 @@ use std::process::{Command, Output};
 /// ```
 
 // NOTE: Add Into so a "" can also be passed in...
-pub fn run_cli(cmd_line: &str) -> Result<(Output)> {
+pub fn run_cli(cmd_line: &str) -> Result<Output> {
     let output = Command::new("sh").arg("-c").arg(cmd_line).output()?;
     Ok(output)
 }

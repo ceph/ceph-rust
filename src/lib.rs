@@ -66,6 +66,7 @@ extern crate uuid;
 
 pub mod admin_sockets;
 pub mod ceph;
+pub mod ceph_volume;
 pub mod cmd;
 pub mod error;
 pub mod json;

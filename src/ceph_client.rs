@@ -98,7 +98,7 @@ impl CephClient {
                         "Unable to parse osd pool get output: {:?}",
                         result,
                     )))
-                }
+                },
             }
         }
 
@@ -232,6 +232,17 @@ impl CephClient {
         Ok(cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)?)
     }
 
+    // ceph osd crush reweight {id} {weight}
+    /// reweight an osd in the CRUSH map
+    pub fn osd_crush_reweight(&self, osd_id: u64, weight: f64) -> Result<(), RadosError> {
+        Ok(cmd::osd_crush_reweight(&self.rados_t, osd_id, weight, self.simulate)?)
+    }
+
+    /// check if a single osd is safe to destroy/remove
+    pub fn osd_safe_to_destroy(&self, osd_id: u64) -> bool {
+        cmd::osd_safe_to_destroy(&self.rados_t, osd_id)
+    }
+
     // Luminous + only
 
     pub fn mgr_dump(&self) -> Result<cmd::MgrDump, RadosError> {
@@ -264,9 +275,13 @@ impl CephClient {
         Ok(cmd::mgr_disable_module(&self.rados_t, module, self.simulate)?)
     }
 
-    pub fn mgr_metadata(&self) -> Result<cmd::MgrMetadata, RadosError> {
+    pub fn mgr_metadata(&self) -> Result<Vec<cmd::MgrMetadata>, RadosError> {
         min_version!(Luminous, self);
         Ok(cmd::mgr_metadata(&self.rados_t)?)
+    }
+
+    pub fn osd_metadata(&self) -> Result<Vec<cmd::OsdMetadata>, RadosError> {
+        Ok(cmd::osd_metadata(&self.rados_t)?)
     }
 
     pub fn mgr_count_metadata(&self, property: &str) -> Result<HashMap<String, u64>, RadosError> {

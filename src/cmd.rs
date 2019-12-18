@@ -9,6 +9,7 @@ extern crate serde_json;
 
 use crate::ceph::Rados;
 use crate::error::{RadosError, RadosResult};
+use crate::CephVersion;
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -43,11 +44,24 @@ pub struct CrushTree {
     pub stray: Vec<String>,
 }
 
+#[serde(untagged)]
+#[derive(Deserialize, Debug, Clone)]
+pub enum Mem {
+    MemNum { mem_swap_kb: u64, mem_total_kb: u64 },
+    MemStr { mem_swap_kb: String, mem_total_kb: String },
+}
+
 #[derive(Deserialize, Debug)]
+/// Manager Metadata
 pub struct MgrMetadata {
+    #[serde(alias = "name")]
     pub id: String,
+    pub addr: Option<String>, //nautilous
+    pub addrs: Option<String>,
     pub arch: String,
+    pub ceph_release: Option<String>,
     pub ceph_version: String,
+    pub ceph_version_short: Option<String>,
     pub cpu: String,
     pub distro: String,
     pub distro_description: String,
@@ -55,9 +69,159 @@ pub struct MgrMetadata {
     pub hostname: String,
     pub kernel_description: String,
     pub kernel_version: String,
-    pub mem_swap_kb: u64,
-    pub mem_total_kb: u64,
+    #[serde(flatten)]
+    pub mem: Mem,
     pub os: String,
+}
+
+#[serde(rename_all = "lowercase")]
+#[derive(Deserialize, Debug, Clone)]
+pub enum ObjectStoreType {
+    Bluestore,
+    Filestore,
+}
+
+#[serde(untagged, rename_all = "lowercase")]
+#[derive(Deserialize, Debug, Clone)]
+pub enum ObjectStoreMeta {
+    Bluestore {
+        bluefs: String,
+        bluefs_db_access_mode: String,
+        bluefs_db_block_size: String,
+        bluefs_db_dev: Option<String>, //Not in Nautilous
+        bluefs_db_dev_node: String,
+        bluefs_db_driver: String,
+        bluefs_db_model: Option<String>, //Not in Nautilous
+        bluefs_db_partition_path: String,
+        bluefs_db_rotational: String,
+        bluefs_db_serial: Option<String>, //Not in Nautilous
+        bluefs_db_size: String,
+        bluefs_db_support_discard: Option<String>, //Nautilous
+        bluefs_db_type: String,
+        bluefs_single_shared_device: String,
+        bluefs_slow_access_mode: Option<String>,    //Not in Nautilous
+        bluefs_slow_block_size: Option<String>,     //Not in Nautilous
+        bluefs_slow_dev: Option<String>,            //Not in Nautilous
+        bluefs_slow_dev_node: Option<String>,       //Not in Nautilous
+        bluefs_slow_driver: Option<String>,         //Not in Nautilous
+        bluefs_slow_model: Option<String>,          //Not in Nautilous
+        bluefs_slow_partition_path: Option<String>, //Not in Nautilous
+        bluefs_slow_rotational: Option<String>,     //Not in Nautilous
+        bluefs_slow_size: Option<String>,           //Not in Nautilous
+        bluefs_slow_type: Option<String>,           //Not in Nautilous
+        bluefs_wal_access_mode: Option<String>,     //Not in Nautilous
+        bluefs_wal_block_size: Option<String>,      //Not in Nautilous
+        bluefs_wal_dev: Option<String>,             //Not in Nautilous
+        bluefs_wal_dev_node: Option<String>,        //Not in Nautilous
+        bluefs_wal_driver: Option<String>,          //Not in Nautilous
+        bluefs_wal_model: Option<String>,           //Not in Nautilous
+        bluefs_wal_partition_path: Option<String>,  //Not in Nautilous
+        bluefs_wal_rotational: Option<String>,      //Not in Nautilous
+        bluefs_wal_serial: Option<String>,          //Not in Nautilous
+        bluefs_wal_size: Option<String>,            //Not in Nautilous
+        bluefs_wal_type: Option<String>,            //Not in Nautilous
+        bluestore_bdev_access_mode: String,
+        bluestore_bdev_block_size: String,
+        bluestore_bdev_dev: Option<String>, //Not in Nautilous
+        bluestore_bdev_dev_node: String,
+        bluestore_bdev_driver: String,
+        bluestore_bdev_model: Option<String>, //Not in Nautilous
+        bluestore_bdev_partition_path: String,
+        bluestore_bdev_rotational: String,
+        bluestore_bdev_size: String,
+        bluestore_bdev_support_discard: Option<String>, //Nautilous
+        bluestore_bdev_type: String,
+    },
+    Filestore {
+        backend_filestore_dev_node: String,
+        backend_filestore_partition_path: String,
+        filestore_backend: String,
+        filestore_f_type: String,
+    },
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct OsdMetadata {
+    pub id: u64,
+    pub arch: String,
+    pub back_addr: String,
+    pub back_iface: Option<String>,   //not in Jewel
+    pub ceph_release: Option<String>, //Nautilous
+    pub ceph_version: String,
+    pub ceph_version_short: Option<String>, //Nautilous
+    pub cpu: String,
+    pub default_device_class: Option<String>, //not in Jewel
+    pub device_ids: Option<String>,           //Nautilous
+    pub devices: Option<String>,              //Nautilous
+    pub distro: String,
+    pub distro_description: String,
+    pub distro_version: String,
+    pub front_addr: String,
+    pub front_iface: Option<String>, //not in Jewel
+    pub hb_back_addr: String,
+    pub hb_front_addr: String,
+    pub hostname: String,
+    pub journal_rotational: Option<String>, //not in Jewel
+    pub kernel_description: String,
+    pub kernel_version: String,
+    pub mem_swap_kb: String,
+    pub mem_total_kb: String,
+    pub os: String,
+    pub osd_data: String,
+    pub osd_journal: Option<String>, //not usually in bluestore
+    pub osd_objectstore: ObjectStoreType,
+    pub rotational: Option<String>, //Not in Jewel
+    #[serde(flatten)]
+    pub objectstore_meta: ObjectStoreMeta,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct PgState {
+    pub name: String,
+    pub num: u64,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct PgSummary {
+    pub num_pg_by_state: Vec<PgState>,
+    pub num_pgs: u64,
+    pub num_bytes: u64,
+    pub total_bytes: Option<u64>,          //Nautilous
+    pub total_avail_bytes: Option<u64>,    //Nautilous
+    pub total_used_bytes: Option<u64>,     //Nautilous
+    pub total_used_raw_bytes: Option<u64>, //Nautilous
+    pub raw_bytes_used: Option<u64>,
+    pub raw_bytes_avail: Option<u64>,
+    pub raw_bytes: Option<u64>,
+    pub read_bytes_sec: Option<u64>,
+    pub write_bytes_sec: Option<u64>,
+    pub io_sec: Option<u64>,
+    pub version: Option<u64>, //Jewel
+    pub degraded_objects: Option<u64>,
+    pub degraded_total: Option<u64>,
+    pub degraded_ratio: Option<f64>,
+    pub misplaced_objects: Option<u64>,
+    pub misplaced_total: Option<u64>,
+    pub misplaced_ratio: Option<f64>,
+    pub recovering_objects_per_sec: Option<u64>,
+    pub recovering_bytes_per_sec: Option<u64>,
+    pub recovering_keys_per_sec: Option<u64>,
+    pub num_objects_recovered: Option<u64>,
+    pub num_bytes_recovered: Option<u64>,
+    pub num_keys_revocered: Option<u64>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum PgStat {
+    Wrapped {
+        pg_ready: bool,
+        pg_summary: PgSummary,
+    },
+    UnWrapped {
+        #[serde(flatten)]
+        pg_summary: PgSummary,
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -585,10 +749,10 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     } else {
                         return Err(RadosError::Error(e));
                     }
-                }
+                },
                 _ => return Err(e),
             }
-        }
+        },
     };
     // I don't know why but config-key exists uses the status message
     // and not the regular output buffer
@@ -602,7 +766,7 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     status,
                 )))
             }
-        }
+        },
         None => Err(RadosError::Error(format!(
             "Unable to parse config-key exists output: {:?}",
             result.1,
@@ -1052,8 +1216,12 @@ pub fn mgr_disable_module(cluster_handle: &Rados, module: &str, simulate: bool) 
     Ok(())
 }
 
-/// dump metadata for all daemons
-pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
+/// dump metadata for all daemons.  Note this only works for Luminous+
+pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<Vec<MgrMetadata>> {
+    let vrsn: CephVersion = version(cluster_handle)?.parse()?;
+    if vrsn < CephVersion::Luminous {
+        return Err(RadosError::MinVersion(CephVersion::Luminous, vrsn));
+    }
     let cmd = json!({
         "prefix": "mgr metadata",
     });
@@ -1061,6 +1229,42 @@ pub fn mgr_metadata(cluster_handle: &Rados) -> RadosResult<MgrMetadata> {
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
+}
+
+/// dump metadata for all osds
+pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
+    let cmd = json!({
+        "prefix": "osd metadata",
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
+/// reweight an osd in the CRUSH map
+pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: f64, simulate: bool) -> RadosResult<()> {
+    let cmd = json!({
+        "prefix": "osd crush reweight",
+        "name":  format!("osd.{}", osd_id),
+        "weight": weight,
+    });
+    if !simulate {
+        cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    }
+    Ok(())
+}
+
+/// check if a single osd is safe to destroy/remove
+pub fn osd_safe_to_destroy(cluster_handle: &Rados, osd_id: u64) -> bool {
+    let cmd = json!({
+        "prefix": "osd safe-to-destroy",
+        "ids": [osd_id.to_string()]
+    });
+    match cluster_handle.ceph_mon_command_without_data(&cmd) {
+        Err(_) => false,
+        Ok(_) => true,
+    }
 }
 
 /// count ceph-mgr daemons by metadata field property
@@ -1081,6 +1285,13 @@ pub fn mgr_versions(cluster_handle: &Rados) -> RadosResult<HashMap<String, u64>>
         "prefix": "mgr versions",
     });
 
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
+pub fn pg_stat(cluster_handle: &Rados) -> RadosResult<PgStat> {
+    let cmd = json!({ "prefix": "pg stat", "format": "json"});
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result.0)?;
     Ok(serde_json::from_str(&return_data)?)
