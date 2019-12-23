@@ -89,6 +89,12 @@ pub enum LvmData {
         #[serde(flatten)]
         other_meta: Option<HashMap<String, String>>,
     },
+    // unknown type of ceph-volume lvm list output
+    Unknown {
+        //unknown metadata not captured through the above attributes
+        #[serde(flatten)]
+        unknown_meta: Option<HashMap<String, String>>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
