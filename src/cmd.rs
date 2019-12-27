@@ -945,12 +945,11 @@ impl CrushNodeStatus {
     }
 }
 
-
 /// get a crush tree of all osds that have the given status
 pub fn osd_tree_status(cluster_handle: &Rados, status: CrushNodeStatus) -> RadosResult<CrushTree> {
     let cmd = json!({
         "prefix": "osd tree",
-        "strings" : &status.to_string(),
+        "states" : &[&status.to_string()],
         "format": "json-pretty"
     });
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
