@@ -845,6 +845,17 @@ pub fn osd_crush_remove(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> 
     Ok(())
 }
 
+/// Get a list of all pools in the cluster
+pub fn osd_pool_ls(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
+    let cmd = json!({
+        "prefix": "osd pool ls",
+        "format": "json",
+    });
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
 /// Query a ceph pool.
 pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> RadosResult<String> {
     let cmd = json!({
