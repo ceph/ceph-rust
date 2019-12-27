@@ -945,8 +945,9 @@ impl CrushNodeStatus {
     }
 }
 
-/// get a crush tree of all osds that are out.  
-pub fn osd_tree_out(cluster_handle: &Rados, status: CrushNodeStatus) -> RadosResult<CrushTree> {
+
+/// get a crush tree of all osds that have the given status
+pub fn osd_tree_status(cluster_handle: &Rados, status: CrushNodeStatus) -> RadosResult<CrushTree> {
     let cmd = json!({
         "prefix": "osd tree",
         "strings" : &status.to_string(),
