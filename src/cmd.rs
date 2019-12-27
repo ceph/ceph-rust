@@ -845,6 +845,17 @@ pub fn osd_crush_remove(cluster_handle: &Rados, osd_id: u64, simulate: bool) -> 
     Ok(())
 }
 
+/// Get a list of all pools in the cluster
+pub fn osd_pool_ls(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
+    let cmd = json!({
+        "prefix": "osd pool ls",
+        "format": "json",
+    });
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
+}
+
 /// Query a ceph pool.
 pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> RadosResult<String> {
     let cmd = json!({
@@ -912,6 +923,39 @@ pub fn osd_unset(cluster_handle: &Rados, key: &OsdOption, simulate: bool) -> Rad
         cluster_handle.ceph_mon_command_without_data(&cmd)?;
     }
     Ok(())
+}
+
+pub enum CrushNodeStatus {
+    Up,
+    Down,
+    In,
+    Out,
+    Destroyed,
+}
+
+impl CrushNodeStatus {
+    pub fn to_string(&self) -> String {
+        match self {
+            CrushNodeStatus::Up => "up".to_string(),
+            CrushNodeStatus::Down => "down".to_string(),
+            CrushNodeStatus::In => "in".to_string(),
+            CrushNodeStatus::Out => "out".to_string(),
+            CrushNodeStatus::Destroyed => "destroyed".to_string(),
+        }
+    }
+}
+
+
+/// get a crush tree of all osds that have the given status
+pub fn osd_tree_status(cluster_handle: &Rados, status: CrushNodeStatus) -> RadosResult<CrushTree> {
+    let cmd = json!({
+        "prefix": "osd tree",
+        "strings" : &status.to_string(),
+        "format": "json-pretty"
+    });
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    Ok(serde_json::from_str(&return_data)?)
 }
 
 pub fn osd_tree(cluster_handle: &Rados) -> RadosResult<CrushTree> {
