@@ -72,6 +72,9 @@ pub struct MgrMetadata {
     #[serde(flatten)]
     pub mem: Mem,
     pub os: String,
+    // other metadata not captured through the above attributes
+    #[serde(flatten)]
+    other_meta: Option<HashMap<String, String>>,
 }
 
 #[serde(rename_all = "lowercase")]
@@ -173,6 +176,9 @@ pub struct OsdMetadata {
     pub rotational: Option<String>, //Not in Jewel
     #[serde(flatten)]
     pub objectstore_meta: ObjectStoreMeta,
+    // other metadata not captured through the above attributes
+    #[serde(flatten)]
+    other_meta: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -208,7 +214,10 @@ pub struct PgSummary {
     pub recovering_keys_per_sec: Option<u64>,
     pub num_objects_recovered: Option<u64>,
     pub num_bytes_recovered: Option<u64>,
-    pub num_keys_revocered: Option<u64>,
+    pub num_keys_recovered: Option<u64>,
+    // other metadata not captured through the above attributes
+    #[serde(flatten)]
+    other_meta: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -1294,7 +1303,7 @@ pub fn osd_metadata_by_id(cluster_handle: &Rados, osd_id: u64) -> RadosResult<Os
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result.0)?;
-    println!("{:?}", return_data);
+    trace!("{:?}", return_data);
     Ok(serde_json::from_str(&return_data)?)
 }
 
