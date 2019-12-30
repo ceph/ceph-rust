@@ -54,6 +54,9 @@ pub struct LvmTags {
     pub wal_device: Option<String>,
     #[serde(rename = "ceph.wal_uuid")]
     pub wal_uuid: Option<String>,
+    //Other tags that are not listed here
+    #[serde(flatten)]
+    pub other_tags: Option<HashMap<String, String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -69,12 +72,35 @@ pub struct LvmMeta {
     #[serde(rename = "type")]
     pub lv_type: String,
     pub vg_name: String,
+    // other metadata not captured through the above attributes
+    #[serde(flatten)]
+    pub other_meta: Option<HashMap<String, String>>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum LvmData {
+    Osd(LvmMeta),
+    Journal {
+        path: Option<String>,
+        tags: Option<HashMap<String, String>>,
+        #[serde(rename = "type")]
+        j_type: Option<String>,
+        // other metadata not captured through the above attributes
+        #[serde(flatten)]
+        other_meta: Option<HashMap<String, String>>,
+    },
+    // unknown type of ceph-volume lvm list output
+    Unknown {
+        //unknown metadata not captured through the above attributes
+        #[serde(flatten)]
+        unknown_meta: Option<HashMap<String, String>>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Lvm {
     #[serde(flatten)]
-    pub metadata: LvmMeta,
+    pub metadata: LvmData,
 }
 
 // Check the cluster version. If version < Luminous, error out

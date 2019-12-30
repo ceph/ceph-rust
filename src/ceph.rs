@@ -17,26 +17,27 @@
 use crate::JsonData;
 
 use crate::admin_sockets::*;
-use byteorder::{LittleEndian, WriteBytesExt};
 use crate::error::*;
 use crate::json::*;
-use libc::*;
-use nom::IResult;
-use nom::number::complete::le_u32;
-use serde_json;
 use crate::JsonValue;
+use byteorder::{LittleEndian, WriteBytesExt};
+use libc::*;
+use nom::number::complete::le_u32;
+use nom::IResult;
+use serde_json;
 
 use crate::rados::*;
-#[cfg(feature = "rados_striper")] use crate::rados_striper::*;
+#[cfg(feature = "rados_striper")]
+use crate::rados_striper::*;
 use crate::status::*;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::{ptr, str};
 
+use crate::utils::*;
 use std::io::{BufRead, Cursor};
 use std::net::IpAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use crate::utils::*;
 
 use uuid::Uuid;
 
@@ -62,38 +63,49 @@ pub enum CephCommandTypes {
 named!(
     parse_header<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_HDR) >> data_len: le_u32 >> data: take!(data_len) >> (TmapOperation::Header {
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_HDR)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Header { data: data.to_vec() })
     )
 );
 
 named!(
     parse_create<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_CREATE) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Create {
-            name: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_CREATE)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Create {
+                name: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_set<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_SET) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len) >> data_len: le_u32
-            >> data: take!(data_len) >> (TmapOperation::Set {
-            key: key_name.to_string(),
-            data: data.to_vec(),
-        })
+        char!(CEPH_OSD_TMAP_SET)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
+            >> data_len: le_u32
+            >> data: take!(data_len)
+            >> (TmapOperation::Set {
+                key: key_name.to_string(),
+                data: data.to_vec(),
+            })
     )
 );
 
 named!(
     parse_remove<TmapOperation>,
     do_parse!(
-        char!(CEPH_OSD_TMAP_RM) >> key_name_len: le_u32 >> key_name: take_str!(key_name_len)
+        char!(CEPH_OSD_TMAP_RM)
+            >> key_name_len: le_u32
+            >> key_name: take_str!(key_name_len)
             >> (TmapOperation::Remove {
                 name: key_name.to_string(),
             })
@@ -116,26 +128,26 @@ impl TmapOperation {
                 buffer.push(CEPH_OSD_TMAP_HDR as u8);
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            }
+            },
             TmapOperation::Set { ref key, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_SET as u8);
                 buffer.write_u32::<LittleEndian>(key.len() as u32)?;
                 buffer.extend(key.as_bytes());
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            }
+            },
             TmapOperation::Create { ref name, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_CREATE as u8);
                 buffer.write_u32::<LittleEndian>(name.len() as u32)?;
                 buffer.extend(name.as_bytes());
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            }
+            },
             TmapOperation::Remove { ref name } => {
                 buffer.push(CEPH_OSD_TMAP_RM as u8);
                 buffer.write_u32::<LittleEndian>(name.len() as u32)?;
                 buffer.extend(name.as_bytes());
-            }
+            },
         }
         Ok(buffer)
     }
@@ -280,12 +292,7 @@ impl Iterator for XAttr {
         let mut value: *const c_char = ptr::null();
         let mut val_length: usize = 0;
         unsafe {
-            let ret_code = rados_getxattrs_next(
-                self.iter,
-                &mut name,
-                &mut value,
-                &mut val_length,
-            );
+            let ret_code = rados_getxattrs_next(self.iter, &mut name, &mut value, &mut val_length);
 
             if ret_code < 0 {
                 // Something failed, however Iterator doesn't return Result so we return None
@@ -771,7 +778,6 @@ impl IoCtx {
     // unsafe {
     // }
     // }
-    //
     /// List all the ids of pool snapshots
     // pub fn rados_snap_list(ctx: rados_ioctx_t, snaps: *mut rados_snap_t) ->
     // RadosResult<()> {
@@ -792,7 +798,6 @@ impl IoCtx {
     // }
     // Ok(buffer)
     // }
-    //
     /// Get the id of a pool snapshot
     pub fn rados_snap_lookup(&self, snap_name: &str) -> RadosResult<u64> {
         self.ioctx_guard()?;
@@ -1537,7 +1542,6 @@ impl Rados {
     /// buf_size should be the value used with_capacity
     ///
     /// Returns Ok(Vec<String>) - A list of Strings of the pool names.
-    ///
     #[allow(unused_variables)]
     pub fn rados_pools(&self) -> RadosResult<Vec<String>> {
         self.conn_guard()?;
@@ -1672,11 +1676,7 @@ pub fn rados_libversion() -> RadosVersion {
     unsafe {
         rados_version(&mut major, &mut minor, &mut extra);
     }
-    RadosVersion {
-        major,
-        minor,
-        extra,
-    }
+    RadosVersion { major, minor, extra }
 }
 
 impl Rados {
@@ -1731,12 +1731,7 @@ impl Rados {
         let mut out_str: *mut c_char = ptr::null_mut();
         let mut str_length: usize = 0;
         unsafe {
-            let ret_code = rados_ping_monitor(
-                self.rados,
-                mon_id_str.as_ptr(),
-                &mut out_str,
-                &mut str_length,
-            );
+            let ret_code = rados_ping_monitor(self.rados, mon_id_str.as_ptr(), &mut out_str, &mut str_length);
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -1780,7 +1775,7 @@ pub fn ceph_version_parse() -> Option<String> {
             } else {
                 Some(String::from_utf8_lossy(&output.stderr).to_string())
             }
-        }
+        },
         Err(_) => None,
     }
 }
@@ -1800,7 +1795,7 @@ impl Rados {
                                 "The attributes were not found in the output.".to_string(),
                             ))
                         }
-                    }
+                    },
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
                 },
                 _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1833,7 +1828,7 @@ impl Rados {
                 } else {
                     CephHealth::Error
                 }
-            }
+            },
             Err(_) => CephHealth::Error,
         }
     }
@@ -1861,7 +1856,7 @@ impl Rados {
                                     "The attributes were not found in the output.".to_string(),
                                 ))
                             }
-                        }
+                        },
                         _ => Err(RadosError::new("JSON data not found.".to_string())),
                     },
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1889,7 +1884,7 @@ impl Rados {
                         } else {
                             Ok(jsondata)
                         }
-                    }
+                    },
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
                 },
                 _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1909,10 +1904,7 @@ impl Rados {
         self.ceph_mon_command_with_data(name, value, format, data)
     }
 
-    pub fn ceph_mon_command_without_data(
-        &self,
-        cmd: &serde_json::Value,
-    ) -> RadosResult<(Vec<u8>, Option<String>)> {
+    pub fn ceph_mon_command_without_data(&self, cmd: &serde_json::Value) -> RadosResult<(Vec<u8>, Option<String>)> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
@@ -2452,7 +2444,8 @@ impl RadosStriper {
         let mut xattr_iterator_handle: rados_xattrs_iter_t = ptr::null_mut();
 
         unsafe {
-            let ret_code = rados_striper_getxattrs(self.rados_striper, object_name_str.as_ptr(), &mut xattr_iterator_handle);
+            let ret_code =
+                rados_striper_getxattrs(self.rados_striper, object_name_str.as_ptr(), &mut xattr_iterator_handle);
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
