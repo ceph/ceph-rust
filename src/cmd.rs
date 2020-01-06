@@ -1348,7 +1348,11 @@ pub fn osd_metadata_by_id(cluster_handle: &Rados, osd_id: u64) -> RadosResult<Os
 
     let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
     let return_data = String::from_utf8(result.0)?;
+<<<<<<< HEAD
     trace!("{:?}", return_data);
+=======
+    println!("{:?}", return_data);
+>>>>>>> 3081cc1... Add command to get osd metadata specified by osd id
     Ok(serde_json::from_str(&return_data)?)
 }
 
