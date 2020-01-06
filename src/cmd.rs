@@ -1285,6 +1285,19 @@ pub fn osd_metadata(cluster_handle: &Rados) -> RadosResult<Vec<OsdMetadata>> {
     Ok(serde_json::from_str(&return_data)?)
 }
 
+/// get osd metadata for a specific osd id
+pub fn osd_metadata_by_id(cluster_handle: &Rados, osd_id: u64) -> RadosResult<OsdMetadata> {
+    let cmd = json!({
+        "prefix": "osd metadata",
+        "id": osd_id,
+    });
+
+    let result = cluster_handle.ceph_mon_command_without_data(&cmd)?;
+    let return_data = String::from_utf8(result.0)?;
+    println!("{:?}", return_data);
+    Ok(serde_json::from_str(&return_data)?)
+}
+
 /// reweight an osd in the CRUSH map
 pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: f64, simulate: bool) -> RadosResult<()> {
     let cmd = json!({
