@@ -270,9 +270,21 @@ pub struct MonStatus {
     pub election_epoch: u64,
     pub quorum: Vec<u64>,
     pub outside_quorum: Vec<String>,
-    pub extra_probe_peers: Vec<String>,
+    pub extra_probe_peers: Vec<ExtraProbePeer>,
     pub sync_provider: Vec<u64>,
     pub monmap: MonMap,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ExtraProbePeer {
+    addrvec: Vec<AddrVec>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AddrVec {
+    r#type: String,
+    addr: String,
+    nonce: i32
 }
 
 #[derive(Deserialize, Debug)]
