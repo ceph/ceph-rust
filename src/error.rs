@@ -15,7 +15,6 @@ extern crate serde_json;
 
 use crate::ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
-use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
@@ -48,16 +47,16 @@ pub type RadosResult<T> = Result<T, RadosError>;
 impl fmt::Display for RadosError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            RadosError::FromUtf8Error(ref e) => f.write_str(e.description()),
-            RadosError::NulError(ref e) => f.write_str(e.description()),
+            RadosError::FromUtf8Error(ref e) => f.write_str(&e.to_string()),
+            RadosError::NulError(ref e) => f.write_str(&e.to_string()),
             RadosError::Error(ref e) => f.write_str(&e),
-            RadosError::IoError(ref e) => f.write_str(e.description()),
+            RadosError::IoError(ref e) => f.write_str(&e.to_string()),
             RadosError::ApiError(ref e) => e.fmt(f),
-            RadosError::IntoStringError(ref e) => f.write_str(e.description()),
-            RadosError::UuidError(ref e) => f.write_str(e.description()),
-            RadosError::ParseBoolError(ref e) => f.write_str(e.description()),
-            RadosError::ParseIntError(ref e) => f.write_str(e.description()),
-            RadosError::SerdeError(ref e) => f.write_str(e.description()),
+            RadosError::IntoStringError(ref e) => f.write_str(&e.to_string()),
+            RadosError::UuidError(ref e) => f.write_str(&e.to_string()),
+            RadosError::ParseBoolError(ref e) => f.write_str(&e.to_string()),
+            RadosError::ParseIntError(ref e) => f.write_str(&e.to_string()),
+            RadosError::SerdeError(ref e) => f.write_str(&e.to_string()),
             RadosError::MinVersion(ref _min, ref _current_version) => f.write_str("Ceph version is too low"),
             RadosError::Parse(ref _input) => f.write_str("An error occurred during parsing"),
         }
