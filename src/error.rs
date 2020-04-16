@@ -15,7 +15,6 @@ extern crate serde_json;
 
 use crate::ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
-use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
