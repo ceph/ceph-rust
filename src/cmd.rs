@@ -276,8 +276,12 @@ pub struct MonStatus {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ExtraProbePeer {
-    addrvec: Vec<AddrVec>,
+#[serde(untagged)]
+pub enum ExtraProbePeer {
+    Present {
+        addrvec: Vec<AddrVec>,
+    },
+    Absent(String)
 }
 
 #[derive(Deserialize, Debug)]
