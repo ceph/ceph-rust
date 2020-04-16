@@ -1,6 +1,6 @@
 [package]
 name = "ceph"
-version = "3.2.1"
+version = "3.2.2"
 authors = [
     "Chris Jones <chris.jones@lambdastack.io>",
     "Chris Holcombe <xfactor973@gmail.com>",
