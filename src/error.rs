@@ -15,13 +15,13 @@ extern crate serde_json;
 
 use crate::ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
-use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use std::{fmt, str::ParseBoolError};
 use uuid::Error as UuidError;
+use std::error::Error as StdError;
 
 extern crate nix;
 
@@ -48,18 +48,69 @@ pub type RadosResult<T> = Result<T, RadosError>;
 impl fmt::Display for RadosError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            RadosError::FromUtf8Error(ref e) => f.write_str(e.description()),
-            RadosError::NulError(ref e) => f.write_str(e.description()),
+            RadosError::FromUtf8Error(ref e) => f.write_str(&e.to_string()),
+            RadosError::NulError(ref e) => f.write_str(&e.to_string()),
             RadosError::Error(ref e) => f.write_str(&e),
-            RadosError::IoError(ref e) => f.write_str(e.description()),
+            RadosError::IoError(ref e) => f.write_str(&e.to_string()),
             RadosError::ApiError(ref e) => e.fmt(f),
-            RadosError::IntoStringError(ref e) => f.write_str(e.description()),
-            RadosError::UuidError(ref e) => f.write_str(e.description()),
-            RadosError::ParseBoolError(ref e) => f.write_str(e.description()),
-            RadosError::ParseIntError(ref e) => f.write_str(e.description()),
-            RadosError::SerdeError(ref e) => f.write_str(e.description()),
+            RadosError::IntoStringError(ref e) => f.write_str(&e.to_string()),
+            RadosError::UuidError(ref e) => f.write_str(&e.to_string()),
+            RadosError::ParseBoolError(ref e) => f.write_str(&e.to_string()),
+            RadosError::ParseIntError(ref e) => f.write_str(&e.to_string()),
+            RadosError::SerdeError(ref e) => f.write_str(&e.to_string()),
             RadosError::MinVersion(ref _min, ref _current_version) => f.write_str("Ceph version is too low"),
             RadosError::Parse(ref _input) => f.write_str("An error occurred during parsing"),
+        }
+    }
+}
+impl StdError for RadosError {
+
+    fn description(&self) -> &str {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.description(),
+            RadosError::NulError(ref e) => e.description(),
+            RadosError::Error(ref e) => &e,
+            RadosError::IoError(ref e) => e.description(),
+            RadosError::ApiError(ref e) => e.description(),
+            RadosError::IntoStringError(ref e) => e.description(),
+            RadosError::UuidError(ref e) => e.description(),
+            RadosError::ParseBoolError(ref e) => e.description(),
+            RadosError::ParseIntError(ref e) => e.description(),
+            RadosError::SerdeError(ref e) => e.description(),
+            RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
+            RadosError::Parse(ref _input) => "An error occurred during parsing",
+        }
+    }
+    fn cause(&self) -> Option<&dyn StdError> {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.cause(),
+            RadosError::NulError(ref e) => e.cause(),
+            RadosError::Error(ref _e) => None,
+            RadosError::IoError(ref e) => e.cause(),
+            RadosError::ApiError(ref e) => e.cause(),
+            RadosError::IntoStringError(ref e) => e.cause(),
+            RadosError::UuidError(ref e) => e.cause(),
+            RadosError::ParseBoolError(ref e) => e.cause(),
+            RadosError::ParseIntError(ref e) => e.cause(),
+            RadosError::SerdeError(ref e) => e.cause(),
+            RadosError::MinVersion(ref _min, ref _current_version) => None,
+            RadosError::Parse(ref _input) => None,
+        }
+    }
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match *self {
+            RadosError::FromUtf8Error(ref e) => e.source(),
+            RadosError::NulError(ref e) => e.source(),
+            RadosError::Error(ref _e) => None,
+            RadosError::IoError(ref e) => e.source(),
+            RadosError::ApiError(ref e) => e.source(),
+            RadosError::IntoStringError(ref e) => e.source(),
+            RadosError::UuidError(ref e) => e.source(),
+            RadosError::ParseBoolError(ref e) => e.source(),
+            RadosError::ParseIntError(ref e) => e.source(),
+            RadosError::SerdeError(ref e) => e.source(),
+            RadosError::MinVersion(ref _min, ref _current_version) => None,
+            RadosError::Parse(ref _input) => None,
         }
     }
 }
