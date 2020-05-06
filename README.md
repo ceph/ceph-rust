@@ -23,7 +23,7 @@ There may be another way to change the link name in rust without having to creat
 On MacOS, you can install librados via homebrew:
 
 ```shell
-$ brewbrew tap zeichenanonym/ceph-client
+$ brew tap zeichenanonym/ceph-client
 $ brew install ceph-client
 ```
 

@@ -44,6 +44,18 @@ fn test_mon_status_jewel() {
 }
 
 #[test]
+fn test_mon_status_nautilus() {
+    let json = {
+        let mut buff = String::new();
+        let mut f = File::open("tests/mon_status-nautilus").unwrap();
+        f.read_to_string(&mut buff).unwrap();
+        buff
+    };
+    let status: MonStatus = serde_json::from_str(&json).unwrap();
+    println!("mon_status: {:#?}", status);
+}
+
+#[test]
 fn test_osd_tree_hammer() {
     let json = {
         let mut buff = String::new();
