@@ -65,40 +65,8 @@ impl fmt::Display for RadosError {
         }
     }
 }
-impl StdError for RadosError {
 
-    fn description(&self) -> &str {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.description(),
-            RadosError::NulError(ref e) => e.description(),
-            RadosError::Error(ref e) => &e,
-            RadosError::IoError(ref e) => e.description(),
-            RadosError::ApiError(ref e) => e.description(),
-            RadosError::IntoStringError(ref e) => e.description(),
-            RadosError::UuidError(ref e) => e.description(),
-            RadosError::ParseBoolError(ref e) => e.description(),
-            RadosError::ParseIntError(ref e) => e.description(),
-            RadosError::SerdeError(ref e) => e.description(),
-            RadosError::MinVersion(ref _min, ref _current_version) => "Ceph version is too low",
-            RadosError::Parse(ref _input) => "An error occurred during parsing",
-        }
-    }
-    fn cause(&self) -> Option<&dyn StdError> {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.cause(),
-            RadosError::NulError(ref e) => e.cause(),
-            RadosError::Error(ref _e) => None,
-            RadosError::IoError(ref e) => e.cause(),
-            RadosError::ApiError(ref e) => e.cause(),
-            RadosError::IntoStringError(ref e) => e.cause(),
-            RadosError::UuidError(ref e) => e.cause(),
-            RadosError::ParseBoolError(ref e) => e.cause(),
-            RadosError::ParseIntError(ref e) => e.cause(),
-            RadosError::SerdeError(ref e) => e.cause(),
-            RadosError::MinVersion(ref _min, ref _current_version) => None,
-            RadosError::Parse(ref _input) => None,
-        }
-    }
+impl StdError for RadosError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match *self {
             RadosError::FromUtf8Error(ref e) => e.source(),
