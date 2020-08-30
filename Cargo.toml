@@ -39,13 +39,13 @@ travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
 bitflags = "1.2.1"
 byteorder = "1"
 libc = "~0.2"
-log = "~0.4"
 nom = "5"
 serde_derive = "1"
 serde = "1"
 serde_json = "1"
 uuid = { version = "~0.8", features = ["serde"] }
 nix = "0.18"
+tracing = "0.1"
 
 [features]
 default = []
