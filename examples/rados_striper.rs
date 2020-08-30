@@ -1,13 +1,8 @@
-extern crate ceph;
-extern crate nix;
+#[cfg(feature = "rados_striper")]
+use {ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno};
 
-
-
-
-
-
-
-
+use std::env;
+use std::str;
 
 #[cfg(not(feature = "rados_striper"))]
 fn main() {}
