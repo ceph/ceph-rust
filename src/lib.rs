@@ -54,7 +54,7 @@ extern crate bitflags;
 extern crate byteorder;
 extern crate libc;
 #[macro_use]
-extern crate log;
+extern crate tracing;
 #[macro_use]
 extern crate nom;
 extern crate serde;

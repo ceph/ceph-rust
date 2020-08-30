@@ -21,6 +21,7 @@ mod tests {
     }
 }
 
+#[non_exhaustive]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CephVersion {
     Argonaut,
@@ -37,6 +38,7 @@ pub enum CephVersion {
     Luminous,
     Mimic,
     Nautilus,
+    Octopus,
 }
 
 impl FromStr for CephVersion {
@@ -54,6 +56,7 @@ impl FromStr for CephVersion {
                 (version_parts.next(), version_parts.next(), version_parts.next())
             {
                 match major {
+                    "15" => return Ok(Octopus),
                     "14" => return Ok(Nautilus),
                     "13" => return Ok(Mimic),
                     "12" => return Ok(Luminous),
@@ -69,24 +72,12 @@ impl FromStr for CephVersion {
                         "61" => return Ok(Cuttlefish),
                         "56" => return Ok(Bobtail),
                         "48" => return Ok(Argonaut),
-                        _ => {},
+                        _ => {}
                     },
-                    _ => {},
+                    _ => {}
                 }
             }
         }
         Err(RadosError::Parse(s.into()))
     }
 }
-
-// impl Ord for CephVersion {
-//     fn cmp(&self, other: &CephVersion) -> Ordering {
-//         self.height.cmp(&other.height)
-//     }
-// }
-
-// impl PartialOrd for CephVersion {
-//     fn partial_cmp(&self, other: &CephVersion) -> Option<Ordering> {
-//         Some(self.cmp(other))
-//     }
-// }
