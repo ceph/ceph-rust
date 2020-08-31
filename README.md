@@ -1,7 +1,7 @@
 ## Ceph Rust
 ### Official Ceph Rust interface
 
-[![Build Status](https://travis-ci.org/ceph/ceph-rust.svg?branch=master)](https://travis-ci.org/ceph/ceph-rust)
+[![Build Status](https://github.com/ceph/ceph-rust/workflows/CI/badge.svg)](https://github.com/ceph/ceph-rust/actions?query=workflow%3ACI)
 [![Version info](https://img.shields.io/crates/v/ceph.svg)](https://crates.io/crates/ceph)
 
 Official Ceph Rust-lang interface. Contributions welcomed!
