@@ -42,7 +42,10 @@ macro_rules! min_version {
 }
 
 impl CephClient {
-    pub fn new<T1: AsRef<str>, T2: AsRef<str>>(user_id: T1, config_file: T2) -> Result<CephClient, RadosError> {
+    pub fn new<T1: AsRef<str>, T2: AsRef<str>>(
+        user_id: T1,
+        config_file: T2,
+    ) -> Result<CephClient, RadosError> {
         let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
             Ok(rados_t) => rados_t,
             Err(e) => return Err(e),
@@ -66,7 +69,9 @@ impl CephClient {
 
     pub fn osd_out(&self, osd_id: u64) -> Result<(), RadosError> {
         let osd_id = osd_id.to_string();
-        let cmd = MonCommand::new().with_prefix("osd out").with("ids", &osd_id);
+        let cmd = MonCommand::new()
+            .with_prefix("osd out")
+            .with("ids", &osd_id);
 
         if !self.simulate {
             self.run_command(cmd)?;
@@ -76,7 +81,9 @@ impl CephClient {
 
     pub fn osd_crush_remove(&self, osd_id: u64) -> Result<(), RadosError> {
         let osd_id = format!("osd.{}", osd_id);
-        let cmd = MonCommand::new().with_prefix("osd crush remove").with_name(&osd_id);
+        let cmd = MonCommand::new()
+            .with_prefix("osd crush remove")
+            .with_name(&osd_id);
         if !self.simulate {
             self.run_command(cmd)?;
         }
@@ -98,11 +105,13 @@ impl CephClient {
                         "Unable to parse osd pool get output: {:?}",
                         result,
                     )))
-                },
+                }
             }
         }
 
-        Err(RadosError::Error("No response from ceph for osd pool get".into()))
+        Err(RadosError::Error(
+            "No response from ceph for osd pool get".into(),
+        ))
     }
     /// Set a pool value
     pub fn osd_pool_set(&self, pool: &str, key: &str, value: &str) -> Result<(), RadosError> {
@@ -229,13 +238,24 @@ impl CephClient {
     // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
     /// add or update crushmap position and weight for an osd
     pub fn osd_crush_add(&self, osd_id: u64, weight: f64, host: &str) -> Result<(), RadosError> {
-        Ok(cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)?)
+        Ok(cmd::osd_crush_add(
+            &self.rados_t,
+            osd_id,
+            weight,
+            host,
+            self.simulate,
+        )?)
     }
 
     // ceph osd crush reweight {id} {weight}
     /// reweight an osd in the CRUSH map
     pub fn osd_crush_reweight(&self, osd_id: u64, weight: f64) -> Result<(), RadosError> {
-        Ok(cmd::osd_crush_reweight(&self.rados_t, osd_id, weight, self.simulate)?)
+        Ok(cmd::osd_crush_reweight(
+            &self.rados_t,
+            osd_id,
+            weight,
+            self.simulate,
+        )?)
     }
 
     /// check if a single osd is safe to destroy/remove
@@ -267,12 +287,21 @@ impl CephClient {
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        Ok(cmd::mgr_enable_module(&self.rados_t, module, force, self.simulate)?)
+        Ok(cmd::mgr_enable_module(
+            &self.rados_t,
+            module,
+            force,
+            self.simulate,
+        )?)
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        Ok(cmd::mgr_disable_module(&self.rados_t, module, self.simulate)?)
+        Ok(cmd::mgr_disable_module(
+            &self.rados_t,
+            module,
+            self.simulate,
+        )?)
     }
 
     pub fn mgr_metadata(&self) -> Result<Vec<cmd::MgrMetadata>, RadosError> {
@@ -328,7 +357,8 @@ impl CephClient {
         debug!("return code: {}", ret_code);
         if ret_code < 0 {
             if outs_len > 0 && !outs.is_null() {
-                let slice = unsafe { ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize) };
+                let slice =
+                    unsafe { ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize) };
                 str_outs = String::from_utf8_lossy(slice).into_owned();
 
                 unsafe {
@@ -344,7 +374,8 @@ impl CephClient {
 
         // Copy the data from outbuf and then  call rados_buffer_free instead libc::free
         if outbuf_len > 0 && !outbuf.is_null() {
-            let slice = unsafe { ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize) };
+            let slice =
+                unsafe { ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize) };
             str_outbuf = String::from_utf8_lossy(slice).into_owned();
 
             unsafe {

@@ -162,11 +162,13 @@ pub type rados_read_op_t = *mut ::std::os::raw::c_void;
 
 pub type rados_completion_t = *mut ::std::os::raw::c_void;
 
-pub type rados_callback_t =
-    ::std::option::Option<extern "C" fn(cb: rados_completion_t, arg: *mut ::std::os::raw::c_void) -> ()>;
+pub type rados_callback_t = ::std::option::Option<
+    extern "C" fn(cb: rados_completion_t, arg: *mut ::std::os::raw::c_void) -> (),
+>;
 
-pub type rados_watchcb_t =
-    ::std::option::Option<extern "C" fn(opcode: u8, ver: u64, arg: *mut ::std::os::raw::c_void) -> ()>;
+pub type rados_watchcb_t = ::std::option::Option<
+    extern "C" fn(opcode: u8, ver: u64, arg: *mut ::std::os::raw::c_void) -> (),
+>;
 
 pub type rados_watchcb2_t = ::std::option::Option<
     extern "C" fn(
@@ -179,8 +181,9 @@ pub type rados_watchcb2_t = ::std::option::Option<
     ) -> (),
 >;
 
-pub type rados_watcherrcb_t =
-    ::std::option::Option<extern "C" fn(pre: *mut ::std::os::raw::c_void, cookie: u64, err: ::libc::c_int) -> ()>;
+pub type rados_watcherrcb_t = ::std::option::Option<
+    extern "C" fn(pre: *mut ::std::os::raw::c_void, cookie: u64, err: ::libc::c_int) -> (),
+>;
 
 pub type rados_log_callback_t = ::std::option::Option<
     extern "C" fn(
@@ -198,7 +201,11 @@ pub type rados_log_callback_t = ::std::option::Option<
 #[cfg(unix)]
 #[link(name = "rados", kind = "dylib")]
 extern "C" {
-    pub fn rados_version(major: *mut ::libc::c_int, minor: *mut ::libc::c_int, extra: *mut ::libc::c_int) -> ();
+    pub fn rados_version(
+        major: *mut ::libc::c_int,
+        minor: *mut ::libc::c_int,
+        extra: *mut ::libc::c_int,
+    ) -> ();
 
     pub fn rados_create(cluster: *mut rados_t, id: *const ::libc::c_char) -> ::libc::c_int;
 
@@ -252,17 +259,28 @@ extern "C" {
         len: size_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_cluster_stat(cluster: rados_t, result: *mut Struct_rados_cluster_stat_t) -> ::libc::c_int;
+    pub fn rados_cluster_stat(
+        cluster: rados_t,
+        result: *mut Struct_rados_cluster_stat_t,
+    ) -> ::libc::c_int;
 
     /// The Ceph documentation states that the return value of 0 means success
     /// but actually a value < 0 is an error and a value > 0 is the length
     /// which should be 36.
     ///
-    pub fn rados_cluster_fsid(cluster: rados_t, buf: *mut ::libc::c_char, len: size_t) -> ::libc::c_int;
+    pub fn rados_cluster_fsid(
+        cluster: rados_t,
+        buf: *mut ::libc::c_char,
+        len: size_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_wait_for_latest_osdmap(cluster: rados_t) -> ::libc::c_int;
 
-    pub fn rados_pool_list(cluster: rados_t, buf: *mut ::libc::c_char, len: size_t) -> ::libc::c_int;
+    pub fn rados_pool_list(
+        cluster: rados_t,
+        buf: *mut ::libc::c_char,
+        len: size_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_cct(cluster: rados_t) -> rados_config_t;
 
@@ -274,7 +292,11 @@ extern "C" {
         ioctx: *mut rados_ioctx_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_create2(cluster: rados_t, pool_id: i64, ioctx: *mut rados_ioctx_t) -> ::libc::c_int;
+    pub fn rados_ioctx_create2(
+        cluster: rados_t,
+        pool_id: i64,
+        ioctx: *mut rados_ioctx_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_ioctx_destroy(io: rados_ioctx_t) -> ();
 
@@ -282,7 +304,10 @@ extern "C" {
 
     pub fn rados_ioctx_get_cluster(io: rados_ioctx_t) -> rados_t;
 
-    pub fn rados_ioctx_pool_stat(io: rados_ioctx_t, stats: *mut Struct_rados_pool_stat_t) -> ::libc::c_int;
+    pub fn rados_ioctx_pool_stat(
+        io: rados_ioctx_t,
+        stats: *mut Struct_rados_pool_stat_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_pool_lookup(cluster: rados_t, pool_name: *const ::libc::c_char) -> i64;
 
@@ -315,7 +340,11 @@ extern "C" {
         crush_rule_num: u8,
     ) -> ::libc::c_int;
 
-    pub fn rados_pool_get_base_tier(cluster: rados_t, pool: i64, base_tier: *mut i64) -> ::libc::c_int;
+    pub fn rados_pool_get_base_tier(
+        cluster: rados_t,
+        pool: i64,
+        base_tier: *mut i64,
+    ) -> ::libc::c_int;
 
     pub fn rados_pool_delete(cluster: rados_t, pool_name: *const ::libc::c_char) -> ::libc::c_int;
 
@@ -339,7 +368,8 @@ extern "C" {
 
     pub fn rados_ioctx_set_namespace(io: rados_ioctx_t, nspace: *const ::libc::c_char) -> ();
 
-    pub fn rados_nobjects_list_open(io: rados_ioctx_t, ctx: *mut rados_list_ctx_t) -> ::libc::c_int;
+    pub fn rados_nobjects_list_open(io: rados_ioctx_t, ctx: *mut rados_list_ctx_t)
+        -> ::libc::c_int;
 
     pub fn rados_nobjects_list_get_pg_hash_position(ctx: rados_list_ctx_t) -> u32;
 
@@ -368,9 +398,15 @@ extern "C" {
 
     pub fn rados_objects_list_close(ctx: rados_list_ctx_t) -> ();
 
-    pub fn rados_ioctx_snap_create(io: rados_ioctx_t, snapname: *const ::libc::c_char) -> ::libc::c_int;
+    pub fn rados_ioctx_snap_create(
+        io: rados_ioctx_t,
+        snapname: *const ::libc::c_char,
+    ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_snap_remove(io: rados_ioctx_t, snapname: *const ::libc::c_char) -> ::libc::c_int;
+    pub fn rados_ioctx_snap_remove(
+        io: rados_ioctx_t,
+        snapname: *const ::libc::c_char,
+    ) -> ::libc::c_int;
 
     pub fn rados_ioctx_snap_rollback(
         io: rados_ioctx_t,
@@ -386,9 +422,15 @@ extern "C" {
 
     pub fn rados_ioctx_snap_set_read(io: rados_ioctx_t, snap: rados_snap_t) -> ();
 
-    pub fn rados_ioctx_selfmanaged_snap_create(io: rados_ioctx_t, snapid: *mut rados_snap_t) -> ::libc::c_int;
+    pub fn rados_ioctx_selfmanaged_snap_create(
+        io: rados_ioctx_t,
+        snapid: *mut rados_snap_t,
+    ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_selfmanaged_snap_remove(io: rados_ioctx_t, snapid: rados_snap_t) -> ::libc::c_int;
+    pub fn rados_ioctx_selfmanaged_snap_remove(
+        io: rados_ioctx_t,
+        snapid: rados_snap_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_ioctx_selfmanaged_snap_rollback(
         io: rados_ioctx_t,
@@ -403,7 +445,11 @@ extern "C" {
         num_snaps: ::libc::c_int,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_snap_list(io: rados_ioctx_t, snaps: *mut rados_snap_t, maxlen: ::libc::c_int) -> ::libc::c_int;
+    pub fn rados_ioctx_snap_list(
+        io: rados_ioctx_t,
+        snaps: *mut rados_snap_t,
+        maxlen: ::libc::c_int,
+    ) -> ::libc::c_int;
 
     pub fn rados_ioctx_snap_lookup(
         io: rados_ioctx_t,
@@ -418,7 +464,11 @@ extern "C" {
         maxlen: ::libc::c_int,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_snap_get_stamp(io: rados_ioctx_t, id: rados_snap_t, t: *mut time_t) -> ::libc::c_int;
+    pub fn rados_ioctx_snap_get_stamp(
+        io: rados_ioctx_t,
+        id: rados_snap_t,
+        t: *mut time_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_get_last_version(io: rados_ioctx_t) -> u64;
 
@@ -481,7 +531,11 @@ extern "C" {
         len: size_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_rmxattr(io: rados_ioctx_t, o: *const ::libc::c_char, name: *const ::libc::c_char) -> ::libc::c_int;
+    pub fn rados_rmxattr(
+        io: rados_ioctx_t,
+        o: *const ::libc::c_char,
+        name: *const ::libc::c_char,
+    ) -> ::libc::c_int;
 
     pub fn rados_getxattrs(
         io: rados_ioctx_t,
@@ -598,7 +652,10 @@ extern "C" {
         off: u64,
     ) -> ::libc::c_int;
     pub fn rados_aio_flush(io: rados_ioctx_t) -> ::libc::c_int;
-    pub fn rados_aio_flush_async(io: rados_ioctx_t, completion: rados_completion_t) -> ::libc::c_int;
+    pub fn rados_aio_flush_async(
+        io: rados_ioctx_t,
+        completion: rados_completion_t,
+    ) -> ::libc::c_int;
     pub fn rados_aio_stat(
         io: rados_ioctx_t,
         o: *const ::libc::c_char,
@@ -624,7 +681,8 @@ extern "C" {
         arg: *mut ::std::os::raw::c_void,
     ) -> ::libc::c_int;
     pub fn rados_watch_check(io: rados_ioctx_t, cookie: u64) -> ::libc::c_int;
-    pub fn rados_unwatch(io: rados_ioctx_t, o: *const ::libc::c_char, cookie: u64) -> ::libc::c_int;
+    pub fn rados_unwatch(io: rados_ioctx_t, o: *const ::libc::c_char, cookie: u64)
+        -> ::libc::c_int;
     pub fn rados_unwatch2(io: rados_ioctx_t, cookie: u64) -> ::libc::c_int;
     pub fn rados_notify(
         io: rados_ioctx_t,
@@ -695,8 +753,16 @@ extern "C" {
         len: size_t,
         offset: u64,
     ) -> ();
-    pub fn rados_write_op_write_full(write_op: rados_write_op_t, buffer: *const ::libc::c_char, len: size_t) -> ();
-    pub fn rados_write_op_append(write_op: rados_write_op_t, buffer: *const ::libc::c_char, len: size_t) -> ();
+    pub fn rados_write_op_write_full(
+        write_op: rados_write_op_t,
+        buffer: *const ::libc::c_char,
+        len: size_t,
+    ) -> ();
+    pub fn rados_write_op_append(
+        write_op: rados_write_op_t,
+        buffer: *const ::libc::c_char,
+        len: size_t,
+    ) -> ();
     pub fn rados_write_op_remove(write_op: rados_write_op_t) -> ();
     pub fn rados_write_op_truncate(write_op: rados_write_op_t, offset: u64) -> ();
     pub fn rados_write_op_zero(write_op: rados_write_op_t, offset: u64, len: u64) -> ();

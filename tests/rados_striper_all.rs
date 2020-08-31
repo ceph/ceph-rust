@@ -128,6 +128,12 @@ fn test_rados_striper() {
         );
         rados_striper_aio_remove(rados_striper, obj_name_ptr, completion);
         rados_striper_aio_flush(rados_striper);
-        rados_striper_aio_stat(rados_striper, obj_name_ptr, completion, &mut psize, &mut time);
+        rados_striper_aio_stat(
+            rados_striper,
+            obj_name_ptr,
+            completion,
+            &mut psize,
+            &mut time,
+        );
     }
 }

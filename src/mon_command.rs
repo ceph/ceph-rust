@@ -8,7 +8,9 @@ mod tests {
 
     #[test]
     fn it_builds_a_mon_command() {
-        let command = MonCommand::new().with_prefix("osd set").with("key", "osdout");
+        let command = MonCommand::new()
+            .with_prefix("osd set")
+            .with("key", "osdout");
 
         let actual: HashMap<String, String> = serde_json::from_str(&command.as_json()).unwrap();
         let expected: HashMap<String, String> =

@@ -37,7 +37,10 @@ pub type rados_striper_multi_completion_t = *mut ::std::os::raw::c_void;
 #[cfg(feature = "rados_striper")]
 #[link(name = "radosstriper", kind = "dylib")]
 extern "C" {
-    pub fn rados_striper_create(ioctx: rados_ioctx_t, striper: *mut rados_striper_t) -> ::libc::c_int;
+    pub fn rados_striper_create(
+        ioctx: rados_ioctx_t,
+        striper: *mut rados_striper_t,
+    ) -> ::libc::c_int;
 
     pub fn rados_striper_destroy(striper: rados_striper_t) -> ();
 
@@ -86,9 +89,16 @@ extern "C" {
         off: u64,
     ) -> ::libc::c_int;
 
-    pub fn rados_striper_remove(striper: rados_striper_t, soid: *const ::libc::c_char) -> ::libc::c_int;
+    pub fn rados_striper_remove(
+        striper: rados_striper_t,
+        soid: *const ::libc::c_char,
+    ) -> ::libc::c_int;
 
-    pub fn rados_striper_trunc(striper: rados_striper_t, soid: *const ::libc::c_char, size: u64) -> ::libc::c_int;
+    pub fn rados_striper_trunc(
+        striper: rados_striper_t,
+        soid: *const ::libc::c_char,
+        size: u64,
+    ) -> ::libc::c_int;
 
     pub fn rados_striper_getxattr(
         striper: rados_striper_t,
@@ -140,15 +150,31 @@ extern "C" {
         cb_safe: rados_callback_t,
         pc: *mut rados_striper_multi_completion_t,
     ) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_wait_for_complete(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_wait_for_safe(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_is_complete(c: rados_striper_multi_completion_t) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_wait_for_complete(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_wait_for_safe(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_is_complete(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
     pub fn rados_striper_multi_aio_is_safe(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_wait_for_complete_and_cb(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_wait_for_safe_and_cb(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_is_complete_and_cb(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_is_safe_and_cb(c: rados_striper_multi_completion_t) -> ::libc::c_int;
-    pub fn rados_striper_multi_aio_get_return_value(c: rados_striper_multi_completion_t) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_wait_for_complete_and_cb(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_wait_for_safe_and_cb(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_is_complete_and_cb(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_is_safe_and_cb(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
+    pub fn rados_striper_multi_aio_get_return_value(
+        c: rados_striper_multi_completion_t,
+    ) -> ::libc::c_int;
     pub fn rados_striper_multi_aio_release(c: rados_striper_multi_completion_t) -> ();
 
     pub fn rados_striper_aio_write(
