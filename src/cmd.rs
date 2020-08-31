@@ -47,8 +47,14 @@ pub struct CrushTree {
 #[serde(untagged)]
 #[derive(Deserialize, Debug, Clone)]
 pub enum Mem {
-    MemNum { mem_swap_kb: u64, mem_total_kb: u64 },
-    MemStr { mem_swap_kb: String, mem_total_kb: String },
+    MemNum {
+        mem_swap_kb: u64,
+        mem_total_kb: u64,
+    },
+    MemStr {
+        mem_swap_kb: String,
+        mem_total_kb: String,
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -102,27 +108,27 @@ pub enum ObjectStoreMeta {
         bluefs_db_support_discard: Option<String>, //Nautilous
         bluefs_db_type: String,
         bluefs_single_shared_device: String,
-        bluefs_slow_access_mode: Option<String>,    //Not in Nautilous
-        bluefs_slow_block_size: Option<String>,     //Not in Nautilous
-        bluefs_slow_dev: Option<String>,            //Not in Nautilous
-        bluefs_slow_dev_node: Option<String>,       //Not in Nautilous
-        bluefs_slow_driver: Option<String>,         //Not in Nautilous
-        bluefs_slow_model: Option<String>,          //Not in Nautilous
+        bluefs_slow_access_mode: Option<String>, //Not in Nautilous
+        bluefs_slow_block_size: Option<String>,  //Not in Nautilous
+        bluefs_slow_dev: Option<String>,         //Not in Nautilous
+        bluefs_slow_dev_node: Option<String>,    //Not in Nautilous
+        bluefs_slow_driver: Option<String>,      //Not in Nautilous
+        bluefs_slow_model: Option<String>,       //Not in Nautilous
         bluefs_slow_partition_path: Option<String>, //Not in Nautilous
-        bluefs_slow_rotational: Option<String>,     //Not in Nautilous
-        bluefs_slow_size: Option<String>,           //Not in Nautilous
-        bluefs_slow_type: Option<String>,           //Not in Nautilous
-        bluefs_wal_access_mode: Option<String>,     //Not in Nautilous
-        bluefs_wal_block_size: Option<String>,      //Not in Nautilous
-        bluefs_wal_dev: Option<String>,             //Not in Nautilous
-        bluefs_wal_dev_node: Option<String>,        //Not in Nautilous
-        bluefs_wal_driver: Option<String>,          //Not in Nautilous
-        bluefs_wal_model: Option<String>,           //Not in Nautilous
-        bluefs_wal_partition_path: Option<String>,  //Not in Nautilous
-        bluefs_wal_rotational: Option<String>,      //Not in Nautilous
-        bluefs_wal_serial: Option<String>,          //Not in Nautilous
-        bluefs_wal_size: Option<String>,            //Not in Nautilous
-        bluefs_wal_type: Option<String>,            //Not in Nautilous
+        bluefs_slow_rotational: Option<String>,  //Not in Nautilous
+        bluefs_slow_size: Option<String>,        //Not in Nautilous
+        bluefs_slow_type: Option<String>,        //Not in Nautilous
+        bluefs_wal_access_mode: Option<String>,  //Not in Nautilous
+        bluefs_wal_block_size: Option<String>,   //Not in Nautilous
+        bluefs_wal_dev: Option<String>,          //Not in Nautilous
+        bluefs_wal_dev_node: Option<String>,     //Not in Nautilous
+        bluefs_wal_driver: Option<String>,       //Not in Nautilous
+        bluefs_wal_model: Option<String>,        //Not in Nautilous
+        bluefs_wal_partition_path: Option<String>, //Not in Nautilous
+        bluefs_wal_rotational: Option<String>,   //Not in Nautilous
+        bluefs_wal_serial: Option<String>,       //Not in Nautilous
+        bluefs_wal_size: Option<String>,         //Not in Nautilous
+        bluefs_wal_type: Option<String>,         //Not in Nautilous
         bluestore_bdev_access_mode: String,
         bluestore_bdev_block_size: String,
         bluestore_bdev_dev: Option<String>, //Not in Nautilous
@@ -278,17 +284,15 @@ pub struct MonStatus {
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum ExtraProbePeer {
-    Present {
-        addrvec: Vec<AddrVec>,
-    },
-    Absent(String)
+    Present { addrvec: Vec<AddrVec> },
+    Absent(String),
 }
 
 #[derive(Deserialize, Debug)]
 pub struct AddrVec {
     r#type: String,
     addr: String,
-    nonce: i32
+    nonce: i32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -774,10 +778,10 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     } else {
                         return Err(RadosError::Error(e));
                     }
-                },
+                }
                 _ => return Err(e),
             }
-        },
+        }
     };
     // I don't know why but config-key exists uses the status message
     // and not the regular output buffer
@@ -791,7 +795,7 @@ pub fn config_key_exists(cluster_handle: &Rados, key: &str) -> RadosResult<bool>
                     status,
                 )))
             }
-        },
+        }
         None => Err(RadosError::Error(format!(
             "Unable to parse config-key exists output: {:?}",
             result.1,
@@ -833,7 +837,12 @@ pub fn config_key_remove(cluster_handle: &Rados, key: &str, simulate: bool) -> R
 }
 
 /// Set a given configuration key in the monitor cluster
-pub fn config_key_set(cluster_handle: &Rados, key: &str, value: &str, simulate: bool) -> RadosResult<()> {
+pub fn config_key_set(
+    cluster_handle: &Rados,
+    key: &str,
+    value: &str,
+    simulate: bool,
+) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "config-key set",
         "key": key,
@@ -882,7 +891,11 @@ pub fn osd_pool_ls(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 }
 
 /// Query a ceph pool.
-pub fn osd_pool_get(cluster_handle: &Rados, pool: &str, choice: &PoolOption) -> RadosResult<String> {
+pub fn osd_pool_get(
+    cluster_handle: &Rados,
+    pool: &str,
+    choice: &PoolOption,
+) -> RadosResult<String> {
     let cmd = json!({
         "prefix": "osd pool get",
         "pool": pool,
@@ -920,7 +933,12 @@ pub fn osd_pool_set(
     Ok(())
 }
 
-pub fn osd_set(cluster_handle: &Rados, key: &OsdOption, force: bool, simulate: bool) -> RadosResult<()> {
+pub fn osd_set(
+    cluster_handle: &Rados,
+    key: &OsdOption,
+    force: bool,
+    simulate: bool,
+) -> RadosResult<()> {
     let cmd = if force {
         json!({
             "prefix": "osd set",
@@ -1188,7 +1206,13 @@ pub fn auth_get_key(cluster_handle: &Rados, client_type: &str, id: &str) -> Rado
 
 // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
 /// add or update crushmap position and weight for an osd
-pub fn osd_crush_add(cluster_handle: &Rados, osd_id: u64, weight: f64, host: &str, simulate: bool) -> RadosResult<()> {
+pub fn osd_crush_add(
+    cluster_handle: &Rados,
+    osd_id: u64,
+    weight: f64,
+    host: &str,
+    simulate: bool,
+) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush add",
         "id": osd_id,
@@ -1251,7 +1275,12 @@ pub fn mgr_list_services(cluster_handle: &Rados) -> RadosResult<Vec<String>> {
 }
 
 /// Enable a mgr module
-pub fn mgr_enable_module(cluster_handle: &Rados, module: &str, force: bool, simulate: bool) -> RadosResult<()> {
+pub fn mgr_enable_module(
+    cluster_handle: &Rados,
+    module: &str,
+    force: bool,
+    simulate: bool,
+) -> RadosResult<()> {
     let cmd = if force {
         json!({
             "prefix": "mgr module enable",
@@ -1324,7 +1353,12 @@ pub fn osd_metadata_by_id(cluster_handle: &Rados, osd_id: u64) -> RadosResult<Os
 }
 
 /// reweight an osd in the CRUSH map
-pub fn osd_crush_reweight(cluster_handle: &Rados, osd_id: u64, weight: f64, simulate: bool) -> RadosResult<()> {
+pub fn osd_crush_reweight(
+    cluster_handle: &Rados,
+    osd_id: u64,
+    weight: f64,
+    simulate: bool,
+) -> RadosResult<()> {
     let cmd = json!({
         "prefix": "osd crush reweight",
         "name":  format!("osd.{}", osd_id),
@@ -1349,7 +1383,10 @@ pub fn osd_safe_to_destroy(cluster_handle: &Rados, osd_id: u64) -> bool {
 }
 
 /// count ceph-mgr daemons by metadata field property
-pub fn mgr_count_metadata(cluster_handle: &Rados, property: &str) -> RadosResult<HashMap<String, u64>> {
+pub fn mgr_count_metadata(
+    cluster_handle: &Rados,
+    property: &str,
+) -> RadosResult<HashMap<String, u64>> {
     let cmd = json!({
         "prefix": "mgr count-metadata",
         "name": property,

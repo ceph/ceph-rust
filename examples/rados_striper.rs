@@ -57,7 +57,9 @@ fn main() {
         let mut read_buf = vec![0; size as usize];
 
         println!("Reading test object");
-        rados_striper.rados_object_read(object_name, &mut read_buf, 0).unwrap();
+        rados_striper
+            .rados_object_read(object_name, &mut read_buf, 0)
+            .unwrap();
 
         let read_buf_str = str::from_utf8(&read_buf).unwrap();
 

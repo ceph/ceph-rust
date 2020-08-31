@@ -15,13 +15,13 @@ extern crate serde_json;
 
 use crate::ceph_version::CephVersion;
 use serde_json::error::Error as SerdeJsonError;
+use std::error::Error as StdError;
 use std::ffi::{IntoStringError, NulError};
 use std::io::Error;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use std::{fmt, str::ParseBoolError};
 use uuid::Error as UuidError;
-use std::error::Error as StdError;
 
 extern crate nix;
 
@@ -58,7 +58,9 @@ impl fmt::Display for RadosError {
             RadosError::ParseBoolError(ref e) => f.write_str(&e.to_string()),
             RadosError::ParseIntError(ref e) => f.write_str(&e.to_string()),
             RadosError::SerdeError(ref e) => f.write_str(&e.to_string()),
-            RadosError::MinVersion(ref _min, ref _current_version) => f.write_str("Ceph version is too low"),
+            RadosError::MinVersion(ref _min, ref _current_version) => {
+                f.write_str("Ceph version is too low")
+            }
             RadosError::Parse(ref _input) => f.write_str("An error occurred during parsing"),
         }
     }

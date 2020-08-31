@@ -2,7 +2,6 @@ extern crate ceph;
 extern crate serde;
 extern crate serde_json;
 
-
 use ceph::cmd::{ClusterHealth, CrushTree, MonStatus};
 use std::fs::File;
 use std::io::Read;
