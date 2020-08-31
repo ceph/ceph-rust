@@ -30,7 +30,7 @@ RUN set -eux; \
 RUN apt-get update \
     && apt-get install apt-transport-https \
     && wget -q -O- 'https://download.ceph.com/keys/release.asc' | apt-key add - \
-    && echo "deb https://download.ceph.com/debian-nautilus/ xenial main" > /etc/apt/sources.list.d/ceph.list \
+    && echo "deb https://download.ceph.com/debian-octopus/ focal main" > /etc/apt/sources.list.d/ceph.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         uuid-runtime \
