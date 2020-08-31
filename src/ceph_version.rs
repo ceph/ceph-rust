@@ -50,11 +50,15 @@ impl FromStr for CephVersion {
     fn from_str(s: &str) -> Result<Self, RadosError> {
         use crate::CephVersion::*;
         let mut parts = s.split(' ');
-        if let (Some(_ceph), Some(_version), Some(version_str)) = (parts.next(), parts.next(), parts.next()) {
+        if let (Some(_ceph), Some(_version), Some(version_str)) =
+            (parts.next(), parts.next(), parts.next())
+        {
             let mut version_parts = version_str.split('.');
-            if let (Some(major), Some(minor), Some(_patch)) =
-                (version_parts.next(), version_parts.next(), version_parts.next())
-            {
+            if let (Some(major), Some(minor), Some(_patch)) = (
+                version_parts.next(),
+                version_parts.next(),
+                version_parts.next(),
+            ) {
                 match major {
                     "15" => return Ok(Octopus),
                     "14" => return Ok(Nautilus),

@@ -121,14 +121,18 @@ pub fn ceph_volume_list(cluster_handle: &Rados) -> RadosResult<HashMap<String, V
     let output = Command::new("ceph-volume")
         .args(&["lvm", "list", "--format=json"])
         .output()?;
-    let lvms: HashMap<String, Vec<Lvm>> = serde_json::from_str(&String::from_utf8_lossy(&output.stdout))?;
+    let lvms: HashMap<String, Vec<Lvm>> =
+        serde_json::from_str(&String::from_utf8_lossy(&output.stdout))?;
     Ok(lvms)
 }
 
 /// Scan and capture important details on deployed OSDs
 /// Input path, if given, must be the path to the ceph data partition,
 /// so /var/lib/ceph/osd/ceph-{osd_id}
-pub fn ceph_volume_scan(cluster_handle: &Rados, osd_path: Option<PathBuf>) -> RadosResult<JsonData> {
+pub fn ceph_volume_scan(
+    cluster_handle: &Rados,
+    osd_path: Option<PathBuf>,
+) -> RadosResult<JsonData> {
     check_version(cluster_handle)?;
     let output;
     if let Some(p) = osd_path {

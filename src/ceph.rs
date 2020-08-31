@@ -66,7 +66,9 @@ named!(
         char!(CEPH_OSD_TMAP_HDR)
             >> data_len: le_u32
             >> data: take!(data_len)
-            >> (TmapOperation::Header { data: data.to_vec() })
+            >> (TmapOperation::Header {
+                data: data.to_vec()
+            })
     )
 );
 
@@ -128,26 +130,26 @@ impl TmapOperation {
                 buffer.push(CEPH_OSD_TMAP_HDR as u8);
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Set { ref key, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_SET as u8);
                 buffer.write_u32::<LittleEndian>(key.len() as u32)?;
                 buffer.extend(key.as_bytes());
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Create { ref name, ref data } => {
                 buffer.push(CEPH_OSD_TMAP_CREATE as u8);
                 buffer.write_u32::<LittleEndian>(name.len() as u32)?;
                 buffer.extend(name.as_bytes());
                 buffer.write_u32::<LittleEndian>(data.len() as u32)?;
                 buffer.extend_from_slice(data);
-            },
+            }
             TmapOperation::Remove { ref name } => {
                 buffer.push(CEPH_OSD_TMAP_RM as u8);
                 buffer.write_u32::<LittleEndian>(name.len() as u32)?;
                 buffer.extend(name.as_bytes());
-            },
+            }
         }
         Ok(buffer)
     }
@@ -155,7 +157,12 @@ impl TmapOperation {
     fn deserialize(input: &[u8]) -> IResult<&[u8], Vec<TmapOperation>> {
         many0!(
             input,
-            alt!(complete!(parse_header) | complete!(parse_create) | complete!(parse_set) | complete!(parse_remove))
+            alt!(
+                complete!(parse_header)
+                    | complete!(parse_create)
+                    | complete!(parse_set)
+                    | complete!(parse_remove)
+            )
         )
     }
 }
@@ -181,7 +188,8 @@ impl Iterator for Pool {
         let mut nspace_ptr: *mut *const ::libc::c_char = ptr::null_mut();
 
         unsafe {
-            let ret_code = rados_nobjects_list_next(self.ctx, &mut entry_ptr, &mut key_ptr, &mut nspace_ptr);
+            let ret_code =
+                rados_nobjects_list_next(self.ctx, &mut entry_ptr, &mut key_ptr, &mut nspace_ptr);
             if ret_code == -ENOENT {
                 // We're done
                 rados_nobjects_list_close(self.ctx);
@@ -194,10 +202,14 @@ impl Iterator for Pool {
                 let mut object_locator = String::new();
                 let mut namespace = String::new();
                 if !key_ptr.is_null() {
-                    object_locator.push_str(&CStr::from_ptr(key_ptr as *const ::libc::c_char).to_string_lossy());
+                    object_locator.push_str(
+                        &CStr::from_ptr(key_ptr as *const ::libc::c_char).to_string_lossy(),
+                    );
                 }
                 if !nspace_ptr.is_null() {
-                    namespace.push_str(&CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy());
+                    namespace.push_str(
+                        &CStr::from_ptr(nspace_ptr as *const ::libc::c_char).to_string_lossy(),
+                    );
                 }
 
                 Some(CephObject {
@@ -699,7 +711,11 @@ impl IoCtx {
         let object_name_str = CString::new(object_name)?;
 
         unsafe {
-            let ret_code = rados_ioctx_snap_rollback(self.ioctx, object_name_str.as_ptr(), snap_name_str.as_ptr());
+            let ret_code = rados_ioctx_snap_rollback(
+                self.ioctx,
+                object_name_str.as_ptr(),
+                snap_name_str.as_ptr(),
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -753,12 +769,20 @@ impl IoCtx {
     /// Rollback an object to a self-managed snapshot
     /// The contents of the object will be the same as when the snapshot was
     /// taken.
-    pub fn rados_selfmanaged_snap_rollback(&self, object_name: &str, snap_id: u64) -> RadosResult<()> {
+    pub fn rados_selfmanaged_snap_rollback(
+        &self,
+        object_name: &str,
+        snap_id: u64,
+    ) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
 
         unsafe {
-            let ret_code = rados_ioctx_selfmanaged_snap_rollback(self.ioctx, object_name_str.as_ptr(), snap_id);
+            let ret_code = rados_ioctx_selfmanaged_snap_rollback(
+                self.ioctx,
+                object_name_str.as_ptr(),
+                snap_id,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -804,7 +828,8 @@ impl IoCtx {
         let snap_name_str = CString::new(snap_name)?;
         let mut snap_id: u64 = 0;
         unsafe {
-            let ret_code = rados_ioctx_snap_lookup(self.ioctx, snap_name_str.as_ptr(), &mut snap_id);
+            let ret_code =
+                rados_ioctx_snap_lookup(self.ioctx, snap_name_str.as_ptr(), &mut snap_id);
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -861,7 +886,12 @@ impl IoCtx {
 
     /// Write len bytes from buf into the oid object, starting at offset off.
     /// The value of len must be <= UINT_MAX/2.
-    pub fn rados_object_write(&self, object_name: &str, buffer: &[u8], offset: u64) -> RadosResult<()> {
+    pub fn rados_object_write(
+        &self,
+        object_name: &str,
+        buffer: &[u8],
+        offset: u64,
+    ) -> RadosResult<()> {
         self.ioctx_guard()?;
         let obj_name_str = CString::new(object_name)?;
 
@@ -1048,7 +1078,12 @@ impl IoCtx {
     }
 
     /// Set an extended attribute on an object.
-    pub fn rados_object_setxattr(&self, object_name: &str, attr_name: &str, attr_value: &mut [u8]) -> RadosResult<()> {
+    pub fn rados_object_setxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+        attr_value: &mut [u8],
+    ) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let attr_name_str = CString::new(attr_name)?;
@@ -1095,7 +1130,11 @@ impl IoCtx {
         let mut xattr_iterator_handle: rados_xattrs_iter_t = ptr::null_mut();
 
         unsafe {
-            let ret_code = rados_getxattrs(self.ioctx, object_name_str.as_ptr(), &mut xattr_iterator_handle);
+            let ret_code = rados_getxattrs(
+                self.ioctx,
+                object_name_str.as_ptr(),
+                &mut xattr_iterator_handle,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -1120,7 +1159,11 @@ impl IoCtx {
     }
 
     /// Update tmap (trivial map)
-    pub fn rados_object_tmap_update(&self, object_name: &str, update: TmapOperation) -> RadosResult<()> {
+    pub fn rados_object_tmap_update(
+        &self,
+        object_name: &str,
+        update: TmapOperation,
+    ) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let buffer = update.serialize()?;
@@ -1174,8 +1217,12 @@ impl IoCtx {
             Input from Ceph was too small.  Needed: {:?} more bytes",
                 needed
             ))),
-            Err(nom::Err::Error((e, _))) => Err(RadosError::new(String::from_utf8_lossy(e).to_string())),
-            Err(nom::Err::Failure((e, _))) => Err(RadosError::new(String::from_utf8_lossy(e).to_string())),
+            Err(nom::Err::Error((e, _))) => {
+                Err(RadosError::new(String::from_utf8_lossy(e).to_string()))
+            }
+            Err(nom::Err::Failure((e, _))) => {
+                Err(RadosError::new(String::from_utf8_lossy(e).to_string()))
+            }
         }
     }
 
@@ -1276,8 +1323,14 @@ impl IoCtx {
                 }
             },
             None => unsafe {
-                let ret_code =
-                    rados_notify_ack(self.ioctx, object_name_str.as_ptr(), notify_id, cookie, ptr::null(), 0);
+                let ret_code = rados_notify_ack(
+                    self.ioctx,
+                    object_name_str.as_ptr(),
+                    notify_id,
+                    cookie,
+                    ptr::null(),
+                    0,
+                );
                 if ret_code < 0 {
                     return Err(ret_code.into());
                 }
@@ -1422,7 +1475,12 @@ impl IoCtx {
     }
 
     /// Release a shared or exclusive lock on an object.
-    pub fn rados_object_unlock(&self, object_name: &str, lock_name: &str, cookie_name: &str) -> RadosResult<()> {
+    pub fn rados_object_unlock(
+        &self,
+        object_name: &str,
+        lock_name: &str,
+        cookie_name: &str,
+    ) -> RadosResult<()> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let lock_name_str = CString::new(lock_name)?;
@@ -1523,7 +1581,11 @@ impl Rados {
         self.conn_guard()?;
         let client_address = CString::new(client.to_string())?;
         unsafe {
-            let ret_code = rados_blacklist_add(self.rados, client_address.as_ptr() as *mut c_char, expire_seconds);
+            let ret_code = rados_blacklist_add(
+                self.rados,
+                client_address.as_ptr() as *mut c_char,
+                expire_seconds,
+            );
 
             if ret_code < 0 {
                 return Err(ret_code.into());
@@ -1676,7 +1738,11 @@ pub fn rados_libversion() -> RadosVersion {
     unsafe {
         rados_version(&mut major, &mut minor, &mut extra);
     }
-    RadosVersion { major, minor, extra }
+    RadosVersion {
+        major,
+        minor,
+        extra,
+    }
 }
 
 impl Rados {
@@ -1731,7 +1797,12 @@ impl Rados {
         let mut out_str: *mut c_char = ptr::null_mut();
         let mut str_length: usize = 0;
         unsafe {
-            let ret_code = rados_ping_monitor(self.rados, mon_id_str.as_ptr(), &mut out_str, &mut str_length);
+            let ret_code = rados_ping_monitor(
+                self.rados,
+                mon_id_str.as_ptr(),
+                &mut out_str,
+                &mut str_length,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -1759,7 +1830,8 @@ pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
     admin_socket_command(&cmd, socket).ok().and_then(|json| {
-        json_data(&json).and_then(|jsondata| json_find(jsondata, &[cmd]).map(|data| json_as_string(&data)))
+        json_data(&json)
+            .and_then(|jsondata| json_find(jsondata, &[cmd]).map(|data| json_as_string(&data)))
     })
 }
 
@@ -1775,7 +1847,7 @@ pub fn ceph_version_parse() -> Option<String> {
             } else {
                 Some(String::from_utf8_lossy(&output.stderr).to_string())
             }
-        },
+        }
         Err(_) => None,
     }
 }
@@ -1795,7 +1867,7 @@ impl Rados {
                                 "The attributes were not found in the output.".to_string(),
                             ))
                         }
-                    },
+                    }
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
                 },
                 _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1828,7 +1900,7 @@ impl Rados {
                 } else {
                     CephHealth::Error
                 }
-            },
+            }
             Err(_) => CephHealth::Error,
         }
     }
@@ -1856,7 +1928,7 @@ impl Rados {
                                     "The attributes were not found in the output.".to_string(),
                                 ))
                             }
-                        },
+                        }
                         _ => Err(RadosError::new("JSON data not found.".to_string())),
                     },
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1884,7 +1956,7 @@ impl Rados {
                         } else {
                             Ok(jsondata)
                         }
-                    },
+                    }
                     _ => Err(RadosError::new("JSON data not found.".to_string())),
                 },
                 _ => Err(RadosError::new("JSON data not found.".to_string())),
@@ -1904,7 +1976,10 @@ impl Rados {
         self.ceph_mon_command_with_data(name, value, format, data)
     }
 
-    pub fn ceph_mon_command_without_data(&self, cmd: &serde_json::Value) -> RadosResult<(Vec<u8>, Option<String>)> {
+    pub fn ceph_mon_command_without_data(
+        &self,
+        cmd: &serde_json::Value,
+    ) -> RadosResult<(Vec<u8>, Option<String>)> {
         self.conn_guard()?;
         let cmd_string = cmd.to_string();
         debug!("ceph_mon_command_without_data: {}", cmd_string);
@@ -1977,7 +2052,10 @@ impl Rados {
 
         let mut cmd_strings: Vec<String> = Vec::new();
         match format {
-            Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+            Some(fmt) => cmd_strings.push(format!(
+                "{{\"{}\": \"{}\", \"format\": \"{}\"}}",
+                name, value, fmt
+            )),
             None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
         }
 
@@ -2065,7 +2143,10 @@ impl Rados {
 
         let mut cmd_strings: Vec<String> = Vec::new();
         match format {
-            Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+            Some(fmt) => cmd_strings.push(format!(
+                "{{\"{}\": \"{}\", \"format\": \"{}\"}}",
+                name, value, fmt
+            )),
             None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
         }
 
@@ -2152,7 +2233,10 @@ impl Rados {
 
         let mut cmd_strings: Vec<String> = Vec::new();
         match format {
-            Some(fmt) => cmd_strings.push(format!("{{\"{}\": \"{}\", \"format\": \"{}\"}}", name, value, fmt)),
+            Some(fmt) => cmd_strings.push(format!(
+                "{{\"{}\": \"{}\", \"format\": \"{}\"}}",
+                name, value, fmt
+            )),
             None => cmd_strings.push(format!("{{\"{}\": \"{}\"}}", name, value)),
         }
 
@@ -2244,7 +2328,12 @@ impl RadosStriper {
 
     /// Write len bytes from buf into the oid object, starting at offset off.
     /// The value of len must be <= UINT_MAX/2.
-    pub fn rados_object_write(&self, object_name: &str, buffer: &[u8], offset: u64) -> RadosResult<()> {
+    pub fn rados_object_write(
+        &self,
+        object_name: &str,
+        buffer: &[u8],
+        offset: u64,
+    ) -> RadosResult<()> {
         self.rados_striper_guard()?;
         let obj_name_str = CString::new(object_name)?;
 
@@ -2346,7 +2435,10 @@ impl RadosStriper {
         let object_name_str = CString::new(object_name)?;
 
         unsafe {
-            let ret_code = rados_striper_remove(self.rados_striper, object_name_str.as_ptr() as *const c_char);
+            let ret_code = rados_striper_remove(
+                self.rados_striper,
+                object_name_str.as_ptr() as *const c_char,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -2362,7 +2454,8 @@ impl RadosStriper {
         let object_name_str = CString::new(object_name)?;
 
         unsafe {
-            let ret_code = rados_striper_trunc(self.rados_striper, object_name_str.as_ptr(), new_size);
+            let ret_code =
+                rados_striper_trunc(self.rados_striper, object_name_str.as_ptr(), new_size);
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -2397,7 +2490,12 @@ impl RadosStriper {
     }
 
     /// Set an extended attribute on an object.
-    pub fn rados_object_setxattr(&self, object_name: &str, attr_name: &str, attr_value: &mut [u8]) -> RadosResult<()> {
+    pub fn rados_object_setxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+        attr_value: &mut [u8],
+    ) -> RadosResult<()> {
         self.rados_striper_guard()?;
         let object_name_str = CString::new(object_name)?;
         let attr_name_str = CString::new(attr_name)?;
@@ -2444,8 +2542,11 @@ impl RadosStriper {
         let mut xattr_iterator_handle: rados_xattrs_iter_t = ptr::null_mut();
 
         unsafe {
-            let ret_code =
-                rados_striper_getxattrs(self.rados_striper, object_name_str.as_ptr(), &mut xattr_iterator_handle);
+            let ret_code = rados_striper_getxattrs(
+                self.rados_striper,
+                object_name_str.as_ptr(),
+                &mut xattr_iterator_handle,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -2461,7 +2562,12 @@ impl RadosStriper {
         let mut time: ::libc::time_t = 0;
 
         unsafe {
-            let ret_code = rados_striper_stat(self.rados_striper, object_name_str.as_ptr(), &mut psize, &mut time);
+            let ret_code = rados_striper_stat(
+                self.rados_striper,
+                object_name_str.as_ptr(),
+                &mut psize,
+                &mut time,
+            );
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
