@@ -1,8 +1,5 @@
 #[cfg(feature = "rados_striper")]
-use {ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno};
-
-use std::env;
-use std::str;
+use {ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno, std::env, std::str};
 
 #[cfg(not(feature = "rados_striper"))]
 fn main() {}
