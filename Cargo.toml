@@ -31,10 +31,6 @@ for development etc. See README.md for details.
 """
 edition = "2018"
 
-[badges]
-
-travis-ci = { repository = "ceph/ceph-rust", branch = "master" }
-
 [dependencies]
 bitflags = "1.2.1"
 byteorder = "1"
@@ -50,10 +46,3 @@ tracing = "0.1"
 [features]
 default = []
 rados_striper = []
-
-# Run the example as follows: `cargo run --example ceph`
-
-# [[bin]]
-# doc = true
-# name = "ceph"
-# path = "examples/ceph.rs"
