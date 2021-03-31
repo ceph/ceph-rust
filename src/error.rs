@@ -85,25 +85,6 @@ impl StdError for RadosError {
     }
 }
 
-impl StdError for RadosError {
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        match *self {
-            RadosError::FromUtf8Error(ref e) => e.source(),
-            RadosError::NulError(ref e) => e.source(),
-            RadosError::Error(ref _e) => None,
-            RadosError::IoError(ref e) => e.source(),
-            RadosError::ApiError(ref e) => e.source(),
-            RadosError::IntoStringError(ref e) => e.source(),
-            RadosError::UuidError(ref e) => e.source(),
-            RadosError::ParseBoolError(ref e) => e.source(),
-            RadosError::ParseIntError(ref e) => e.source(),
-            RadosError::SerdeError(ref e) => e.source(),
-            RadosError::MinVersion(ref _min, ref _current_version) => None,
-            RadosError::Parse(ref _input) => None,
-        }
-    }
-}
-
 impl RadosError {
     /// Create a new RadosError with a String message
     pub fn new(err: String) -> RadosError {
