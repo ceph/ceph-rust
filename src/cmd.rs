@@ -44,8 +44,8 @@ pub struct CrushTree {
     pub stray: Vec<String>,
 }
 
-#[serde(untagged)]
 #[derive(Deserialize, Debug, Clone)]
+#[serde(untagged)]
 pub enum Mem {
     MemNum {
         mem_swap_kb: u64,
@@ -83,15 +83,15 @@ pub struct MgrMetadata {
     other_meta: Option<HashMap<String, String>>,
 }
 
-#[serde(rename_all = "lowercase")]
 #[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum ObjectStoreType {
     Bluestore,
     Filestore,
 }
 
-#[serde(untagged, rename_all = "lowercase")]
 #[derive(Deserialize, Debug, Clone)]
+#[serde(untagged, rename_all = "lowercase")]
 pub enum ObjectStoreMeta {
     Bluestore {
         bluefs: String,
