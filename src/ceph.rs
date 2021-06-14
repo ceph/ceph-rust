@@ -39,6 +39,9 @@ use std::io::{BufRead, Cursor};
 use std::net::IpAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::{Context, Poll};
 use uuid::Uuid;
 
 const CEPH_OSD_TMAP_HDR: char = 'h';
@@ -332,7 +335,8 @@ impl Iterator for XAttr {
 
 /// Owns a ioctx handle
 pub struct IoCtx {
-    ioctx: rados_ioctx_t,
+    // This is pub within the crate to enable Completions to use it
+    pub(crate) ioctx: rados_ioctx_t,
 }
 
 unsafe impl Send for IoCtx {}
