@@ -1220,12 +1220,12 @@ impl IoCtx {
             Input from Ceph was too small.  Needed: {:?} more bytes",
                 needed
             ))),
-            Err(nom::Err::Error((e, _))) => {
-                Err(RadosError::new(String::from_utf8_lossy(e).to_string()))
-            }
-            Err(nom::Err::Failure((e, _))) => {
-                Err(RadosError::new(String::from_utf8_lossy(e).to_string()))
-            }
+            Err(nom::Err::Error(e)) => Err(RadosError::new(
+                String::from_utf8_lossy(e.input).to_string(),
+            )),
+            Err(nom::Err::Failure(e)) => Err(RadosError::new(
+                String::from_utf8_lossy(e.input).to_string(),
+            )),
         }
     }
 
