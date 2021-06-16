@@ -21,6 +21,7 @@ use crate::error::*;
 use crate::json::*;
 use crate::JsonValue;
 use byteorder::{LittleEndian, WriteBytesExt};
+use futures::task::SpawnExt;
 use libc::*;
 use nom::number::complete::le_u32;
 use nom::IResult;
@@ -378,6 +379,7 @@ pub struct Rados {
     phantom: PhantomData<IoCtx>,
 }
 
+unsafe impl Send for Rados {}
 unsafe impl Sync for Rados {}
 
 impl Drop for Rados {
@@ -413,6 +415,21 @@ pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
             phantom: PhantomData,
         })
     }
+}
+
+/// Non-blocking wrapper for `connect_to_ceph`
+pub async fn connect_to_ceph_async(user_id: &str, config_file: &str) -> RadosResult<Rados> {
+    let user_id = user_id.to_string();
+    let config_file = config_file.to_string();
+
+    // librados doesn't have async initialization, so wrap it in a thread pool.
+    let pool = futures::executor::ThreadPool::builder()
+        .pool_size(1)
+        .create()
+        .expect("Could not spawn thread pool");
+    pool.spawn_with_handle(async move { connect_to_ceph(&user_id, &config_file) })
+        .expect("Could not spawn background task")
+        .await
 }
 
 impl Rados {
