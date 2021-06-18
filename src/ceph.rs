@@ -1071,6 +1071,29 @@ impl IoCtx {
         result
     }
 
+    /// Get object stats (size,SystemTime)
+    pub async fn rados_async_object_stat(
+        &self,
+        object_name: &str,
+    ) -> RadosResult<(u64, SystemTime)> {
+        self.ioctx_guard()?;
+        let object_name_str = CString::new(object_name)?;
+        let mut psize: u64 = 0;
+        let mut time: ::libc::time_t = 0;
+
+        with_completion(self, |c| unsafe {
+            rados_aio_stat(
+                self.ioctx,
+                object_name_str.as_ptr(),
+                c,
+                &mut psize,
+                &mut time,
+            )
+        })?
+        .await?;
+        Ok((psize, (UNIX_EPOCH + Duration::from_secs(time as u64))))
+    }
+
     /// Efficiently copy a portion of one object to another
     /// If the underlying filesystem on the OSD supports it, this will be a
     /// copy-on-write clone.
