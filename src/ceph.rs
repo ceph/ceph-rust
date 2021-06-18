@@ -42,6 +42,7 @@ use std::net::IpAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::list_stream::ListStream;
+use crate::read_stream::ReadStream;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -1070,6 +1071,15 @@ impl IoCtx {
         }
 
         result
+    }
+
+    /// Streaming read of a RADOS object.  The `ReadStream` object implements `futures::Stream`
+    /// for use with Stream-aware code like hyper's Body::wrap_stream.
+    ///
+    /// This will usually issue more read ops than needed if used on a small object: for
+    /// small objects `rados_async_object_read` is more appropriate.
+    pub fn rados_async_object_read_stream(&self, object_name: &str) -> ReadStream<'_> {
+        ReadStream::new(self, object_name, None, None)
     }
 
     /// Get object stats (size,SystemTime)
