@@ -606,6 +606,13 @@ extern "C" {
         cb_safe: rados_callback_t,
         pc: *mut rados_completion_t,
     ) -> ::libc::c_int;
+
+    pub fn rados_aio_create_completion2(
+        cb_arg: *mut ::std::os::raw::c_void,
+        cb_complete: rados_callback_t,
+        pc: *mut rados_completion_t,
+    ) -> ::libc::c_int;
+
     pub fn rados_aio_wait_for_complete(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_wait_for_safe(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_is_complete(c: rados_completion_t) -> ::libc::c_int;

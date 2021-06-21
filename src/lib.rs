@@ -78,6 +78,7 @@ pub mod utils;
 
 mod ceph_client;
 mod ceph_version;
+pub(crate) mod completion;
 mod mon_command;
 
 pub use crate::ceph_client::CephClient;
