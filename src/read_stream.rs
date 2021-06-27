@@ -36,9 +36,17 @@ pub struct ReadStream<'a> {
     // Number of concurrent RADOS read ops to issue
     concurrency: usize,
 
+    // Caller's hint as to the object size (not required to be accurate)
+    size_hint: Option<u64>,
+
     in_flight: Vec<IOSlot<'a>>,
 
+    // Counter for how many bytes we have issued reads for
     next: u64,
+
+    // Counter for how many bytes we have yielded from poll_next()
+    // (i.e. the size of the object so far)
+    yielded: u64,
 
     object_name: String,
 
@@ -55,13 +63,16 @@ impl<'a> ReadStream<'a> {
         object_name: &str,
         buffer_size: Option<usize>,
         concurrency: Option<usize>,
+        size_hint: Option<u64>,
     ) -> Self {
         let mut inst = Self {
             ioctx,
             buffer_size: buffer_size.unwrap_or(DEFAULT_BUFFER_SIZE),
             concurrency: concurrency.unwrap_or(DEFAULT_CONCURRENCY),
+            size_hint,
             in_flight: Vec::new(),
             next: 0,
+            yielded: 0,
             object_name: object_name.to_string(),
             done: false,
         };
@@ -80,8 +91,20 @@ enum IOSlot<'a> {
 
 impl<'a> ReadStream<'a> {
     fn maybe_issue(&mut self) {
-        // Issue reads
-        while self.in_flight.len() < self.concurrency {
+        // Issue reads if any of these are true:
+        // - Nothing is in flight
+        // - No size bound, and in flight < concurrency
+        // - A size bound, and we're within it, and in flight < concurrency
+        // - A size bound, and it has been disproved, and in flight < concurrency
+
+        while !self.done
+            && (self.in_flight.is_empty()
+                || (((self.size_hint.is_some()
+                    && (self.next < self.size_hint.unwrap()
+                        || self.yielded > self.size_hint.unwrap()))
+                    || self.size_hint.is_none())
+                    && (self.in_flight.len() < self.concurrency)))
+        {
             let read_at = self.next;
             self.next += self.buffer_size as u64;
 
@@ -163,10 +186,8 @@ impl<'a> Stream for ReadStream<'a> {
             },
         };
 
-        self.maybe_issue();
-
         // A result is ready, handle it.
-        match result {
+        let r = match result {
             Ok(length) => {
                 if (length as usize) < self.buffer_size {
                     // Cancel outstanding ops
@@ -175,9 +196,14 @@ impl<'a> Stream for ReadStream<'a> {
                     // Flag to return Ready(None) on next call to poll.
                     self.done = true;
                 }
+                self.yielded += buffer.len() as u64;
                 Poll::Ready(Some(Ok(buffer)))
             }
             Err(e) => Poll::Ready(Some(Err(e))),
-        }
+        };
+
+        self.maybe_issue();
+
+        r
     }
 }

@@ -43,6 +43,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::list_stream::ListStream;
 use crate::read_stream::ReadStream;
+pub use crate::write_sink::WriteSink;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -1076,10 +1077,47 @@ impl IoCtx {
     /// Streaming read of a RADOS object.  The `ReadStream` object implements `futures::Stream`
     /// for use with Stream-aware code like hyper's Body::wrap_stream.
     ///
-    /// This will usually issue more read ops than needed if used on a small object: for
-    /// small objects `rados_async_object_read` is more appropriate.
-    pub fn rados_async_object_read_stream(&self, object_name: &str) -> ReadStream<'_> {
-        ReadStream::new(self, object_name, None, None)
+    /// Useful for reading large objects incrementally, or anywhere you are using an interface
+    /// that expects a stream (such as proxying objects via an HTTP server).
+    ///
+    /// Efficiency: If size_hint is not specified, and this function is used on a small object, it will
+    /// issue spurious read-ahead operations beyond the object's size.
+    /// If you have an object that you know is small, prefer to use a single `rados_async_object_read`
+    /// instead of this streaming variant.
+    ///
+    /// * `buffer_size` - How much data should be read per rados read operation.  This is also
+    ///   how much data is emitted in each Item from the stream.
+    /// * `concurrency` - How many RADOS operations should be run in parallel for this stream,
+    ///   or None to use a default.
+    /// * `size_hint` - If you have prior knowledge of the object's size in bytes, pass it here to enable
+    ///   the stream to issue fewer read-ahead operations than it would by default.  This is just
+    ///   a hint, and does not bound the data returned -- if the object is smaller or larger
+    ///   than `size_hint` then the actual object size will be reflected in the stream's output.
+    pub fn rados_async_object_read_stream(
+        &self,
+        object_name: &str,
+        buffer_size: Option<usize>,
+        concurrency: Option<usize>,
+        size_hint: Option<u64>,
+    ) -> ReadStream<'_> {
+        ReadStream::new(self, object_name, buffer_size, concurrency, size_hint)
+    }
+
+    /// Streaming write of a RADOS object.  The `WriteSink` object implements `futures::Sink`.  Combine
+    /// it with other stream-aware code, or bring the SinkExt trait into scope to get methods
+    /// like send, send_all.
+    ///
+    /// Efficiency: this class does not coalesce writes, so each Item you send into it,
+    ///
+    ///
+    /// * `concurrency` - How many RADOS operations should be run in parallel for this stream,
+    ///   or None to use a default.
+    pub fn rados_async_object_write_stream(
+        &self,
+        object_name: &str,
+        concurrency: Option<usize>,
+    ) -> WriteSink<'_> {
+        WriteSink::new(self, object_name, concurrency)
     }
 
     /// Get object stats (size,SystemTime)
