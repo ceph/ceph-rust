@@ -41,6 +41,7 @@ use std::io::{BufRead, Cursor};
 use std::net::IpAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use crate::list_stream::ListStream;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -1094,13 +1095,26 @@ impl IoCtx {
         Ok((psize, (UNIX_EPOCH + Duration::from_secs(time as u64))))
     }
 
+    pub fn rados_async_object_list(&self) -> RadosResult<ListStream> {
+        self.ioctx_guard()?;
+        let mut rados_list_ctx: rados_list_ctx_t = ptr::null_mut();
+        unsafe {
+            let r = rados_nobjects_list_open(self.ioctx, &mut rados_list_ctx);
+            if r == 0 {
+                Ok(ListStream::new(rados_list_ctx))
+            } else {
+                Err(r.into())
+            }
+        }
+    }
+
     /// Async variant of rados_object_getxattr
     pub async fn rados_async_object_getxattr(
         &self,
         object_name: &str,
         attr_name: &str,
         fill_buffer: &mut [u8],
-    ) -> RadosResult<i32> {
+    ) -> RadosResult<u32> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let attr_name_str = CString::new(attr_name)?;
@@ -1124,7 +1138,7 @@ impl IoCtx {
         object_name: &str,
         attr_name: &str,
         attr_value: &[u8],
-    ) -> RadosResult<i32> {
+    ) -> RadosResult<u32> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let attr_name_str = CString::new(attr_name)?;
@@ -1147,7 +1161,7 @@ impl IoCtx {
         &self,
         object_name: &str,
         attr_name: &str,
-    ) -> RadosResult<i32> {
+    ) -> RadosResult<u32> {
         self.ioctx_guard()?;
         let object_name_str = CString::new(object_name)?;
         let attr_name_str = CString::new(attr_name)?;
