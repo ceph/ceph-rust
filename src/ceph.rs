@@ -1094,6 +1094,75 @@ impl IoCtx {
         Ok((psize, (UNIX_EPOCH + Duration::from_secs(time as u64))))
     }
 
+    /// Async variant of rados_object_getxattr
+    pub async fn rados_async_object_getxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+        fill_buffer: &mut [u8],
+    ) -> RadosResult<i32> {
+        self.ioctx_guard()?;
+        let object_name_str = CString::new(object_name)?;
+        let attr_name_str = CString::new(attr_name)?;
+
+        with_completion(self, |c| unsafe {
+            rados_aio_getxattr(
+                self.ioctx,
+                object_name_str.as_ptr() as *const c_char,
+                c,
+                attr_name_str.as_ptr() as *const c_char,
+                fill_buffer.as_mut_ptr() as *mut c_char,
+                fill_buffer.len(),
+            )
+        })?
+        .await
+    }
+
+    /// Async variant of rados_object_setxattr
+    pub async fn rados_async_object_setxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+        attr_value: &[u8],
+    ) -> RadosResult<i32> {
+        self.ioctx_guard()?;
+        let object_name_str = CString::new(object_name)?;
+        let attr_name_str = CString::new(attr_name)?;
+
+        with_completion(self, |c| unsafe {
+            rados_aio_setxattr(
+                self.ioctx,
+                object_name_str.as_ptr() as *const c_char,
+                c,
+                attr_name_str.as_ptr() as *const c_char,
+                attr_value.as_ptr() as *mut c_char,
+                attr_value.len(),
+            )
+        })?
+        .await
+    }
+
+    /// Async variant of rados_object_rmxattr
+    pub async fn rados_async_object_rmxattr(
+        &self,
+        object_name: &str,
+        attr_name: &str,
+    ) -> RadosResult<i32> {
+        self.ioctx_guard()?;
+        let object_name_str = CString::new(object_name)?;
+        let attr_name_str = CString::new(attr_name)?;
+
+        with_completion(self, |c| unsafe {
+            rados_aio_rmxattr(
+                self.ioctx,
+                object_name_str.as_ptr() as *const c_char,
+                c,
+                attr_name_str.as_ptr() as *const c_char,
+            )
+        })?
+        .await
+    }
+
     /// Efficiently copy a portion of one object to another
     /// If the underlying filesystem on the OSD supports it, this will be a
     /// copy-on-write clone.
