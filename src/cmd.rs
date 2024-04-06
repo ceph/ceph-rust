@@ -80,6 +80,7 @@ pub struct MgrMetadata {
     pub os: String,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
+    #[allow(unused)] // used for debug and deserialization
     other_meta: Option<HashMap<String, String>>,
 }
 
@@ -184,6 +185,7 @@ pub struct OsdMetadata {
     pub objectstore_meta: ObjectStoreMeta,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
+    #[allow(unused)] // used for debug and deserialization
     other_meta: Option<HashMap<String, String>>,
 }
 
@@ -223,6 +225,7 @@ pub struct PgSummary {
     pub num_keys_recovered: Option<u64>,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
+    #[allow(unused)] // used for debug and deserialization
     other_meta: Option<HashMap<String, String>>,
 }
 
@@ -290,8 +293,11 @@ pub enum ExtraProbePeer {
 
 #[derive(Deserialize, Debug)]
 pub struct AddrVec {
+    #[allow(unused)] // used for debug and deserialization
     r#type: String,
+    #[allow(unused)] // used for debug and deserialization
     addr: String,
+    #[allow(unused)] // used for debug and deserialization
     nonce: i32,
 }
 
