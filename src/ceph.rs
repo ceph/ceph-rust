@@ -25,6 +25,7 @@ use libc::*;
 use nom::number::complete::le_u32;
 use nom::IResult;
 use serde_json;
+use tokio::task;
 
 use crate::rados::*;
 #[cfg(feature = "rados_striper")]
@@ -1608,26 +1609,31 @@ impl Rados {
     ///
     /// Returns Ok(Vec<String>) - A list of Strings of the pool names.
     #[allow(unused_variables)]
-    pub fn rados_pools(&self) -> RadosResult<Vec<String>> {
+    pub async fn rados_pools(&self) -> RadosResult<Vec<String>> {
         self.conn_guard()?;
         let mut pools: Vec<String> = Vec::new();
         let pool_slice: &[u8];
         let mut pool_buffer: Vec<u8> = Vec::with_capacity(500);
 
         unsafe {
-            let len = rados_pool_list(
-                self.rados,
-                pool_buffer.as_mut_ptr() as *mut c_char,
-                pool_buffer.capacity(),
-            );
-            if len > pool_buffer.capacity() as i32 {
-                // rados_pool_list requires more buffer than we gave it
-                pool_buffer.reserve(len as usize);
-                let len = rados_pool_list(
+            let mut len = 0;
+            task::block_in_place(|| {
+                len = rados_pool_list(
                     self.rados,
                     pool_buffer.as_mut_ptr() as *mut c_char,
                     pool_buffer.capacity(),
                 );
+            });
+            if len > pool_buffer.capacity() as i32 {
+                // rados_pool_list requires more buffer than we gave it
+                pool_buffer.reserve(len as usize);
+                task::block_in_place(|| {
+                    len = rados_pool_list(
+                        self.rados,
+                        pool_buffer.as_mut_ptr() as *mut c_char,
+                        pool_buffer.capacity(),
+                    );
+                });
                 // Tell the Vec how much Ceph read into the buffer
                 pool_buffer.set_len(len as usize);
             } else {

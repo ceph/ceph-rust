@@ -31,7 +31,8 @@ fn main() {}
 // NB: The examples below show a mix of raw native access and rust specific calls.
 
 #[cfg(unix)]
-fn main() {
+#[tokio::main]
+async fn main() {
     let pool_name = "lsio";
     // NB: These examples (except for a few) are low level examples that require the unsafe block.
     // However, work for the higher level pur Rust is being worked on in the ceph.rs module of
@@ -57,7 +58,7 @@ fn main() {
     cluster.rados_create_pool(pool_name).unwrap();
 
     println!("Listing pools");
-    let pools_list = cluster.rados_pools().unwrap();
+    let pools_list = cluster.rados_pools().await.unwrap();
     for pool in pools_list {
         println!("pool: {}", pool);
     }
