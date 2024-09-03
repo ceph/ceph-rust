@@ -606,6 +606,13 @@ extern "C" {
         cb_safe: rados_callback_t,
         pc: *mut rados_completion_t,
     ) -> ::libc::c_int;
+
+    pub fn rados_aio_create_completion2(
+        cb_arg: *mut ::std::os::raw::c_void,
+        cb_complete: rados_callback_t,
+        pc: *mut rados_completion_t,
+    ) -> ::libc::c_int;
+
     pub fn rados_aio_wait_for_complete(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_wait_for_safe(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_is_complete(c: rados_completion_t) -> ::libc::c_int;
@@ -902,6 +909,32 @@ extern "C" {
         oid: *const ::libc::c_char,
         flags: ::libc::c_int,
     ) -> ::libc::c_int;
+
+    pub fn rados_aio_getxattr(
+        io: rados_ioctx_t,
+        o: *const ::libc::c_char,
+        completion: rados_completion_t,
+        name: *const ::libc::c_char,
+        buf: *mut ::libc::c_char,
+        len: size_t,
+    ) -> ::libc::c_int;
+
+    pub fn rados_aio_setxattr(
+        io: rados_ioctx_t,
+        o: *const ::libc::c_char,
+        completion: rados_completion_t,
+        name: *const ::libc::c_char,
+        buf: *const ::libc::c_char,
+        len: size_t,
+    ) -> ::libc::c_int;
+
+    pub fn rados_aio_rmxattr(
+        io: rados_ioctx_t,
+        o: *const ::libc::c_char,
+        completion: rados_completion_t,
+        name: *const ::libc::c_char,
+    ) -> ::libc::c_int;
+
     pub fn rados_lock_exclusive(
         io: rados_ioctx_t,
         o: *const ::libc::c_char,
