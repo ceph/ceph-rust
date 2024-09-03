@@ -2,11 +2,11 @@ name: CI
 
 on:
   pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
-      - staging
-      - trying
 
 env:
   RUSTFLAGS: -Dwarnings
@@ -21,33 +21,12 @@ jobs:
         rust: [nightly, beta, stable]
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
 
     - name: Install ${{ matrix.rust }}
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        override: true
+      run: rustup install ${{ matrix.rust }}
 
-    - name: Cache cargo registry
-      uses: actions/cache@v2
-      with:
-        path: ~/.cargo/registry
-        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
-
-    - name: Cache cargo index
-      uses: actions/cache@v2
-      with:
-        path: ~/.cargo/git
-        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-index-${{ hashFiles('**/Cargo.toml') }}
-
-    - name: Cache cargo build
-      uses: actions/cache@v2
-      with:
-        path: target
-        key: ${{ matrix.os }}-${{ matrix.rust }}-cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
-
-    - name: Install Ceph 
+    - name: Install Ceph
       run: |
         sudo apt-get update
         sudo apt-get install -y apt-transport-https
@@ -57,29 +36,13 @@ jobs:
         sudo apt-get install -y --no-install-recommends uuid-runtime ceph-mgr ceph-mon ceph-osd ceph-mds librados-dev libradosstriper-dev
 
     - name: check
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
-        args: --all --bins --tests
+      run: cargo check --all-targets
 
     - name: check rados_striper
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
-        args: --features rados_striper --all --bins --examples --tests
-
-    - name: check bench
-      uses: actions-rs/cargo@v1
-      if: matrix.rust == 'nightly'
-      with:
-        command: check
-        args: --benches
+      run: cargo check --features rados_striper --all-targets
 
     - name: tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all
+      run: cargo test --all-targets
 
   cross:
     name: Cross compile
@@ -92,13 +55,10 @@ jobs:
           - aarch64-unknown-linux-gnu
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
 
     - name: Install nightly
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
+      run: rustup install nightly
 
     - name: Install cross
       run: cargo install cross
@@ -110,19 +70,6 @@ jobs:
     name: Checking fmt and docs
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-
-    - uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt
-
-    - name: setup
-      run: |
-        rustup component add rustfmt
-        rustc --version
-
+    - uses: actions/checkout@v4
     - name: fmt
       run: cargo fmt --all -- --check
