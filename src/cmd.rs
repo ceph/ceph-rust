@@ -80,7 +80,7 @@ pub struct MgrMetadata {
     pub os: String,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
-    other_meta: Option<HashMap<String, String>>,
+    pub other_meta: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -184,7 +184,7 @@ pub struct OsdMetadata {
     pub objectstore_meta: ObjectStoreMeta,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
-    other_meta: Option<HashMap<String, String>>,
+    pub other_meta: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -223,7 +223,7 @@ pub struct PgSummary {
     pub num_keys_recovered: Option<u64>,
     // other metadata not captured through the above attributes
     #[serde(flatten)]
-    other_meta: Option<HashMap<String, String>>,
+    pub other_meta: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -290,9 +290,9 @@ pub enum ExtraProbePeer {
 
 #[derive(Deserialize, Debug)]
 pub struct AddrVec {
-    r#type: String,
-    addr: String,
-    nonce: i32,
+    pub r#type: String,
+    pub addr: String,
+    pub nonce: i32,
 }
 
 #[derive(Deserialize, Debug)]
