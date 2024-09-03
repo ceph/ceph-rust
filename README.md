@@ -3,6 +3,7 @@
 
 [![Build Status](https://github.com/ceph/ceph-rust/workflows/CI/badge.svg)](https://github.com/ceph/ceph-rust/actions?query=workflow%3ACI)
 [![Version info](https://img.shields.io/crates/v/ceph.svg)](https://crates.io/crates/ceph)
+[![slack](https://img.shields.io/badge/slack-Join%20us!-brightgreen.svg?logo=slack)](https://join.slack.com/t/ceph-storage/shared_invite/zt-2ptxrb851-FzpqR7ShQcvlkI4JCWeoEw)
 
 Official Ceph Rust-lang interface. Contributions welcomed!
 
