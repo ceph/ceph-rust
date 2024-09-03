@@ -1,11 +1,11 @@
 DOCKER_CI_IMAGE = ceph-rust-ci
 
 build:
-	go build -v
+	cargo build
 fmt:
-	go fmt ./...
+	cargo fmt
 test:
-	go test -v ./...
+	cargo test.
 
 test-docker: .build-docker
 	docker run --rm -it -v $(CURDIR):/ceph-rust $(DOCKER_CI_IMAGE)
