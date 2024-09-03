@@ -1,7 +1,7 @@
 DOCKER_CI_IMAGE = ceph-rust-ci
 
 build:
-	cargo  build
+	cargo build
 fmt:
 	cargo fmt
 test:
