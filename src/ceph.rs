@@ -32,6 +32,7 @@ use crate::rados_striper::*;
 use crate::status::*;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
+use std::sync::Arc;
 use std::{ptr, str};
 
 use crate::utils::*;
@@ -333,6 +334,7 @@ impl Iterator for XAttr {
 /// Owns a ioctx handle
 pub struct IoCtx {
     ioctx: rados_ioctx_t,
+    _rados: Arc<Rados>,
 }
 
 unsafe impl Send for IoCtx {}
@@ -480,7 +482,7 @@ impl Rados {
     /// Create an io context. The io context allows you to perform operations
     /// within a particular pool.
     /// For more details see rados_ioctx_t.
-    pub fn get_rados_ioctx(&self, pool_name: &str) -> RadosResult<IoCtx> {
+    pub fn get_rados_ioctx(self: &Arc<Self>, pool_name: &str) -> RadosResult<IoCtx> {
         self.conn_guard()?;
         let pool_name_str = CString::new(pool_name)?;
         unsafe {
@@ -489,14 +491,17 @@ impl Rados {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            Ok(IoCtx { ioctx })
+            Ok(IoCtx {
+                ioctx,
+                _rados: self.clone(),
+            })
         }
     }
 
     /// Create an io context. The io context allows you to perform operations
     /// within a particular pool.
     /// For more details see rados_ioctx_t.
-    pub fn get_rados_ioctx2(&self, pool_id: i64) -> RadosResult<IoCtx> {
+    pub fn get_rados_ioctx2(self: &Arc<Self>, pool_id: i64) -> RadosResult<IoCtx> {
         self.conn_guard()?;
         unsafe {
             let mut ioctx: rados_ioctx_t = ptr::null_mut();
@@ -504,7 +509,10 @@ impl Rados {
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
-            Ok(IoCtx { ioctx })
+            Ok(IoCtx {
+                ioctx,
+                _rados: self.clone(),
+            })
         }
     }
 }

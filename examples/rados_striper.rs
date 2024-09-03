@@ -1,5 +1,8 @@
 #[cfg(feature = "rados_striper")]
-use {ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno, std::env, std::str};
+use {
+    ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno, std::env, std::str,
+    std::sync::Arc,
+};
 
 #[cfg(not(feature = "rados_striper"))]
 fn main() {}
@@ -11,7 +14,7 @@ fn main() {
     let pool_name = "ceph-rust-test";
 
     println!("Connecting to ceph");
-    let cluster = ceph_helpers::connect_to_ceph(user_id, &config_file).unwrap();
+    let cluster = Arc::new(ceph_helpers::connect_to_ceph(user_id, &config_file).unwrap());
 
     println!("Creating pool {}", pool_name);
     match cluster.rados_create_pool(pool_name) {
