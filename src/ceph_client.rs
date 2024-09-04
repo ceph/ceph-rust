@@ -238,24 +238,13 @@ impl CephClient {
     // ceph osd crush add {id-or-name} {weight}  [{bucket-type}={bucket-name} ...]
     /// add or update crushmap position and weight for an osd
     pub fn osd_crush_add(&self, osd_id: u64, weight: f64, host: &str) -> Result<(), RadosError> {
-        cmd::osd_crush_add(
-            &self.rados_t,
-            osd_id,
-            weight,
-            host,
-            self.simulate,
-        )
+        cmd::osd_crush_add(&self.rados_t, osd_id, weight, host, self.simulate)
     }
 
     // ceph osd crush reweight {id} {weight}
     /// reweight an osd in the CRUSH map
     pub fn osd_crush_reweight(&self, osd_id: u64, weight: f64) -> Result<(), RadosError> {
-        cmd::osd_crush_reweight(
-            &self.rados_t,
-            osd_id,
-            weight,
-            self.simulate,
-        )
+        cmd::osd_crush_reweight(&self.rados_t, osd_id, weight, self.simulate)
     }
 
     /// check if a single osd is safe to destroy/remove
@@ -287,21 +276,12 @@ impl CephClient {
 
     pub fn mgr_enable_module(&self, module: &str, force: bool) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        cmd::mgr_enable_module(
-            &self.rados_t,
-            module,
-            force,
-            self.simulate,
-        )
+        cmd::mgr_enable_module(&self.rados_t, module, force, self.simulate)
     }
 
     pub fn mgr_disable_module(&self, module: &str) -> Result<(), RadosError> {
         min_version!(Luminous, self);
-        cmd::mgr_disable_module(
-            &self.rados_t,
-            module,
-            self.simulate,
-        )
+        cmd::mgr_disable_module(&self.rados_t, module, self.simulate)
     }
 
     pub fn mgr_metadata(&self) -> Result<Vec<cmd::MgrMetadata>, RadosError> {
