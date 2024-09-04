@@ -1376,10 +1376,7 @@ pub fn osd_safe_to_destroy(cluster_handle: &Rados, osd_id: u64) -> bool {
         "prefix": "osd safe-to-destroy",
         "ids": [osd_id.to_string()]
     });
-    match cluster_handle.ceph_mon_command_without_data(&cmd) {
-        Err(_) => false,
-        Ok(_) => true,
-    }
+    cluster_handle.ceph_mon_command_without_data(&cmd).is_ok()
 }
 
 /// count ceph-mgr daemons by metadata field property

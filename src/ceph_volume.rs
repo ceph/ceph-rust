@@ -146,13 +146,10 @@ pub fn ceph_volume_scan(
             .output()?;
     }
     let json = String::from_utf8_lossy(&output.stdout);
-    let index: usize = match json.find("{") {
-        Some(i) => i,
-        None => 0,
-    };
+    let index: usize = json.find("{").unwrap_or_default();
     // Skip stderr's.  The last output is Json
     let json = json.split_at(index);
-    match json_data(&json.1) {
+    match json_data(json.1) {
         Some(jsondata) => Ok(jsondata),
         _ => Err(RadosError::new("JSON data not found.".to_string())),
     }

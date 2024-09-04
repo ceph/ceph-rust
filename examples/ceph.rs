@@ -89,14 +89,8 @@ fn main() {
     // Mon command to check the health. Same as `ceph -s`
     match cluster.ceph_mon_command("prefix", "status", None) {
         Ok((outbuf, outs)) => {
-            match outbuf {
-                Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
-                None => {}
-            }
-            match outs {
-                Some(output) => println!("Ceph mon command (outs):\n{}", output),
-                None => {}
-            }
+            if let Some(output) = outbuf { println!("Ceph mon command (outbuf):\n{}", output) }
+            if let Some(output) = outs { println!("Ceph mon command (outs):\n{}", output) }
         }
         Err(e) => {
             println!("{:?}", e);
@@ -125,7 +119,7 @@ fn main() {
     }
 
     let fsid = cluster.rados_fsid().unwrap();
-    println!("rados_cluster_fsid: {}", fsid.to_hyphenated().to_string());
+    println!("rados_cluster_fsid: {}", fsid.to_hyphenated());
 
     let ping_monitor = cluster.ping_monitor("ceph-mon.ceph-vm1"); // Change to support your mon name
     println!("Ping monitor: {:?}", ping_monitor);
@@ -137,14 +131,8 @@ fn main() {
     // Mon command to check the health. Same as `ceph -s`
     match cluster.ceph_mon_command("prefix", "status", None) {
         Ok((outbuf, outs)) => {
-            match outbuf {
-                Some(output) => println!("Ceph mon command (outbuf):\n{}", output),
-                None => {}
-            }
-            match outs {
-                Some(output) => println!("Ceph mon command (outs):\n{}", output),
-                None => {}
-            }
+            if let Some(output) = outbuf { println!("Ceph mon command (outbuf):\n{}", output) }
+            if let Some(output) = outs { println!("Ceph mon command (outs):\n{}", output) }
         }
         Err(e) => {
             println!("{:?}", e);

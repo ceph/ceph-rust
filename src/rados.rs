@@ -205,7 +205,7 @@ extern "C" {
         major: *mut ::libc::c_int,
         minor: *mut ::libc::c_int,
         extra: *mut ::libc::c_int,
-    ) -> ();
+    );
 
     pub fn rados_create(cluster: *mut rados_t, id: *const ::libc::c_char) -> ::libc::c_int;
 
@@ -227,7 +227,7 @@ extern "C" {
 
     pub fn rados_connect(cluster: rados_t) -> ::libc::c_int;
 
-    pub fn rados_shutdown(cluster: rados_t) -> ();
+    pub fn rados_shutdown(cluster: rados_t);
 
     pub fn rados_conf_read_file(cluster: rados_t, path: *const ::libc::c_char) -> ::libc::c_int;
 
@@ -298,7 +298,7 @@ extern "C" {
         ioctx: *mut rados_ioctx_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_destroy(io: rados_ioctx_t) -> ();
+    pub fn rados_ioctx_destroy(io: rados_ioctx_t);
 
     pub fn rados_ioctx_cct(io: rados_ioctx_t) -> rados_config_t;
 
@@ -364,9 +364,9 @@ extern "C" {
         maxlen: ::libc::c_uint,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_locator_set_key(io: rados_ioctx_t, key: *const ::libc::c_char) -> ();
+    pub fn rados_ioctx_locator_set_key(io: rados_ioctx_t, key: *const ::libc::c_char);
 
-    pub fn rados_ioctx_set_namespace(io: rados_ioctx_t, nspace: *const ::libc::c_char) -> ();
+    pub fn rados_ioctx_set_namespace(io: rados_ioctx_t, nspace: *const ::libc::c_char);
 
     pub fn rados_nobjects_list_open(io: rados_ioctx_t, ctx: *mut rados_list_ctx_t)
         -> ::libc::c_int;
@@ -382,7 +382,7 @@ extern "C" {
         nspace: *mut *mut *const ::libc::c_char,
     ) -> ::libc::c_int;
 
-    pub fn rados_nobjects_list_close(ctx: rados_list_ctx_t) -> ();
+    pub fn rados_nobjects_list_close(ctx: rados_list_ctx_t);
 
     pub fn rados_objects_list_open(io: rados_ioctx_t, ctx: *mut rados_list_ctx_t) -> ::libc::c_int;
 
@@ -396,7 +396,7 @@ extern "C" {
         key: *mut *const ::libc::c_char,
     ) -> ::libc::c_int;
 
-    pub fn rados_objects_list_close(ctx: rados_list_ctx_t) -> ();
+    pub fn rados_objects_list_close(ctx: rados_list_ctx_t);
 
     pub fn rados_ioctx_snap_create(
         io: rados_ioctx_t,
@@ -420,7 +420,7 @@ extern "C" {
         snapname: *const ::libc::c_char,
     ) -> ::libc::c_int;
 
-    pub fn rados_ioctx_snap_set_read(io: rados_ioctx_t, snap: rados_snap_t) -> ();
+    pub fn rados_ioctx_snap_set_read(io: rados_ioctx_t, snap: rados_snap_t);
 
     pub fn rados_ioctx_selfmanaged_snap_create(
         io: rados_ioctx_t,
@@ -550,7 +550,7 @@ extern "C" {
         len: *mut size_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_getxattrs_end(iter: rados_xattrs_iter_t) -> ();
+    pub fn rados_getxattrs_end(iter: rados_xattrs_iter_t);
 
     pub fn rados_omap_get_next(
         iter: rados_omap_iter_t,
@@ -559,7 +559,7 @@ extern "C" {
         len: *mut size_t,
     ) -> ::libc::c_int;
 
-    pub fn rados_omap_get_end(iter: rados_omap_iter_t) -> ();
+    pub fn rados_omap_get_end(iter: rados_omap_iter_t);
 
     pub fn rados_stat(
         io: rados_ioctx_t,
@@ -615,7 +615,7 @@ extern "C" {
     pub fn rados_aio_is_complete_and_cb(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_is_safe_and_cb(c: rados_completion_t) -> ::libc::c_int;
     pub fn rados_aio_get_return_value(c: rados_completion_t) -> ::libc::c_int;
-    pub fn rados_aio_release(c: rados_completion_t) -> ();
+    pub fn rados_aio_release(c: rados_completion_t);
     pub fn rados_aio_write(
         io: rados_ioctx_t,
         oid: *const ::libc::c_char,
@@ -716,17 +716,17 @@ extern "C" {
         expected_write_size: u64,
     ) -> ::libc::c_int;
     pub fn rados_create_write_op() -> rados_write_op_t;
-    pub fn rados_release_write_op(write_op: rados_write_op_t) -> ();
-    pub fn rados_write_op_set_flags(write_op: rados_write_op_t, flags: ::libc::c_int) -> ();
-    pub fn rados_write_op_assert_exists(write_op: rados_write_op_t) -> ();
-    pub fn rados_write_op_assert_version(write_op: rados_write_op_t, ver: u64) -> ();
+    pub fn rados_release_write_op(write_op: rados_write_op_t);
+    pub fn rados_write_op_set_flags(write_op: rados_write_op_t, flags: ::libc::c_int);
+    pub fn rados_write_op_assert_exists(write_op: rados_write_op_t);
+    pub fn rados_write_op_assert_version(write_op: rados_write_op_t, ver: u64);
     pub fn rados_write_op_cmpxattr(
         write_op: rados_write_op_t,
         name: *const ::libc::c_char,
         comparison_operator: u8,
         value: *const ::libc::c_char,
         value_len: size_t,
-    ) -> ();
+    );
     pub fn rados_write_op_omap_cmp(
         write_op: rados_write_op_t,
         key: *const ::libc::c_char,
@@ -734,38 +734,38 @@ extern "C" {
         val: *const ::libc::c_char,
         val_len: size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_write_op_setxattr(
         write_op: rados_write_op_t,
         name: *const ::libc::c_char,
         value: *const ::libc::c_char,
         value_len: size_t,
-    ) -> ();
-    pub fn rados_write_op_rmxattr(write_op: rados_write_op_t, name: *const ::libc::c_char) -> ();
+    );
+    pub fn rados_write_op_rmxattr(write_op: rados_write_op_t, name: *const ::libc::c_char);
     pub fn rados_write_op_create(
         write_op: rados_write_op_t,
         exclusive: ::libc::c_int,
         category: *const ::libc::c_char,
-    ) -> ();
+    );
     pub fn rados_write_op_write(
         write_op: rados_write_op_t,
         buffer: *const ::libc::c_char,
         len: size_t,
         offset: u64,
-    ) -> ();
+    );
     pub fn rados_write_op_write_full(
         write_op: rados_write_op_t,
         buffer: *const ::libc::c_char,
         len: size_t,
-    ) -> ();
+    );
     pub fn rados_write_op_append(
         write_op: rados_write_op_t,
         buffer: *const ::libc::c_char,
         len: size_t,
-    ) -> ();
-    pub fn rados_write_op_remove(write_op: rados_write_op_t) -> ();
-    pub fn rados_write_op_truncate(write_op: rados_write_op_t, offset: u64) -> ();
-    pub fn rados_write_op_zero(write_op: rados_write_op_t, offset: u64, len: u64) -> ();
+    );
+    pub fn rados_write_op_remove(write_op: rados_write_op_t);
+    pub fn rados_write_op_truncate(write_op: rados_write_op_t, offset: u64);
+    pub fn rados_write_op_zero(write_op: rados_write_op_t, offset: u64, len: u64);
     pub fn rados_write_op_exec(
         write_op: rados_write_op_t,
         cls: *const ::libc::c_char,
@@ -773,25 +773,25 @@ extern "C" {
         in_buf: *const ::libc::c_char,
         in_len: size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_write_op_omap_set(
         write_op: rados_write_op_t,
         keys: *const *const ::libc::c_char,
         vals: *const *const ::libc::c_char,
         lens: *const size_t,
         num: size_t,
-    ) -> ();
+    );
     pub fn rados_write_op_omap_rm_keys(
         write_op: rados_write_op_t,
         keys: *const *const ::libc::c_char,
         keys_len: size_t,
-    ) -> ();
-    pub fn rados_write_op_omap_clear(write_op: rados_write_op_t) -> ();
+    );
+    pub fn rados_write_op_omap_clear(write_op: rados_write_op_t);
     pub fn rados_write_op_set_alloc_hint(
         write_op: rados_write_op_t,
         expected_object_size: u64,
         expected_write_size: u64,
-    ) -> ();
+    );
     pub fn rados_write_op_operate(
         write_op: rados_write_op_t,
         io: rados_ioctx_t,
@@ -808,22 +808,22 @@ extern "C" {
         flags: ::libc::c_int,
     ) -> ::libc::c_int;
     pub fn rados_create_read_op() -> rados_read_op_t;
-    pub fn rados_release_read_op(read_op: rados_read_op_t) -> ();
-    pub fn rados_read_op_set_flags(read_op: rados_read_op_t, flags: ::libc::c_int) -> ();
-    pub fn rados_read_op_assert_exists(read_op: rados_read_op_t) -> ();
-    pub fn rados_read_op_assert_version(write_op: rados_read_op_t, ver: u64) -> ();
+    pub fn rados_release_read_op(read_op: rados_read_op_t);
+    pub fn rados_read_op_set_flags(read_op: rados_read_op_t, flags: ::libc::c_int);
+    pub fn rados_read_op_assert_exists(read_op: rados_read_op_t);
+    pub fn rados_read_op_assert_version(write_op: rados_read_op_t, ver: u64);
     pub fn rados_read_op_cmpxattr(
         read_op: rados_read_op_t,
         name: *const ::libc::c_char,
         comparison_operator: u8,
         value: *const ::libc::c_char,
         value_len: size_t,
-    ) -> ();
+    );
     pub fn rados_read_op_getxattrs(
         read_op: rados_read_op_t,
         iter: *mut rados_xattrs_iter_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_omap_cmp(
         read_op: rados_read_op_t,
         key: *const ::libc::c_char,
@@ -831,13 +831,13 @@ extern "C" {
         val: *const ::libc::c_char,
         val_len: size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_stat(
         read_op: rados_read_op_t,
         psize: *mut u64,
         pmtime: *mut time_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_read(
         read_op: rados_read_op_t,
         offset: u64,
@@ -845,7 +845,7 @@ extern "C" {
         buf: *mut ::libc::c_char,
         bytes_read: *mut size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_exec(
         read_op: rados_read_op_t,
         cls: *const ::libc::c_char,
@@ -855,7 +855,7 @@ extern "C" {
         out_buf: *mut *mut ::libc::c_char,
         out_len: *mut size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_exec_user_buf(
         read_op: rados_read_op_t,
         cls: *const ::libc::c_char,
@@ -866,7 +866,7 @@ extern "C" {
         out_len: size_t,
         used_len: *mut size_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_omap_get_vals(
         read_op: rados_read_op_t,
         start_after: *const ::libc::c_char,
@@ -874,21 +874,21 @@ extern "C" {
         max_return: u64,
         iter: *mut rados_omap_iter_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_omap_get_keys(
         read_op: rados_read_op_t,
         start_after: *const ::libc::c_char,
         max_return: u64,
         iter: *mut rados_omap_iter_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_omap_get_vals_by_keys(
         read_op: rados_read_op_t,
         keys: *const *const ::libc::c_char,
         keys_len: size_t,
         iter: *mut rados_omap_iter_t,
         prval: *mut ::libc::c_int,
-    ) -> ();
+    );
     pub fn rados_read_op_operate(
         read_op: rados_read_op_t,
         io: rados_ioctx_t,
@@ -976,7 +976,7 @@ extern "C" {
         outs: *mut *mut ::libc::c_char,
         outslen: *mut size_t,
     ) -> ::libc::c_int;
-    pub fn rados_buffer_free(buf: *mut ::libc::c_char) -> ();
+    pub fn rados_buffer_free(buf: *mut ::libc::c_char);
     pub fn rados_osd_command(
         cluster: rados_t,
         osdid: ::libc::c_int,

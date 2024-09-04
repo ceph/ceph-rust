@@ -1839,7 +1839,7 @@ impl Rados {
 pub fn ceph_version(socket: &str) -> Option<String> {
     let cmd = "version";
 
-    admin_socket_command(&cmd, socket).ok().and_then(|json| {
+    admin_socket_command(cmd, socket).ok().and_then(|json| {
         json_data(&json)
             .and_then(|jsondata| json_find(jsondata, &[cmd]).map(|data| json_as_string(&data)))
     })
@@ -2016,7 +2016,7 @@ impl Rados {
                 &mut cmds.as_ptr(),
                 1,
                 data.as_ptr() as *mut c_char,
-                data.len() as usize,
+                data.len(),
                 &mut outbuf,
                 &mut outbuf_len,
                 &mut outs,
@@ -2034,13 +2034,13 @@ impl Rados {
 
             // Copy the data from outbuf and then call rados_buffer_free instead libc::free
             if outbuf_len > 0 && !outbuf.is_null() {
-                let slice = ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len as usize);
+                let slice = ::std::slice::from_raw_parts(outbuf as *const u8, outbuf_len);
                 out = slice.to_vec();
 
                 rados_buffer_free(outbuf);
             }
             if outs_len > 0 && !outs.is_null() {
-                let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
+                let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len);
                 status_string = Some(String::from_utf8(slice.to_vec())?);
                 rados_buffer_free(outs);
             }
