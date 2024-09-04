@@ -5,7 +5,7 @@ build:
 fmt:
 	cargo fmt
 test:
-	cargo test.
+	cargo test
 
 test-docker: .build-docker
 	docker run --rm -it -v $(CURDIR):/ceph-rust $(DOCKER_CI_IMAGE)

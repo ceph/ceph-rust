@@ -862,7 +862,6 @@ impl IoCtx {
                 out_str.as_ptr() as *mut c_char,
                 out_buff_size as c_int,
             );
-            if ret_code == -ERANGE {}
             if ret_code < 0 {
                 return Err(ret_code.into());
             }
@@ -2026,7 +2025,7 @@ impl Rados {
             debug!("return code: {}", ret_code);
             if ret_code < 0 {
                 if outs_len > 0 && !outs.is_null() {
-                    let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len as usize);
+                    let slice = ::std::slice::from_raw_parts(outs as *const u8, outs_len);
                     rados_buffer_free(outs);
                     return Err(RadosError::new(String::from_utf8_lossy(slice).into_owned()));
                 }
@@ -2096,7 +2095,7 @@ impl Rados {
                 cmds.as_mut_ptr(),
                 1,
                 data.as_ptr() as *mut c_char,
-                data.len() as usize,
+                data.len(),
                 &mut outbuf,
                 &mut outbuf_len,
                 &mut outs,
@@ -2186,7 +2185,7 @@ impl Rados {
                 cmds.as_mut_ptr(),
                 1,
                 data.as_ptr() as *mut c_char,
-                data.len() as usize,
+                data.len(),
                 &mut outbuf,
                 &mut outbuf_len,
                 &mut outs,
@@ -2277,7 +2276,7 @@ impl Rados {
                 cmds.as_mut_ptr(),
                 1,
                 data.as_ptr() as *mut c_char,
-                data.len() as usize,
+                data.len(),
                 &mut outbuf,
                 &mut outbuf_len,
                 &mut outs,

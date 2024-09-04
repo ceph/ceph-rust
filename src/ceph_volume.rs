@@ -119,7 +119,7 @@ fn check_version(cluster_handle: &Rados) -> RadosResult<()> {
 pub fn ceph_volume_list(cluster_handle: &Rados) -> RadosResult<HashMap<String, Vec<Lvm>>> {
     check_version(cluster_handle)?;
     let output = Command::new("ceph-volume")
-        .args(&["lvm", "list", "--format=json"])
+        .args(["lvm", "list", "--format=json"])
         .output()?;
     let lvms: HashMap<String, Vec<Lvm>> =
         serde_json::from_str(&String::from_utf8_lossy(&output.stdout))?;
@@ -138,11 +138,11 @@ pub fn ceph_volume_scan(
     if let Some(p) = osd_path {
         let path = format!("{}", p.display());
         output = Command::new("ceph-volume")
-            .args(&["simple", "scan", "--stdout", &path])
+            .args(["simple", "scan", "--stdout", &path])
             .output()?;
     } else {
         output = Command::new("ceph-volume")
-            .args(&["simple", "scan", "--stdout"])
+            .args(["simple", "scan", "--stdout"])
             .output()?;
     }
     let json = String::from_utf8_lossy(&output.stdout);
