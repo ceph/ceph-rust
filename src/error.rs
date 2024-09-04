@@ -139,6 +139,6 @@ impl From<Error> for RadosError {
 }
 impl From<i32> for RadosError {
     fn from(err: i32) -> RadosError {
-        RadosError::ApiError(nix::errno::Errno::from_i32(-err))
+        RadosError::ApiError(nix::errno::Errno::from_raw(-err))
     }
 }
