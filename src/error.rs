@@ -50,7 +50,7 @@ impl fmt::Display for RadosError {
         match *self {
             RadosError::FromUtf8Error(ref e) => f.write_str(&e.to_string()),
             RadosError::NulError(ref e) => f.write_str(&e.to_string()),
-            RadosError::Error(ref e) => f.write_str(&e),
+            RadosError::Error(ref e) => f.write_str(e),
             RadosError::IoError(ref e) => f.write_str(&e.to_string()),
             RadosError::ApiError(ref e) => e.fmt(f),
             RadosError::IntoStringError(ref e) => f.write_str(&e.to_string()),

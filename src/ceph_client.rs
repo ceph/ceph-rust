@@ -46,7 +46,7 @@ impl CephClient {
         user_id: T1,
         config_file: T2,
     ) -> Result<CephClient, RadosError> {
-        let rados_t = match connect_to_ceph(&user_id.as_ref(), &config_file.as_ref()) {
+        let rados_t = match connect_to_ceph(user_id.as_ref(), config_file.as_ref()) {
             Ok(rados_t) => rados_t,
             Err(e) => return Err(e),
         };
@@ -170,11 +170,11 @@ impl CephClient {
     /// # }
     /// ```
     pub fn osd_unset(&self, key: OsdOption) -> Result<(), RadosError> {
-        cmd::osd_unset(&self.rados_t, &key, self.simulate).map_err(|a| a)
+        cmd::osd_unset(&self.rados_t, &key, self.simulate)
     }
 
     pub fn osd_tree(&self) -> Result<cmd::CrushTree, RadosError> {
-        cmd::osd_tree(&self.rados_t).map_err(|a| a)
+        cmd::osd_tree(&self.rados_t)
     }
 
     /// Get cluster status
