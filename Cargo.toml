@@ -40,7 +40,7 @@ serde_derive = "1"
 serde = "1"
 serde_json = "1"
 uuid = { version = "~0.8", features = ["serde"] }
-nix = "0.21"
+nix = "0.29"
 tracing = "0.1"
 
 [features]
