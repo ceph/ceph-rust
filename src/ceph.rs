@@ -395,6 +395,13 @@ pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
         if ret_code < 0 {
             return Err(ret_code.into());
         }
+        // Instantiate Rados struct to call shutdown on drop.
+        // Doc specifies that it's not necessary to call rados_shutdown if
+        // rados_connect hasn't run, but that seems incorrect.
+        let rados = Rados {
+            rados: cluster_handle,
+            phantom: PhantomData,
+        };
         let ret_code = rados_conf_read_file(cluster_handle, conf_file.as_ptr());
         if ret_code < 0 {
             return Err(ret_code.into());
@@ -403,10 +410,7 @@ pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
         if ret_code < 0 {
             return Err(ret_code.into());
         }
-        Ok(Rados {
-            rados: cluster_handle,
-            phantom: PhantomData,
-        })
+        Ok(rados)
     }
 }
 
