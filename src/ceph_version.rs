@@ -42,6 +42,7 @@ pub enum CephVersion {
     Pacific,
     Quincy,
     Reef,
+    Squid,
 }
 
 impl FromStr for CephVersion {
@@ -63,6 +64,7 @@ impl FromStr for CephVersion {
                 version_parts.next(),
             ) {
                 match major {
+                    "19" => return Ok(Squid),
                     "18" => return Ok(Reef),
                     "17" => return Ok(Quincy),
                     "16" => return Ok(Pacific),
