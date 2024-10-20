@@ -1,6 +1,9 @@
 #[cfg(feature = "rados_striper")]
 use {
-    ceph::ceph as ceph_helpers, ceph::error::RadosError, nix::errno::Errno, std::env, std::str,
+    ceph::ceph as ceph_helpers,
+    ceph::error::{Errno, RadosError},
+    std::env,
+    std::str,
     std::sync::Arc,
 };
 
