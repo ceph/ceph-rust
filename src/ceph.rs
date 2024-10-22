@@ -248,17 +248,115 @@ impl Drop for ReadOperation {
 /// An object write operation stores a number of operations which can be
 /// executed atomically.
 #[derive(Debug)]
-pub struct WriteOperation {
-    pub object_name: String,
+pub struct WriteOperation<'a> {
+    object_name: &'a str,
     /// flags are set by calling LIBRADOS_OPERATION_NOFLAG |
     /// LIBRADOS_OPERATION_ORDER_READS_WRITES
     /// all the other flags are documented in rados.rs
-    pub flags: u32,
-    pub mtime: time_t,
+    flags: u32,
+    mtime: time_t,
     write_op_handle: rados_write_op_t,
+    _lifetime: PhantomData<&'a [u8]>,
+}
+unsafe impl Send for WriteOperation<'_> {}
+
+impl<'a> WriteOperation<'a> {
+    /// Construct a new WriteOperation
+    pub fn new(object_name: &'a str) -> Self {
+        let write_op_handle = unsafe { rados_create_write_op() };
+        WriteOperation {
+            object_name,
+            flags: 0,
+            mtime: 0,
+            write_op_handle,
+            _lifetime: PhantomData,
+        }
+    }
+
+    /// Ensure that the object exists before writing
+    pub fn assert_exists(self) -> Self {
+        unsafe {
+            rados_write_op_assert_exists(self.write_op_handle);
+        }
+        self
+    }
+
+    /// Create the object
+    ///
+    /// - `exclusive: true` => fail if the object already exists (this sets the
+    /// `CEPH_OSD_OP_FLAG_EXCL` on the operation)
+    /// - `exclusive: false` => create the object if it
+    /// does not exist
+    pub fn create(self, exclusive: bool) -> Self {
+        unsafe {
+            rados_write_op_create(self.write_op_handle, exclusive as i32, &0);
+        }
+        self
+    }
+
+    /// Write to offset
+    pub fn write(self, buffer: &'a [u8], offset: u64) -> Self {
+        unsafe {
+            rados_write_op_write(
+                self.write_op_handle,
+                buffer.as_ptr() as *const ::libc::c_char,
+                buffer.len(),
+                offset,
+            );
+        }
+        self
+    }
+
+    /// Write whole object, atomically replacing it.
+    pub fn write_full(self, buffer: &'a [u8]) -> Self {
+        unsafe {
+            rados_write_op_write_full(
+                self.write_op_handle,
+                buffer.as_ptr() as *const ::libc::c_char,
+                buffer.len(),
+            );
+        }
+        self
+    }
+
+    /// Append to end of object
+    pub fn append(self, buffer: &'a [u8]) -> Self {
+        unsafe {
+            rados_write_op_append(
+                self.write_op_handle,
+                buffer.as_ptr() as *const ::libc::c_char,
+                buffer.len(),
+            );
+        }
+        self
+    }
+
+    /// Truncate an object
+    pub fn truncate(self, offset: u64) -> Self {
+        unsafe {
+            rados_write_op_truncate(self.write_op_handle, offset);
+        }
+        self
+    }
+
+    /// Zero part of an object
+    pub fn zero(self, offset: u64, len: u64) -> Self {
+        unsafe {
+            rados_write_op_zero(self.write_op_handle, offset, len);
+        }
+        self
+    }
+
+    /// Remove object
+    pub fn remove(self) -> Self {
+        unsafe {
+            rados_write_op_remove(self.write_op_handle);
+        }
+        self
+    }
 }
 
-impl Drop for WriteOperation {
+impl Drop for WriteOperation<'_> {
     fn drop(&mut self) {
         unsafe {
             rados_release_write_op(self.write_op_handle);
@@ -545,7 +643,7 @@ impl IoCtx {
     fn ioctx_guard(&self) -> RadosResult<()> {
         if self.ioctx.is_null() {
             return Err(RadosError::new(
-                "Rados ioctx not created.  Please initialize first".to_string(),
+                "Rados ioctx not created. Please initialize first".to_string(),
             ));
         }
         Ok(())
@@ -1400,9 +1498,9 @@ impl IoCtx {
     }
 
     // Perform a compound write operation synchronously
-    pub fn rados_commit_write_operations(&self, write_op: &mut WriteOperation) -> RadosResult<()> {
+    pub fn rados_commit_write_operations(&self, mut write_op: WriteOperation) -> RadosResult<()> {
         self.ioctx_guard()?;
-        let object_name_str = CString::new(write_op.object_name.clone())?;
+        let object_name_str = CString::new(write_op.object_name)?;
 
         unsafe {
             let ret_code = rados_write_op_operate(
