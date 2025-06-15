@@ -410,6 +410,8 @@ pub fn connect_to_ceph(user_id: &str, config_file: &str) -> RadosResult<Rados> {
         if ret_code < 0 {
             return Err(ret_code.into());
         }
+        // Tracing integration needs to be enabled after we connected for some reason
+        crate::tracing_integration::enable_tracing_integration(rados.rados)?;
         Ok(rados)
     }
 }

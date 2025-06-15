@@ -79,6 +79,7 @@ pub mod utils;
 mod ceph_client;
 mod ceph_version;
 mod mon_command;
+mod tracing_integration;
 
 pub use crate::ceph_client::CephClient;
 pub use crate::ceph_version::CephVersion;
